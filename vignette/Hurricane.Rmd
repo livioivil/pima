@@ -1,0 +1,196 @@
+---
+title: "Tutorial: Hurricane dataset analysis"
+author: "Vari ed eventuali"
+date: "`r Sys.Date()`"
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+- \usepackage{rotating}
+- \usepackage{longtable}
+output:
+  html_document:
+  highlight: haddock
+latex_engine: xelatex
+toc: yes
+---
+```{r knitr_init, echo=TRUE, cache=FALSE}
+#carico library
+rm(list=ls())
+library(gtsummary)
+library(tidyverse)
+library(GGally)
+library(MASS)
+library(knitr)
+library(readstata13)
+library(gridExtra)
+opts_chunk$set(echo=FALSE,
+               cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+hurricane<-read.dta13("~/Dropbox/Convegni/2024_ASA/hurricanes_2015_01_09.dta")
+source("Rutils.R")
+head(hurricane)
+
+#Original analysis from  
+
+# https://www.pnas.org/content/111/24/8782  
+#year: anno
+#masfem: 1 masculine, 11 feminile
+#min: minimo di pressione
+#categoria uragano
+#alldeaths: decessi totali
+#ndam: indice normalizzato di danni
+#elapsedyrs:anni passati dal 2013
+#masfem_mturk: femminilità media assegnata da amazon turk
+#wind; vento 
+#ndam15: indice normalizzato di danni al 2015
+```
+# Hurricane  
+## Preparazione del dataset 
+
+```{r echo=TRUE}
+hurricane$gender_mf<-as.factor(hurricane$gender_mf)
+hurricane$category<-as.factor(hurricane$category)
+levels(hurricane$gender_mf)<-c("Male","Female")
+hurricane[,c(1,3,4,5,7,12,13)] %>% tbl_summary(by = gender_mf) %>% add_p() %>%as_gt() %>%   gt::as_latex()
+#we consider only deaths
+
+p1<-ggplot(hurricane, aes(x=gender_mf, y=alldeaths, color=gender_mf)) +
+  geom_boxplot()
+p2<-ggplot(hurricane, aes(x=gender_mf, y=ndam15, color=gender_mf)) +
+  geom_boxplot()
+
+grid.arrange(p1,p2,ncol=2)
+pdf("figure1.pdf",width = 10,height = 4)
+grid.arrange(p1,p2,ncol=2)
+dev.off()
+
+corrplot::corrplot(cor(hurricane[,c("alldeaths","masfem","min","wind","ndam15","year")]))
+hurricane$Log_deaths<-log(hurricane$alldeaths+1)
+pm <- ggpairs(hurricane, columns = c(14,3,1,4,12,13),upper = list(continuous = wrap("cor", method = "spearman")))
+pm
+pdf("corr.pdf",width=8,height =5)
+pm
+dev.off()
+
+
+```
+
+Correlation very high between:  
+- min and wind (-0.85)
+
+
+
+## GLM Model
+
+Quasi-Poisson model since the number of deaths right-skew distributed  
+
+```{r,echo=TRUE}
+hist(hurricane$alldeaths,ylab="Frequency",xlab="Number of deaths")
+pdf("gender_year.pdf",width = 8,height = 4)
+ggplot(hurricane,aes(x=year,y=masfem,col=gender_mf))+ylab("Degree of femininity")+geom_point(size=3)+xlab("Year")+labs(col="Gender")
+dev.off()
+```
+
+and Var(Y) >> E[Y] (`r round(var(hurricane$alldeaths),1)` > `r round(mean(hurricane$alldeaths),1)`
+
+We consider the following glm:  
+
+$$g(\mu)=\alpha+f_1(\mbox{mf})+f_2(\mbox{year})+f_3(\mbox{min})+f_4(\mbox{elapsedyrs})+f_5(\mbox{wind})+f_6(\mbox{ndam15})$$
+
+where:  
+
+$$\mbox{alldeaths} \sim quasiPoisson(\lambda=g^{-1}(X\beta))$$
+Some considerations:
+- limited sample size: n=94
+- model with 4 predictors and 1 intercept
+
+### Theoretical model
+We know in advance that the number of deaths depends on the strength of the hurricane (min,pressure,wind), if it touches a populated area (ndam15), and the historical period (year).
+
+
+## MULTIVERSE ANALYSIS 
+
+```{r,echo=TRUE}
+########################################### possible specifications:
+combinations_matrix=expand.grid(list(
+  c("min","sqrt(min)","log(min)","poly(min,2)"),
+  c("wind","sqrt(wind)","log(wind)","poly(wind,2)"),
+  c("year","sqrt(year)","log(year)","poly(year,2)"),
+  c("ndam15","sqrt(ndam15)","log(ndam15)","poly(ndam15,2)")))
+
+combinations=apply(combinations_matrix,1,paste,collapse="+")
+##################### one list of formulas for each comparison of interest:
+
+#######
+formulas1=sapply(combinations,function(cmb) paste0("alldeaths ~ masfem +",cmb))
+mod1=glm(as.formula(formulas1[1]),data=hurricane,family=quasipoisson())
+mods1=lapply(formulas1, function(frml) update(mod1,formula. = as.formula(frml)))
+
+library(jointest)
+library(flipscores)
+res1=join_flipscores(mods1,n_flips = 5000,
+                          tested_coeffs =  c("masfem"),
+                          score_type = "standardized" ,seed = 123)
+#dipendenze ggplot2 e cowplot
+#3 argomenti 
+# 1: res: results della funzione join_flipscores
+# 2: alpha: valore per gli intervalli di confidenza 
+p<-spec_curve(res1,alpha = 0.05)
+#pdf("spec_curve.pdf",width = 8,height = 5)
+p
+#dev.off()
+
+2*mean(apply(res1$Tspace,1,max)>max(summary(res1)$Score))
+t_stat_h0<-apply(res1$Tspace,1,max)
+observed_t<-max(summary(res1)$Score)
+ho_t<-ggplot(data = data.frame(t_stat_h0), aes(x = t_stat_h0)) +
+  geom_histogram(aes(y = ..density..), fill = "lightblue", color = "black", alpha = 0.7) +
+  geom_vline(aes(xintercept = observed_t), color = "red", linetype = "dashed", size = 1.2) +
+  geom_text(aes(x = observed_t, y = 0.00035, label = paste("Observed S =", observed_t)),
+            color = "red", angle = 90, vjust = -0.5, hjust = -0.5, size = 4) +
+  labs(title = "Histogram of Sign-flip test statistic Under H0",
+       x = "S-statistic",
+       y = "Density") +
+  theme_minimal()
+
+#pdf("null_dist.pdf",height = 5,width = 8)
+ho_t
+#dev.off()
+
+
+#adjusted pvalues
+res1$summary_table$p.adj<-maxT.light(res1$Tspace,c(0.001,0.005,0.01,0.025,0.05,0.075,0.1,0.2,0.3,0.4,0.5))
+
+p3<-plot(res1)
+#pdf("graph_raw.pdf",height = 5,width = 8)
+p3
+#dev.off()
+
+p4 <- plot(res1,p.values = "adjusted")
+#pdf("graph_adj.pdf",height = 5,width = 8)
+p4
+#dev.off()
+
+sum(res1$summary_table$p.adj<.05)
+
+pvalue_tree(res=res1) # raw
+pvalue_tree(res=res1,p.values = "adjusted") #FWER adjusted
+
+#vibration of effects: statistiche descritive? 
+#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4555355/
+#RHR 99-01% dei coefficienti, RP: 99-01% dei -log10(pvalue)
+# Relative Incidence Rate Ratio -> Relative Coefficient Ratio
+IRR<-exp(res1$summary_table$Estimate)
+RIRR<-quantile(IRR,c(0.99))/quantile(IRR,c(0.01))
+RIRR
+#Relative pvalues
+RP_raw<-diff(-log10(quantile(res1$summary_table$p,c(0.99,0.01))))
+RP_raw
+RP_adjusted<-diff(-log10(quantile(res1$summary_table$p.adj,c(0.99,0.01))))
+RP_adjusted
+```
