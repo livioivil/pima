@@ -25,6 +25,8 @@ pvalue_tree <- function(res, p.values = "raw") {
     spec[[i]] <- res$mods[[i]]$formula
   }
   
+  ####################################################
+  #DEVE DIVENTARE UNA PARTE DELL'OUTPUT DI PIMA
   # Organize combinations
   nvar <- sapply(spec, function(x) length(gregexpr("\\+", as.character(x))) + 1)
   comb_long <- data.frame(Variable = as.vector(sapply(cmb, function(x) unlist(strsplit(x, split = "+", fixed = TRUE)))),
@@ -37,6 +39,7 @@ pvalue_tree <- function(res, p.values = "raw") {
   comb_long$SpecID <- rep(rank(res$summary_table$Estimate), times = nvar)
   comb_wide <- reshape(comb_long, direction = "wide", idvar = "SpecID", timevar = "Variable")
   names(comb_wide)[-1] <- sapply(names(comb_wide)[-1], function(x) strsplit(x, "[.]")[[1]][2])
+  ############################
   
   if (p.values == "raw") comb_wide$p <- res$summary_table$p
   if (p.values == "adjusted") comb_wide$p <- maxT.light(res$Tspace, c(0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5))
@@ -46,53 +49,6 @@ pvalue_tree <- function(res, p.values = "raw") {
   tree_model <- rpart(p ~ ., data = comb_wide[, -1])
   rpart.plot(tree_model)
 }
-
-#' MaxT Adjustment for p-values
-#'
-#' This function adjusts p-values using the maxT procedure on a given permutation test result.
-#'
-#' @param permT A matrix of permutation test statistics.
-#' @param alphas A numeric vector of significance levels (default is `c(0.001, 0.01, 0.05, 0.1)`).
-#' @param weights Optional weights to apply to the test statistics.
-#' @param m The number of tests (default is the number of columns in `permT`).
-#'
-#' @return A vector of adjusted p-values.
-#'
-#' @examples
-#' # Example usage:
-#' # maxT.light(permT, alphas = c(0.001, 0.01, 0.05))
-#' @export
-maxT.light <- function(permT, alphas = c(0.001, 0.01, 0.05, 0.1), weights = NULL, m = ncol(permT)) {
-  if (is.null(colnames(permT))) colnames(permT) <- 1:m
-  
-  alphas <- ceiling(alphas * nrow(permT)) / nrow(permT)
-  alphas <- sort(alphas)
-  
-  if (!is.null(weights)) permT <- t(weights * t(permT))
-  
-  Padjs <- rep(1, m)
-  names(Padjs) <- colnames(permT)
-  
-  alphaid <- 1
-  notrejs <- 1:m
-  
-  while ((alphaid <= length(alphas)) & (length(notrejs) > 0)) {
-    th <- compute_thresholds(permT[, notrejs, drop = FALSE], alphas[alphaid])
-    tmp <- which(permT[1, notrejs] > th)
-    
-    while (length(tmp) > 0) {
-      Padjs[notrejs[tmp]] <- alphas[alphaid]
-      notrejs <- notrejs[-tmp]
-      if (length(notrejs) == 0) return(Padjs)
-      th <- compute_thresholds(permT[, notrejs, drop = FALSE], alphas[alphaid])
-      tmp <- which(permT[1, notrejs] > th)
-    }
-    alphaid <- alphaid + 1
-  }
-  
-  return(Padjs)
-}
-
 #' NOT EXPORTED
 #' Compute Thresholds for maxT Adjustment
 #'

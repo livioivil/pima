@@ -1,14 +1,21 @@
 nomi automatici ai modelli: mod1, mod2, etc + (funzione get:)  tabella conversione mod* -> call (più avanti forse formula+family)
 nomi automatici ai coefficiente testato: usa i coefficienti della model matrix: (.get_coeff_model_name)  "X @ mod1",  X1 @ mod1,  X2 @ mod1
 
+object pima: 
+- (list modelli) lunghezza nmodelli
+- table di summary
+- matrix Bxp test Tspace (p coefficienti testati)
+- info_model (data.frame) nmodelli x quante colonne vogliamo (call, una colonna per ogni variabile) 
+
 forse serve aggiungere un data.frame dove ogni riga descrive un modello, colonne diverse riportano le diverse trasformazioni operate (vedi anche tree_plot esplorativo)
 non usare la tabella di summary per questo perché quella ha numero di righe pari al numero di coefficienti testati (possono essere più d'uno per modello). le due tabelle però devono essere collegate dalla chiave che è il modello ovviamente.
+
 
 
 includere:
 - jointest con dati mancanti (livio)
 - funzioni di manipolazione dati (outliers removal, leverage, trasformazioni varie, funzione che fa la grid delle combinazioni di tutte le trasfomazioni)
-- plot vibration of effects fatto con pseudo z o -log10-p (y) inoltre effect size, hr o coefficiente (x) 
+- plot vibration of effects fatto con pseudo z o -log10(p) (y) inoltre effect size, hr o coefficiente (x) 
 - plot spec-curve (funzione paolo) cowplot (evitabile?)
 - plot esplorativo alberi regressione (funzione paolo):  p come numero o logico p<alpha: parametro della funzione? (default cosa?) 
 - plot con boxplot per gruppi di modelli (ci pensa paolo se farli) 

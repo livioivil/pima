@@ -49,6 +49,7 @@ head(hurricane)
 #wind; vento 
 #ndam15: indice normalizzato di danni al 2015
 ```
+
 # Hurricane  
 ## Preparazione del dataset 
 
@@ -133,7 +134,7 @@ mods1=lapply(formulas1, function(frml) update(mod1,formula. = as.formula(frml)))
 
 library(jointest)
 library(flipscores)
-res1=join_flipscores(mods1,n_flips = 5000,
+res1=pima(mods1,n_flips = 5000,
                           tested_coeffs =  c("masfem"),
                           score_type = "standardized" ,seed = 123)
 #dipendenze ggplot2 e cowplot
