@@ -21,4 +21,13 @@ includere:
 - plot con boxplot per gruppi di modelli (ci pensa paolo se farli) 
 - vibration of effects: statistiche descritive? (ci pensa paolo)  RHR 99-01% dei coefficienti, RP: 99-01% dei -log10(pvalue)
 
+# note filippo
 
+- per come lo stiamo pensando ora, possiamo solo fare trasformazioni dentro la formula del modello, quindi tutto deve essere esplicito li oppure fare riferimento a due colonne diverse
+
+mod1 <- lm(y ~ x)
+mod2 <- lm(y ~ log(x))
+# mod2 <- lm(y ~ xlog) # dove data ha una colonna che si chiama xlog
+
+- join_flipscores dovrebbe chiamarsi pima giusto?
+- per integrarla con il pacchetto multiverse, un'opzione potrebbe essere quella di prendere un oggetto multiverse in input e lavorare su quello, se non sbaglio dovrebbe avere la lista di modelli
