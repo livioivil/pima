@@ -117,6 +117,10 @@ join_flipscores <- function (mods, tested_coeffs = NULL, n_flips = 5000, score_t
            summary_table=.get_all_summary_table(mods),
            mods=mods)
   attr(out$Tspace,"orig_var")=temp
+  
+  # TODO (filippo) check if putting here the info model
+  out$info <- .get_info_models(out$mods)
+  
   class(out) <- unique(c("pima", class(out)))
   out
 }
