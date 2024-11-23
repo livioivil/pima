@@ -21,19 +21,21 @@ spec_curve <- function(res, alpha = 0.05) {
   data_ori <- res$mods[[1]]$data
   cmb <- names(res$mods)
   n_spec <- length(res$mods)
-  spec <- list()
-  
+  num_var_test<-length(res$tested_coeffs)
+  if(num_var_test==1){
   for (i in 1:n_spec) {
-    res$summary_table$std_glm[i] <- summary(glm(res$mods[[i]]$formula, data = data_ori, family = res$mods[[i]]$family$family))$coef[2, 2]
-    spec[[i]] <- res$mods[[i]]$formula
+    res$summary_table$std_glm[i] <- summary(glm(res$mods[[i]]$formula, data = data_ori, family = res$mods[[i]]$family$family))$coef[res$tested_coeffs, 2]
+    res$summary_table$df[i]<-summary(glm(res$mods[[i]]$formula, data = data_ori, family = res$mods[[i]]$family$family))$df.residual
   }
+  }
+  if(num_var_test>1){stop("The number of tested coefficients is higher 1")}
   
   # Calculate confidence intervals
-  z_value <- qnorm(1 - alpha / 2)
+  t_value <- qt(1 - alpha / 2,res$summary_table$df)
   coeff_estimates <- res$summary_table$Estimate
   std_devs <- res$summary_table$std_glm
-  lower_ci <- coeff_estimates - z_value * std_devs
-  upper_ci <- coeff_estimates + z_value * std_devs
+  lower_ci <- coeff_estimates - t_value * std_devs
+  upper_ci <- coeff_estimates + t_value * std_devs
   t <- coeff_estimates / std_devs
   p <- 2 * (1 - pnorm(abs(t)))
   
@@ -45,7 +47,7 @@ spec_curve <- function(res, alpha = 0.05) {
     PValue = p,
     LowerCI = lower_ci,
     UpperCI = upper_ci,
-    Significance = ifelse(p < 0.05, "Yes", "No")
+    Significance = ifelse(p < alpha, "Yes", "No")
   )
   
   # Plot the specification curve
@@ -58,21 +60,23 @@ spec_curve <- function(res, alpha = 0.05) {
       title = "Specification Curve Analysis",
       x = "SpecID",
       y = "Coefficient Estimate",
-      color = "p < .05"
+      color = paste("p <", alpha)
     ) +
     theme_minimal()
   
   # Legend of specifications
-  nvar <- sapply(spec, function(x) length(gregexpr("\\+", as.character(x))) + 1)
-  combinations_num_long <- data.frame(Variable = as.vector(sapply(cmb, function(x) unlist(strsplit(x, split = "+", fixed = TRUE)))),
-                                      SpecID = rep(rank(res$summary_table$Estimate), times = nvar))
-  combinations_num_long$Type <- NULL
-  combinations_num_long$Type[is.na(sapply(combinations_num_long$Variable, function(x) strsplit(x, "[(),]")[[1]][2]))] <- "original"
-  combinations_num_long$Type[is.na(combinations_num_long$Type)] <- sapply(combinations_num_long$Variable[is.na(combinations_num_long$Type)], function(x) strsplit(x, "[(),]")[[1]][1])
-  combinations_num_long$Variable[combinations_num_long$Type != "original"] <- sapply(combinations_num_long$Variable, function(x) strsplit(x, "[(),]")[[1]][2])[combinations_num_long$Type != "original"]
-  combinations_num_long$Variable <- factor(combinations_num_long$Variable)
-  
-  p2 <- ggplot(combinations_num_long, aes(x = Variable, y = SpecID, col = Type)) +
+  combinations_wide<-res$info
+  combinations_wide$SpecID<-rank(res$summary_table$Estimate)
+  confounders_names<-names(combinations_wide)[(4+num_var_test):(length(combinations_wide)-1)]
+  combinations_long<-reshape(combinations_wide,direction="long",idvar = "SpecID", varying = list((4+num_var_test):(length(combinations_wide)-1)),v.names = "Type")
+  names(combinations_long)[5+num_var_test]<-"Variable"
+  combinations_long$Type[combinations_long$Type=="FALSE"]<-"false("
+  combinations_long$Type[combinations_long$Type=="TRUE"]<-"true("
+  combinations_long$Type[!grepl("([()])",combinations_long$Type)]<-"original"
+  combinations_long$Type[grepl("([()])",combinations_long$Type)]<-sub("\\(.*", "", combinations_long$Type)[grepl("([()])",combinations_long$Type)]
+  combinations_long$Variable<-as.factor(combinations_long$Variable)
+  levels(combinations_long$Variable)<-confounders_names
+  p2 <- ggplot(combinations_long, aes(x = Variable, y = SpecID, col = Type)) +
     geom_point(aes(color = Type), shape = 1, size = 4, position = position_dodge(width = 0.4)) +
     theme_bw() + coord_flip()
   

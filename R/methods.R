@@ -118,7 +118,7 @@ as.pima <- function (object, names_obj=NULL, ...)
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
 #' @param p.values  use "raw" or "adjusted" (i.e. corrected for selective inference) 
-#' @param mark_signif a value between 0 and 1. The plot will mark the p-values smaller than \code{mark_signif} (0.05 by default). If equal to 0 or 1 nothing will be marked. 
+#' @param alpha a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked. 
 #' @param ... additional arguments to be passed
 #' @method  plot pima
 #' @docType methods
@@ -127,7 +127,7 @@ as.pima <- function (object, names_obj=NULL, ...)
 
 plot.pima <- function(object,
                     p.values=c("raw","adjusted"),
-                    mark_signif=.05){
+                    alpha=.05){
   
   p.values=p.values[1]
   y="-log10(p.vals)"
@@ -141,7 +141,7 @@ plot.pima <- function(object,
   } else
     if(p.values=="adjusted")
       D$p.vals=D$p.adj
-  D$is_signif=(D$p.vals<=mark_signif)
+  D$is_signif=(D$p.vals<=alpha)
   
   if(p.values=="raw") title="(Raw) p-values" else title="Adjusted p-values"
   
@@ -150,13 +150,26 @@ plot.pima <- function(object,
                             group=group,color=group)) +
     geom_point(aes(shape=is_signif),size=2)+ 
     ggtitle(title) + theme_minimal() 
-  if(!(mark_signif%in%c(0,1))){
+  if(!(alpha%in%c(0,1))){
     p <- p +
       scale_shape_manual(values=c(3,19),name = paste(p.values,
                                                      "p-value"), 
                          labels = paste0(c("p >  ", "p <= "),
-                                         mark_signif))
+                                         alpha))
   }
-  
+  #RIRR and RP indices 
+  IRR<-exp(object$summary_table$Estimate)
+  RIRR<-as.numeric(quantile(IRR,c(0.99))/quantile(IRR,c(0.01)))
+  #Relative pvalues
+  RP_raw<-as.numeric(diff(-log10(quantile(object$summary_table$p,c(0.99,0.01)))))
+  RP_adjusted<-as.numeric(diff(-log10(quantile(object$summary_table$p.adj,c(0.99,0.01)))))
+  if(p.values=="raw") {
+    indices<-paste("RIRR=",round(RIRR,3),"\nRP=",round(RP_raw,3),sep="")
+    p + geom_text(x=quantile(D$Estimate,0.05), y=quantile(-log10(D$p),0.95), label=indices)
+  }
+    if(p.values=="adjusted"){
+      indices<-paste("RIRR=",round(RIRR,3),"\nRP=",round(RP_adjusted,3),sep="")
+      p + geom_text(x=quantile(D$Estimate,0.05), y=quantile(-log10(D$p),0.95), label=indices)
+    }
   p
 }

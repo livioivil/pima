@@ -35,11 +35,11 @@ pima <- function (mods, tested_coeffs = NULL, n_flips = 5000, score_type = "stan
                              statistics = "t", seed=NULL, output_models, ...) 
 {
 
-  out <- join_flipscores(mods, tested_coeffs = NULL, n_flips = 5000, score_type = "standardized", 
-                               statistics = "t", seed=NULL, output_models, ...) 
+  out <- join_flipscores(mods, tested_coeffs = tested_coeffs, n_flips = n_flips, score_type = score_type, 
+                               statistics =statistics, seed=seed, output_models=output_models) 
   
   out$info <- .get_info_models(out$mods)
-  
+  out$tested_coeffs<-tested_coeffs
   class(out) <- unique(c("pima", class(out)))
   out
 }

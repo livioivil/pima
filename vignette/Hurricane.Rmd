@@ -15,15 +15,30 @@ latex_engine: xelatex
 toc: yes
 ---
 ```{r knitr_init, echo=TRUE, cache=FALSE}
-#carico library
 rm(list=ls())
+#### some libraries
+#### core functions (to be dropped when the pima package is ready)
+library(jointest)
+library(flipscores)
+source("../R/filippo_utils.R")
+source("../R/paolo_utils.R")
+source("../R/pima.R")
+source("../R/spec_curve.R")
+source("../R/pvalue_tree.R")
+source("../R/utils_internal.R")
+############
+
+# results reporting
 library(gtsummary)
 library(tidyverse)
 library(GGally)
-library(MASS)
 library(knitr)
-library(readstata13)
 library(gridExtra)
+library(corrplot)
+# models 
+library(MASS)
+# read STATA dataset
+library(readstata13)
 opts_chunk$set(echo=FALSE,
                cache=TRUE,
                prompt=FALSE,
@@ -31,27 +46,22 @@ opts_chunk$set(echo=FALSE,
                comment=NA,
                message=FALSE,
                warning=FALSE)
-hurricane<-read.dta13("~/Dropbox/Convegni/2024_ASA/hurricanes_2015_01_09.dta")
-source("Rutils.R")
-head(hurricane)
+hurricane<-read.dta13("../data/hurricanes_2015_01_09.dta")
 
-#Original analysis from  
-
-# https://www.pnas.org/content/111/24/8782  
-#year: anno
-#masfem: 1 masculine, 11 feminile
-#min: minimo di pressione
-#categoria uragano
-#alldeaths: decessi totali
-#ndam: indice normalizzato di danni
-#elapsedyrs:anni passati dal 2013
-#masfem_mturk: femminilità media assegnata da amazon turk
-#wind; vento 
-#ndam15: indice normalizzato di danni al 2015
+#Original analysis from https://www.pnas.org/content/111/24/8782  
+#year: year of the hurricane
+#masfem: 1 masculine - 11 feminine
+#min: minimum of pression
+#alldeaths: total deaths
+#ndam: amount of damages normalized 
+#elapsedyrs: years since analysis
+#masfem_mturk: femininity with mturk
+#wind: highest wind speed
+#ndam15: amount of damages normalized to the year 2015
 ```
 
 # Hurricane  
-## Preparazione del dataset 
+## Dataset pre processing
 
 ```{r echo=TRUE}
 hurricane$gender_mf<-as.factor(hurricane$gender_mf)
@@ -66,25 +76,24 @@ p2<-ggplot(hurricane, aes(x=gender_mf, y=ndam15, color=gender_mf)) +
   geom_boxplot()
 
 grid.arrange(p1,p2,ncol=2)
-pdf("figure1.pdf",width = 10,height = 4)
-grid.arrange(p1,p2,ncol=2)
-dev.off()
+# to export
+#pdf("figure1.pdf",width = 10,height = 4)
+#grid.arrange(p1,p2,ncol=2)
+#dev.off()
 
-corrplot::corrplot(cor(hurricane[,c("alldeaths","masfem","min","wind","ndam15","year")]))
+# correlation plot
+corrplot(cor(hurricane[,c("alldeaths","masfem","min","wind","ndam15","year")]))
 hurricane$Log_deaths<-log(hurricane$alldeaths+1)
+
 pm <- ggpairs(hurricane, columns = c(14,3,1,4,12,13),upper = list(continuous = wrap("cor", method = "spearman")))
 pm
-pdf("corr.pdf",width=8,height =5)
-pm
-dev.off()
-
-
+#to export
+#pdf("corr.pdf",width=8,height =5)
+#pm
+#dev.off()
 ```
 
-Correlation very high between:  
-- min and wind (-0.85)
-
-
+Correlation very high between min and wind (-0.85)
 
 ## GLM Model
 
@@ -92,29 +101,49 @@ Quasi-Poisson model since the number of deaths right-skew distributed
 
 ```{r,echo=TRUE}
 hist(hurricane$alldeaths,ylab="Frequency",xlab="Number of deaths")
-pdf("gender_year.pdf",width = 8,height = 4)
-ggplot(hurricane,aes(x=year,y=masfem,col=gender_mf))+ylab("Degree of femininity")+geom_point(size=3)+xlab("Year")+labs(col="Gender")
-dev.off()
 ```
 
 and Var(Y) >> E[Y] (`r round(var(hurricane$alldeaths),1)` > `r round(mean(hurricane$alldeaths),1)`
 
+Observational study design:
+- Outcome: Number of Death
+- Determinant: Femininity of the Hurricane Name
+- Confounders: Year, Min of pressure, Wind, Amount of damages normalized at 2015. 
 We consider the following glm:  
 
-$$g(\mu)=\alpha+f_1(\mbox{mf})+f_2(\mbox{year})+f_3(\mbox{min})+f_4(\mbox{elapsedyrs})+f_5(\mbox{wind})+f_6(\mbox{ndam15})$$
+$$g(\mu)=\alpha+f_1(\mbox{mf})+f_2(\mbox{year})+f_3(\mbox{min})+f_4(\mbox{wind})+f_5(\mbox{ndam15})$$
 
 where:  
 
-$$\mbox{alldeaths} \sim quasiPoisson(\lambda=g^{-1}(X\beta))$$
+$$\mbox{alldeaths} \sim quasiPoisson(\lambda=g^{-1}(X\beta),\phi)$$
+where $\lambda$ is mean parameter and $\phi$ is estimated to deal with overdispersion (scale). Use set the $\log()$ as link function $g()$
+
 Some considerations:
 - limited sample size: n=94
-- model with 4 predictors and 1 intercept
+- model with 5 predictors and 1 intercept
 
-### Theoretical model
-We know in advance that the number of deaths depends on the strength of the hurricane (min,pressure,wind), if it touches a populated area (ndam15), and the historical period (year).
+In a simple additive model like this one:
+
+$$g(\mu)=\alpha+\beta_1 mf+ \beta_2 year+\beta_3 min+\beta_4 wind+\beta_5 ndam15$$
+The coefficient $\beta_1$ express the increase of the log-death due to a 1-point increase in the $mf$ variable. The results of a Poisson regression models are commonly expressed in terms of Incidence Rate Ratio (IRR) just by exponentiation of the coefficient (IRR=$\exp(\beta_1)$).
+
+### Theoretical model  
+We know in advance that the number of deaths depends on the strength of the hurricane (combination of min and wind), if it touches a populated area (ndam15).
+In addition the year is an important confounder for two reasons:  
+- 1) the alternating of the male/female name to an hurricane began in 1978 (https://www.nhc.noaa.gov/aboutnames_history.shtml)   
+- 2) The year is a key factor for assessing the spread of information and its use in the general population   
+
+```{r,echo=TRUE}
+ggplot(hurricane,aes(x=year,y=masfem,col=gender_mf))+ylab("Degree of femininity")+geom_point(size=3)+xlab("Year")+labs(col="Gender")
+```
 
 
 ## MULTIVERSE ANALYSIS 
+
+All the four confounders are continuous. In addition to the identity, we decide to explore for each variable the following transformations:  
+- Square Root ($\sqrt(x)$);  
+- Log ($\sqrt(x)$);  
+- Second order polynomial ($x+x^2$).
 
 ```{r,echo=TRUE}
 ########################################### possible specifications:
@@ -125,19 +154,39 @@ combinations_matrix=expand.grid(list(
   c("ndam15","sqrt(ndam15)","log(ndam15)","poly(ndam15,2)")))
 
 combinations=apply(combinations_matrix,1,paste,collapse="+")
-##################### one list of formulas for each comparison of interest:
+```
 
+Then we combine all the transformations in $4^4=256$ specifications
+```{r,echo=TRUE}
+##################### one list of formulas for each comparison of interest:
 #######
 formulas1=sapply(combinations,function(cmb) paste0("alldeaths ~ masfem +",cmb))
 mod1=glm(as.formula(formulas1[1]),data=hurricane,family=quasipoisson())
 mods1=lapply(formulas1, function(frml) update(mod1,formula. = as.formula(frml)))
+```
 
-library(jointest)
-library(flipscores)
-res1=pima(mods1,n_flips = 5000,
-                          tested_coeffs =  c("masfem"),
-                          score_type = "standardized" ,seed = 123)
+Using the pima function() we compute the PIMA procedure  
+
+```{r,echo=TRUE}
+res1=pima(mods1,tested_coeffs =  c("masfem"),n_flips = 5000,
+                          score_type = "standardized",seed = 167)
+names(res1)
+```
+
+The output is composed by:  
+- Tspace: output table of sign_flip score testing  
+- summary_table: overall results  
+- mods: 256 models estimated (one for each specification)  
+- info: specifications info (auxiliary object)  
+
+
+### Specification curve 
+```{r,echo=TRUE}
+
+#######
 #dipendenze ggplot2 e cowplot
+library(ggplot2)
+library(cowplot)
 #3 argomenti 
 # 1: res: results della funzione join_flipscores
 # 2: alpha: valore per gli intervalli di confidenza 
@@ -146,9 +195,9 @@ p<-spec_curve(res1,alpha = 0.05)
 p
 #dev.off()
 
-2*mean(apply(res1$Tspace,1,max)>max(summary(res1)$Score))
 t_stat_h0<-apply(res1$Tspace,1,max)
 observed_t<-max(summary(res1)$Score)
+2*mean(abs(t_stat_h0)>abs(observed_t))
 ho_t<-ggplot(data = data.frame(t_stat_h0), aes(x = t_stat_h0)) +
   geom_histogram(aes(y = ..density..), fill = "lightblue", color = "black", alpha = 0.7) +
   geom_vline(aes(xintercept = observed_t), color = "red", linetype = "dashed", size = 1.2) +
@@ -165,7 +214,7 @@ ho_t
 
 
 #adjusted pvalues
-res1$summary_table$p.adj<-maxT.light(res1$Tspace,c(0.001,0.005,0.01,0.025,0.05,0.075,0.1,0.2,0.3,0.4,0.5))
+res1$summary_table$p.adj<-maxT.light(res1$Tspace,exp(seq(-8,0,0.5)))
 
 p3<-plot(res1)
 #pdf("graph_raw.pdf",height = 5,width = 8)
@@ -179,19 +228,10 @@ p4
 
 sum(res1$summary_table$p.adj<.05)
 
+library(rpart)
+library(rpart.plot)
 pvalue_tree(res=res1) # raw
 pvalue_tree(res=res1,p.values = "adjusted") #FWER adjusted
-
-#vibration of effects: statistiche descritive? 
-#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4555355/
-#RHR 99-01% dei coefficienti, RP: 99-01% dei -log10(pvalue)
-# Relative Incidence Rate Ratio -> Relative Coefficient Ratio
-IRR<-exp(res1$summary_table$Estimate)
-RIRR<-quantile(IRR,c(0.99))/quantile(IRR,c(0.01))
-RIRR
-#Relative pvalues
-RP_raw<-diff(-log10(quantile(res1$summary_table$p,c(0.99,0.01))))
-RP_raw
-RP_adjusted<-diff(-log10(quantile(res1$summary_table$p.adj,c(0.99,0.01))))
-RP_adjusted
+# complexity
+pvalue_tree(res=res1,p.values = "adjusted",cp=0.001) #higher complexity
 ```
