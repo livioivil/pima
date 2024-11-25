@@ -14,7 +14,7 @@
 #' @import rpart
 #' @import rpart.plot
 #' @export
-pvalue_tree <- function(res, p.values = "raw",cp=0.05) {
+pima_tree <- function(res, p.values = "raw",cp=0.05) {
   # Extract data
   data_ori <- res$mods[[1]]$data
   cmb <- names(res$mods)

@@ -24,7 +24,7 @@ source("../R/filippo_utils.R")
 source("../R/paolo_utils.R")
 source("../R/pima.R")
 source("../R/spec_curve.R")
-source("../R/pvalue_tree.R")
+source("../R/pima_tree.R")
 source("../R/utils_internal.R")
 ############
 
@@ -118,20 +118,20 @@ where:
 $$\mbox{alldeaths} \sim quasiPoisson(\lambda=g^{-1}(X\beta),\phi)$$
 where $\lambda$ is mean parameter and $\phi$ is estimated to deal with overdispersion (scale). Use set the $\log()$ as link function $g()$
 
-Some considerations:
-- limited sample size: n=94
-- model with 5 predictors and 1 intercept
+Some considerations:  
+- limited sample size: n=94  
+- model with 5 predictors and 1 intercept  
 
-In a simple additive model like this one:
+We consider a simple additive regression model like the follwing one:
 
 $$g(\mu)=\alpha+\beta_1 mf+ \beta_2 year+\beta_3 min+\beta_4 wind+\beta_5 ndam15$$
-The coefficient $\beta_1$ express the increase of the log-death due to a 1-point increase in the $mf$ variable. The results of a Poisson regression models are commonly expressed in terms of Incidence Rate Ratio (IRR) just by exponentiation of the coefficient (IRR=$\exp(\beta_1)$).
+The coefficient $\beta_1$ expresses the increase of the log-death due to a 1-point increase in the $mf$ variable. The results of a Poisson regression models are commonly expressed in terms of Incidence Rate Ratio (IRR) just by exponentiation of the coefficients. (IRR=$\exp(\beta_1)$).
 
 ### Theoretical model  
-We know in advance that the number of deaths depends on the strength of the hurricane (combination of min and wind), if it touches a populated area (ndam15).
+We know in advance that the number of deaths depends on the strength of the hurricane (combination of min and wind) and of high population density and relative damages (ndam15).
 In addition the year is an important confounder for two reasons:  
 - 1) the alternating of the male/female name to an hurricane began in 1978 (https://www.nhc.noaa.gov/aboutnames_history.shtml)   
-- 2) The year is a key factor for assessing the spread of information and its use in the general population   
+- 2) The year is a key factor for assessing the spread of information and its use in the general population over the year.   
 
 ```{r,echo=TRUE}
 ggplot(hurricane,aes(x=year,y=masfem,col=gender_mf))+ylab("Degree of femininity")+geom_point(size=3)+xlab("Year")+labs(col="Gender")
@@ -140,10 +140,10 @@ ggplot(hurricane,aes(x=year,y=masfem,col=gender_mf))+ylab("Degree of femininity"
 
 ## MULTIVERSE ANALYSIS 
 
-All the four confounders are continuous. In addition to the identity, we decide to explore for each variable the following transformations:  
+All the four confounders are continuous. In addition to the identity, we decide to explore for each confounders the following transformations:   
 - Square Root ($\sqrt(x)$);  
 - Log ($\sqrt(x)$);  
-- Second order polynomial ($x+x^2$).
+- Second order polynomial ($x+x^2$).  
 
 ```{r,echo=TRUE}
 ########################################### possible specifications:
@@ -156,7 +156,8 @@ combinations_matrix=expand.grid(list(
 combinations=apply(combinations_matrix,1,paste,collapse="+")
 ```
 
-Then we combine all the transformations in $4^4=256$ specifications
+Then we combine all the transformations in $4^4=256$ specifications  
+
 ```{r,echo=TRUE}
 ##################### one list of formulas for each comparison of interest:
 #######
@@ -165,7 +166,7 @@ mod1=glm(as.formula(formulas1[1]),data=hurricane,family=quasipoisson())
 mods1=lapply(formulas1, function(frml) update(mod1,formula. = as.formula(frml)))
 ```
 
-Using the pima function() we compute the PIMA procedure  
+Using the \texttt{pima} function() we apply the PIMA procedure to the list of models inside the mods1 list.
 
 ```{r,echo=TRUE}
 res1=pima(mods1,tested_coeffs =  c("masfem"),n_flips = 5000,
@@ -182,7 +183,6 @@ The output is composed by:
 
 ### Specification curve 
 ```{r,echo=TRUE}
-
 #######
 #dipendenze ggplot2 e cowplot
 library(ggplot2)
@@ -230,8 +230,21 @@ sum(res1$summary_table$p.adj<.05)
 
 library(rpart)
 library(rpart.plot)
-pvalue_tree(res=res1) # raw
-pvalue_tree(res=res1,p.values = "adjusted") #FWER adjusted
+pima_tree(res=res1) # raw pvalues
+pima_tree(res=res1,p.values = "adjusted") #FWER adjusted pvalues
 # complexity
-pvalue_tree(res=res1,p.values = "adjusted",cp=0.001) #higher complexity
+pima_tree(res=res1,p.values = "adjusted",cp=0.001) #higher complexity
 ```
+
+### Pick up a model
+
+
+Since the overall p-value is lower than <0.05, we can select among the estimated models a significant model 
+
+```{r,echo=TRUE}
+sel_model<-which.min(res1$summary_table$p.adj)
+summary(mods1[[sel_model]])
+exp(summary(mods1[[sel_model]])$coef[2,1])
+```
+
+In the selected model the adjusted effect of the masfem variable is significant. 1-point increase in masfem variables implies an increase of the risk of death of 19.47%.
