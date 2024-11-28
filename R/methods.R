@@ -140,7 +140,7 @@ plot.pima <- function(object,
     if(is.null(D$p.vals)) D$p.vals=D$p
   } else
     if(p.values=="adjusted")
-      D$p.vals=D$p.adj
+      D$p.vals=maxT.light(object$Tspace,exp(seq(-8,0,0.5)))
   D$is_signif=(D$p.vals<=alpha)
   
   if(p.values=="raw") title="(Raw) p-values" else title="Adjusted p-values"

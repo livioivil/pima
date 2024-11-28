@@ -23,6 +23,7 @@ library(flipscores)
 source("../R/filippo_utils.R")
 source("../R/paolo_utils.R")
 source("../R/pima.R")
+source("../R/methods.R")
 source("../R/spec_curve.R")
 source("../R/pima_tree.R")
 source("../R/utils_internal.R")
@@ -172,6 +173,8 @@ Using the \texttt{pima} function() we apply the PIMA procedure to the list of mo
 res1=pima(mods1,tested_coeffs =  c("masfem"),n_flips = 5000,
                           score_type = "standardized",seed = 167)
 names(res1)
+plot.pima(res1,p.values="raw")
+plot.pima(res1,p.values="adjusted")
 ```
 
 The output is composed by:  
@@ -184,16 +187,13 @@ The output is composed by:
 ### Specification curve 
 ```{r,echo=TRUE}
 #######
-#dipendenze ggplot2 e cowplot
+#ggplot2 e cowplot
 library(ggplot2)
 library(cowplot)
-#3 argomenti 
-# 1: res: results della funzione join_flipscores
-# 2: alpha: valore per gli intervalli di confidenza 
-p<-spec_curve(res1,alpha = 0.05)
-#pdf("spec_curve.pdf",width = 8,height = 5)
-p
-#dev.off()
+spec_curve1<-spec_curve(res1,alpha = 0.05,p.values = "raw")
+spec_curve1
+spec_curve2<-spec_curve(res1,alpha = 0.05,p.values = "adjusted")
+spec_curve2
 
 t_stat_h0<-apply(res1$Tspace,1,max)
 observed_t<-max(summary(res1)$Score)
@@ -230,9 +230,8 @@ sum(res1$summary_table$p.adj<.05)
 
 library(rpart)
 library(rpart.plot)
-pima_tree(res=res1) # raw pvalues
+pima_tree(res=res1) #raw
 pima_tree(res=res1,p.values = "adjusted") #FWER adjusted pvalues
-# complexity
 pima_tree(res=res1,p.values = "adjusted",cp=0.001) #higher complexity
 ```
 
@@ -247,4 +246,4 @@ summary(mods1[[sel_model]])
 exp(summary(mods1[[sel_model]])$coef[2,1])
 ```
 
-In the selected model the adjusted effect of the masfem variable is significant. 1-point increase in masfem variables implies an increase of the risk of death of 19.47%.
+In the selected model the adjusted effect of the masfem variable is significant. 1-point increase in masfem variables implies an increase of the risk of death of `r  round((exp(summary(mods1[[sel_model]])$coef[2,1])-1)*100,2)` \%

@@ -4,6 +4,7 @@
 #'
 #' @param res A list object with regression model results, including `mods` (a list of models) and `summary_table` (a data frame containing estimates and p-values).
 #' @param alpha A numeric value specifying the significance level for the confidence intervals. Default is 0.05.
+#' @param p.values A char string indicating which type of p-values to use. Options are `"raw"` (default) or `"adjusted"`. When `"raw"`, the function uses the p-values from the `summary_table`. When `"adjusted"`, p-values are adjusted using the `maxT.light` function.
 #'
 #' @return A plot displaying the specification curve with confidence intervals and p-values, as well as a legend showing the variable combinations used in each specification.
 #'
@@ -16,46 +17,62 @@
 #' # Example usage (assuming `res` is a pre-computed result object):
 #' # spec_curve(res, alpha = 0.05)
 #' 
-spec_curve <- function(res, alpha = 0.05) {
+spec_curve <- function(res, alpha = 0.05,p.values=c("raw","adjusted")) {
   # Extract data from res
   data_ori <- res$mods[[1]]$data
   cmb <- names(res$mods)
   n_spec <- length(res$mods)
   num_var_test<-length(res$tested_coeffs)
-  if(num_var_test==1){
-  for (i in 1:n_spec) {
-    res$summary_table$std_glm[i] <- summary(glm(res$mods[[i]]$formula, data = data_ori, family = res$mods[[i]]$family$family))$coef[res$tested_coeffs, 2]
-    res$summary_table$df[i]<-summary(glm(res$mods[[i]]$formula, data = data_ori, family = res$mods[[i]]$family$family))$df.residual
-  }
-  }
   if(num_var_test>1){stop("The number of tested coefficients is higher 1")}
   
-  # Calculate confidence intervals
-  t_value <- qt(1 - alpha / 2,res$summary_table$df)
-  coeff_estimates <- res$summary_table$Estimate
-  std_devs <- res$summary_table$std_glm
-  lower_ci <- coeff_estimates - t_value * std_devs
-  upper_ci <- coeff_estimates + t_value * std_devs
-  t <- coeff_estimates / std_devs
-  p <- 2 * (1 - pnorm(abs(t)))
-  
+  # Calculate approximate confidence intervals 
+  if(p.values=="raw"){
+    z_value <- qnorm(1 - alpha / 2)
+    coeff_estimates <- res$summary_table$Estimate
+    std_devs<-res$summary_table$Estimate/qnorm(1-res$summary_table$p/2)
+    lower_ci <- coeff_estimates - z_value * std_devs
+    upper_ci <- coeff_estimates + z_value * std_devs
+    p<-res$summary_table$p
+  }
+  # Calculate approximate confidence intervals
+  if(p.values=="adjusted"){
+    z_value <- qnorm(1 - alpha / 2)
+    res$summary_table$p.adj<- maxT.light(res$Tspace,exp(seq(-8,0,0.5)))
+    coeff_estimates <- res$summary_table$Estimate
+    std_devs<-res$summary_table$Estimate/qnorm(1-res$summary_table$p.adj/2)
+    lower_ci <- coeff_estimates - z_value * std_devs
+    upper_ci <- coeff_estimates + z_value * std_devs
+    p<-res$summary_table$p
+    p.adj<-res$summary_table$p.adj
+  }
   # Prepare data for plotting
-  df <- data.frame(
-    SpecID = rank(res$summary_table$Estimate),
-    Coefficients = coeff_estimates,
-    StdDev = std_devs,
-    PValue = p,
-    LowerCI = lower_ci,
-    UpperCI = upper_ci,
-    Significance = ifelse(p < alpha, "Yes", "No")
-  )
-  
+  if(p.values=="raw"){
+    df <- data.frame(
+      SpecID = rank(res$summary_table$Estimate),
+      Coefficients = coeff_estimates,
+      StdDev = std_devs,
+      PValue = p,
+      LowerCI = lower_ci,
+      UpperCI = upper_ci,
+      Significance = ifelse(p < alpha, "Yes","No")
+    )
+  }
+    if(p.values=="adjusted"){
+      df <- data.frame(
+        SpecID = rank(res$summary_table$Estimate),
+        Coefficients = coeff_estimates,
+        StdDev = std_devs,
+        PValue = p,
+        LowerCI = lower_ci,
+        UpperCI = upper_ci,
+        Significance = ifelse(p.adj < alpha, "Yes-adjusted",ifelse(p < alpha, "Yes","No"))
+      )
+  }
   # Plot the specification curve
   p1 <- ggplot(df, aes(x = SpecID, y = Coefficients)) +
     geom_point(aes(color = Significance), size = 3) +
     geom_errorbar(aes(ymin = LowerCI, ymax = UpperCI), width = 0.2) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-    scale_color_manual(values = c("Yes" = "blue", "No" = "grey")) +
     labs(
       title = "Specification Curve Analysis",
       x = "SpecID",
