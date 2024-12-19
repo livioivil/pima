@@ -1,0 +1,247 @@
+---
+title: "pima_dataset"
+output: 
+  html_document: 
+    toc: true
+date: "2024-12-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# PIMA Indians Diabetes dataset
+
+Riferimenti Bibliografici:  
+- Smith, J. W., Everhart, J. E., Dickson, W. C., Knowler, W. C. and Johannes, R. S. (1988) Using the ADAP learning algorithm to forecast the onset of diabetes mellitus. In Proceedings of the Symposium on Computer Applications in Medical Care (Washington, 1988), ed. R. A. Greenes, pp. 261–265. Los Alamitos, CA: IEEE Computer Society Press.  
+- Newman, D.J. & Hettich, S. & Blake, C.L. & Merz, C.J. (1998). UCI Repository of machine learning databases <http://www.ics.uci.edu/~mlearn/MLRepository.html>. Irvine, CA: University of California, Department of Information and Computer Science.
+
+
+
+Il dataset PIMA Indians studia i predittori associati all'insorgenza di diabete. Il campione include 532 donne della tribù Pima di indiani nativi americani. 
+
+- `npreg`: numero di gravidanze  
+- `glucose`: glucose concentration in an oral glucose tolerance test.   
+- `pressure`: diastolic blood pressure (mm Hg).   
+- `skin`: triceps skin fold thickness (mm).  
+- `bmi`: body bmi index (weight in kg)/(height in m)$^2$.  
+- `pedigree`: diabetes pedigree function (familiarità).  
+- `age`: age in years.  
+- `diabetes`: `pos` o `neg` for diabetic according to WHO criteria.  
+
+
+In particolare siamo interessati alla valutazione dell'effetto di `npreg` sulla presenza di diabete (`diabetes = pos`).
+
+**NOTA BENE:** I dati mancanti sono stati rimossi per comodità di esposizione. La gestione dei dati mancanti (sono casuali? posso sostituorli con valori plausibili senza distorcere i risultati?) è comunque un aspetto cruciale nell'analisi di dati reali e un ambito di ricerca molto attivo.
+
+
+## Studi osservazionali
+
+Nel caso di studi osservazionali come questo (al contrario degli studi randomizzati) è indispensabile analizzare i dati tenendo in considerazione i possibili **confondenti**; è necessario cioè includerere nel nostro modello tutte le altre variabili che sono possono influenzare la risposta (presenza di diabete).
+
+E' facile supporre che varibili come `glucose`, `bmi` e `pedigree` siano associate (e predittori) al diabete.
+
+Inoltre variabli fortemente associate al numero di gravidanze `npreg`, come ad esempio l'età `age` (la correlazione tra queste due variabili è 0.642) rischiano di nascondere o ingrandire l'effetto osservato. Ad esempio, se l'età risulta positivamente associata all'insorgenza del diabete, si osserverà anche un'associazione tra numero di gravidanze e diabete. Questa associazione però risulta spuria perchè le donne con maggior numero di gravidanze risulta, in media, anche maggiore d'età.
+
+
+
+```{r knitr_init, echo=TRUE, cache=FALSE}
+rm(list=ls())
+#### some libraries
+#### core functions (to be dropped when the pima package is ready)
+library(jointest)
+library(flipscores)
+setwd("G:\\Il mio Drive\\lavorincorso\\PIMA\\talk_catania\\pima-main\\vignette")
+source("../R/filippo_utils.R")
+source("../R/paolo_utils.R")
+source("../R/pima.R")
+source("../R/methods.R")
+source("../R/spec_curve.R")
+source("../R/pima_tree.R")
+source("../R/utils_internal.R")
+############
+
+# results reporting
+library(gtsummary)
+library(tidyverse)
+library(GGally)
+library(knitr)
+library(gridExtra)
+library(corrplot)
+# models 
+library(MASS)
+# read STATA dataset
+library(readstata13)
+opts_chunk$set(echo=FALSE,
+               cache=FALSE,
+               prompt=FALSE,
+               # tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+
+load("pimads.rda")
+
+pimads=na.omit(pimads)
+#writexl::write_xlsx(pimads,path="PIMAds.xlsx")
+
+```
+
+## Analisi Esplorativa e Descrittiva
+
+```{r}
+summary(pimads)
+```
+
+```{r echo=TRUE,results='asis'}
+pimads %>% tbl_summary(by = diabetes) %>% add_p() %>%as_gt() %>%   gt::as_raw_html()
+#
+# 
+ p1<-ggplot(pimads, aes(x=diabetes, y=npreg, color=diabetes)) +
+   geom_boxplot()+theme_bw()
+ p2<-ggplot(pimads, aes(x=diabetes, y=glucose, color=diabetes)) +
+   geom_boxplot()+theme_bw()
+
+ grid.arrange(p1,p2,ncol=2)
+
+pm <- ggpairs(pimads, columns = c(1:7),aes(color= diabetes),upper = list(continuous = wrap("cor", method = "spearman")))
+pm
+```
+
+Correlazione molto alta tra `pelle` e `bmi` (0,68) e tra `età` e `npreg` (0,64),
+
+## Modello Logistico
+
+Disegno di studio osservazionale:
+
+- Esito: Diabete  
+- Determinante: numero di gravidanze  
+- Confondenti: glucosio, pressione, pelle, bmi, pedigree, età.
+
+Consideriamo la regressione logistica
+
+$$logit(\pi)=log(\pi/(1-\pi))=\beta_0+\beta_1\mbox{npreg}+\beta_2\mbox{glucose}+\beta_3\mbox{pressure}+\beta_4\mbox{skin}+\beta_5\mbox{bmi}+\beta_6\mbox{pedigree}+\beta_7\mbox{age}$$
+dove $\pi$ è la probabilità di diabete e quindi (sostituiamo $\beta_0+\beta_1\mbox{npreg}+\beta_2\mbox{glucose}+\beta_3\mbox{pressure}+\beta_4\mbox{skin}+\beta_5\mbox{bmi}+\beta_6\mbox{pedigree}+\beta_7\mbox{age} = XB$):  
+
+$$\mbox{diabetes} \sim Bernulli(\pi=expit(XB))$$
+$expit()$ è l'inversa della funzione logit: $$expit(XB)=\frac{e^{XB}}{1+e^{XB}}$$
+
+
+## MULTIVERSE ANALYSIS 
+
+Nell'analisi di dati reali non sappiamo se (e non è sempre verosimile assumere che) il legame dei preidittori sia lineare, potrebbe essere opportuno considerare effetti non lineari delle variabili, come ad esempio la trasformazione quadratica ($X^2$) o la radice quadrata $\sqrt{X}$. Questo può valere per tutti i predittori.
+
+Nei dati reali inoltre potremmo cercare se si sono osservazioni troppo influenti (leverage) o outlier. Potremmo anche valutare diversi modi di imputare i dati mancanti. O di includere interazioni tra variabili etc...
+
+
+Proviamo qualche modello possibile
+
+```{r}
+mod=glm(diabetes ~ .,data=pimads,family=binomial)
+summary(mod)
+
+mod=glm(diabetes ~ . - age +sqrt(age) ,data=pimads,family=binomial)
+summary(mod)
+
+mod=glm(diabetes ~ . - age +sqrt(age)- npreg +I(npreg^2),data=pimads,family=binomial)
+summary(mod)
+
+```
+
+Tutti i confondenti sono continui. Decidiamo di esplorare per ogni predittore le seguenti trasformazioni:   
+- Radice quadrata ($sqrt(x)$);  
+- identità ($x$);  
+- Polinomio di secondo ordine ($x+x^2$) (o semplicemente $x^2$ per npreg).  
+
+
+```{r,echo=TRUE}
+
+
+########################################### possible specifications:
+combinations_matrix=expand.grid(list(
+  c("npreg","sqrt(npreg)","I(npreg^2)"),
+  c("age","sqrt(age)","poly(age, 2)"),
+  c("glucose","sqrt(glucose)","poly(glucose, 2)"),
+  c("pedigree","sqrt(pedigree)","poly(pedigree, 2)"),
+  c("bmi","sqrt(bmi)","poly(bmi, 2)")))
+
+combinations=apply(combinations_matrix,1,paste,collapse="+")
+```
+
+Poi stimiamo tutti i modelli ($3^5=243$) specificati  
+
+
+```{r,echo=TRUE}
+##################### one list of formulas for each model:
+#######
+formulas1=sapply(combinations,function(cmb) paste0("diabetes ~ ",cmb," + pressure + skin"))
+mod1=glm(as.formula(formulas1[1]),data=pimads,family=binomial)
+summary(mod1)
+
+#stimiamo tutti i modelli:
+mods=lapply(formulas1, function(frml) update(mod1,formula. = as.formula(frml)))
+```
+
+Utilizzando la funzione \texttt{pima()} applichiamo la procedura PIMA all'elenco di modelli all'interno dell'elenco mods.
+E correggiamo per molteplicità (min-p).
+
+
+```{r,echo=TRUE}
+library(pima)
+
+# res=pima(mods,tested_coeffs =  c("npreg","sqrt(npreg)","I(npreg^2)"),n_flips = 2000,
+#                           score_type = "standardized",seed = 1)
+
+# res=p.adjust(res,"minp",alphas=c(0.001, (1:99)/1000, (1:9)/10))
+# save(res, file="G:/Il mio Drive/lavorincorso/PIMA/talk_catania/pima_res.Rdata")
+ load("G:/Il mio Drive/lavorincorso/PIMA/talk_catania/pima_res.Rdata")
+
+summary(res)
+
+
+source("G:/Il mio Drive/lavorincorso/PIMA/talk_catania/funzioni_new.R")
+plot.pima(res,p.values="raw")
+plot.pima(res,p.values="adjusted")
+
+# pseudo |Z| = qnorm ( 1 - p/2) (quantile di una normale standard)
+
+```
+
+L'output è composto da:  
+- `Tspace`: tabella delle statistiche test (osservate nella prima riga)  
+- `summary_table`: summary dei risultati  
+- `mods`: list dei 243 modelli stimati (uno per ogni specifica)  
+- `info`: informazioni sulle specifiche (oggetto ausiliario)  
+
+
+
+## Scegli il tuo modello
+
+Ora possiamo considerare i modelli i cui p-value sono ancora significativi dopo la correzione.
+
+Possiamo prendere quello con significatività più elevata (minimo p-value) o quello che ci sembra ragionevole:
+
+```{r,echo=TRUE}
+sel_model<-which(res$summary_table$p.adj<0.05)
+sel_model
+tab=res$summary_table
+tab$.assign=NULL
+tab[sel_model,]
+```
+
+## Esplorazione dei risultati
+
+Quali caratteristiche hanno i modelli significativi?
+
+```{r}
+library(rpart)
+#res$info$npreg=pmax(res$info$npreg,res$info$`npreg^2`,na.rm = TRUE)
+#res$info$`npreg^2`=NULL
+pima_tree(res)
+tab=res$info[res$summary_table$p.adj.minp<=.05,]
+  table(tab$age,tab$npreg,tab$pedigree)
+```
+
+## Aspetti problematici
+
+Naturalmente tutte queste conclusioni valgono fin tanto che sono valide le assunzioni che facciamo sui modelli che stimiamo. E' opportuno fare delle valutazioni di adeguatezza dei modelli stimati (es grafici di diagnostica, indici di fit).
