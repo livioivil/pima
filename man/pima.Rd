@@ -2,59 +2,69 @@
 % Please edit documentation in R/pima.R
 \name{pima}
 \alias{pima}
-\title{pima function}
+\title{Post-selection Inference in Multiverse Analysis (PIMA)}
 \usage{
-pima(
-  mods,
-  tested_coeffs = NULL,
-  n_flips = 5000,
-  score_type = "standardized",
-  statistics = "t",
-  seed = NULL,
-  output_models,
-  ...
-)
+pima(mods, tested_coeffs = NULL, n_flips = 5000, score_type = "standardized", statistics = "t", seed = NULL, output_models = TRUE, ...)
 }
 \arguments{
-\item{mods}{list of \code{glm}s (or list of any other object that can be evaluated by flipscores)}
+\item{mods}{list of objects that can be evaluated by \code{flipscores}, usually
+model objects produced by \code{glm} or \code{flipscores}.}
 
-\item{tested_coeffs}{is a list of the same length of \code{mods}, each element of the list being a vector of
-of names of tested coefficients. Alternatively, it can be a vector of names of tested coefficients, in this case, the tested coefficients are attributed to all models (when present). 
-As a last option, it can be \code{NULL}, if so, all coefficients are tested.}
+\item{tested_coeffs}{tested coefficients. It can be a vector of names (common to all models)
+or a list of the same length as \code{mods}, where each element is a vector of names.
+If \code{NULL}, all coefficients are tested.}
 
-\item{n_flips}{= 5000}
+\item{n_flips}{number of sign flips.}
 
-\item{score_type}{any valid type for \code{flipscores}, \code{"standardized"} is the default. see \code{\link[flipscores]{flipscores}} for more datails}
+\item{score_type}{type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
+The default \code{standardized} takes into account nuisance estimation and provides
+good control of the type I error even for small sample sizes.}
 
-\item{statistics}{"t" is the only method implemented (yet). Any other value will not modify the Score (a different statistic will only affect the multivariate inference, not the univariate one).}
+\item{statistics}{test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
+Different statistics will affect the multivariate inference, but not the univariate.}
 
-\item{seed}{\code{NULL} by default. Use a number if you wanto to ensure replicability of the results}
+\item{seed}{seed. Can be specified to ensure replicability of results.}
 
-\item{output_models}{\code{TRUE} by default. Should the \code{flipscores} model returned?}
+\item{output_models}{\code{TRUE} to return the list of model objects produced by \code{flipscores}.}
 
-\item{...}{any other further parameter.}
+\item{...}{any other further parameters.}
+}
+\value{
+\code{pima} returns an object of class \code{pima}, containing:
+\itemize{
+\item \code{Tspace}: data frame of test statistics, where columns correspond to coefficients, and rows to sign-flipping transformations
+(the first is the identity).
+\item \code{summary_table}: data frame containing a summary for each tested coefficient in each model:
+estimate, score, standard error, z value, partial correlation, p-value.
+\item \code{mods}: list of model objects computed by \code{flipscores}.
+\item \code{tested_coeffs}: tested coefficients, as in input.
+}
 }
 \description{
-pima function
+This function applies the PIMA procedure to make selective inference on parameters of interest within a multiverse of models.
+The method builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
 }
 \examples{
-n=20
+# Generate data
+n = 20
 set.seed(123)
-D=data.frame(X=rnorm(n),Z1=rnorm(n),Z2=rnorm(n))
-D$Y=D$Z1+D$X+rnorm(n)
-mod1=glm(Y~X+Z1+Z2,data=D)
-mod2=glm(Y~X+poly(Z1,2)+Z2,data=D)
-mod3=glm(Y~X+poly(Z1,2)+poly(Z2,2),data=D)
-mod4=glm(Y~X+Z1+poly(Z2,2),data=D)
-mods=list(mod1=mod1,mod2=mod2,mod3=mod3,mod4=mod4)
-for(i in 1:length(mods))
-mods[[i]]$call$data=eval(D)
-library(pima)
-res=pima(mods,n_flips = 5000, score_type = "standardized" ,
-      seed = 1, tested_coeffs = "X")
+D = data.frame(X1 = rnorm(n), X2 = rnorm(n)^2, Z1 = rnorm(n), Z2 = rnorm(n))
+D$Y = D$X1 + D$Z1 + rnorm(n)
+
+# Multiverse of 4 models (list)
+mod1 = glm(Y ~ X1 + X2 + Z1 + Z2, data = D)
+mod2 = glm(Y ~ X1 + X2 + poly(Z1,2) + Z2, data = D)
+mod3 = glm(Y ~ X1 + X2 + Z1 + poly(Z2,2), data = D)
+mod4 = glm(Y ~ X1 + X2 + poly(Z1,2) + poly(Z2,2), data = D)
+mods = list(mod1 = mod1, mod2 = mod2, mod3 = mod3, mod4 = mod4)
+
+# Test the coefficients of X1 and X2, then add adjusted p-values
+res = pima(mods, tested_coeffs = c("X1","X2"), seed = 123)
+res = jointest:::p.adjust(res)
 summary(res)
-summary(combine(res))
-res=pima:::p.adjust.pima(res)
-summary(res)
-summary(combine(res,by="Model"))
+
+# Global p-values: overall, by model and by coefficient
+summary(jointest::combine(res))
+summary(jointest::combine(res, by="Model"))
+summary(jointest::combine(res, by="Coeff"))
 }
