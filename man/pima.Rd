@@ -7,7 +7,7 @@
 pima(mods, tested_coeffs = NULL, n_flips = 5000, score_type = "standardized", statistics = "t", seed = NULL, output_models = TRUE, ...)
 }
 \arguments{
-\item{mods}{list of objects that can be evaluated by \code{flipscores}, usually
+\item{mods}{list of objects that can be evaluated by \code{\link[flipscores]{flipscores}}, usually
 model objects produced by \code{glm} or \code{flipscores}.}
 
 \item{tested_coeffs}{tested coefficients. It can be a vector of names (common to all models)
@@ -30,9 +30,9 @@ Different statistics will affect the multivariate inference, but not the univari
 \item{...}{any other further parameters.}
 }
 \value{
-\code{pima} returns an object of class \code{pima}, containing:
+Returns an object of class \code{pima}, containing:
 \itemize{
-\item \code{Tspace}: data frame of test statistics, where columns correspond to coefficients, and rows to sign-flipping transformations
+\item \code{Tspace}: data frame of test statistics, where columns correspond to tested coefficients, and rows to sign-flipping transformations
 (the first is the identity).
 \item \code{summary_table}: data frame containing a summary for each tested coefficient in each model:
 estimate, score, standard error, z value, partial correlation, p-value.
@@ -41,30 +41,57 @@ estimate, score, standard error, z value, partial correlation, p-value.
 }
 }
 \description{
-This function applies the PIMA procedure to make selective inference on parameters of interest within a multiverse of models.
-The method builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
+Applies the PIMA procedure to make selective inference on one or more parameters within a multiverse of models,
+derived from different specifications of the data (e.g., pre-processing) and of the model (GLMs).
+For each coefficient of interest in each model, the method allows computing raw and multiplicity-adjusted p-values
+for the null hypothesis that the coefficient is null against a two-sided alternative.
+Furthermore, it gives a global p-value for the null hypothesis that all considered coefficients in all models are null.
+}
+\details{
+The procedure builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
+For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
+for the null hypothesis that the coefficient is null against a two-sided alternative.
+
+Post-selection inference is achieved by merging information from the considered models, i.e.,
+by combining the resulting test statistics (maximum, mean, etc.) with the \strong{jointest} package:
+\itemize{
+\item \code{p.adjust} adds multiplicity-adjusted p-values to the output summary.
+\item \code{combine} produces a global p-value for the null hypothesis that all considered coefficients in all models are null,
+possibly by model or by coefficient.
+}
+
+When the standardized scores are used as test statistics (default \code{score_type = "standardized"}),
+the method has exact control of the type I error asymptotically in the sample size
+and, for practical purposes, almost exact control for any sample size.
 }
 \examples{
 # Generate data
-n = 20
 set.seed(123)
-D = data.frame(X1 = rnorm(n), X2 = rnorm(n)^2, Z1 = rnorm(n), Z2 = rnorm(n))
-D$Y = D$X1 + D$Z1 + rnorm(n)
+n <- 20
+D <- data.frame(X1 = rnorm(n), X2 = rnorm(n)^2, Z1 = rnorm(n), Z2 = rnorm(n))
+D$Y <- D$X1 + D$Z1 + rnorm(n)
 
 # Multiverse of 4 models (list)
-mod1 = glm(Y ~ X1 + X2 + Z1 + Z2, data = D)
-mod2 = glm(Y ~ X1 + X2 + poly(Z1,2) + Z2, data = D)
-mod3 = glm(Y ~ X1 + X2 + Z1 + poly(Z2,2), data = D)
-mod4 = glm(Y ~ X1 + X2 + poly(Z1,2) + poly(Z2,2), data = D)
-mods = list(mod1 = mod1, mod2 = mod2, mod3 = mod3, mod4 = mod4)
+mod1 <- glm(Y ~ X1 + X2 + Z1 + Z2, data = D)
+mod2 <- glm(Y ~ X1 + X2 + poly(Z1,2) + Z2, data = D)
+mod3 <- glm(Y ~ X1 + X2 + Z1 + poly(Z2,2), data = D)
+mod4 <- glm(Y ~ X1 + X2 + poly(Z1,2) + poly(Z2,2), data = D)
+mods <- list(mod1 = mod1, mod2 = mod2, mod3 = mod3, mod4 = mod4)
 
 # Test the coefficients of X1 and X2, then add adjusted p-values
-res = pima(mods, tested_coeffs = c("X1","X2"), seed = 123)
-res = jointest:::p.adjust(res)
+res <- pima(mods, tested_coeffs = c("X1","X2"), seed = 123)
+res <- jointest::p.adjust(res)
 summary(res)
 
 # Global p-values: overall, by model and by coefficient
 summary(jointest::combine(res))
 summary(jointest::combine(res, by="Model"))
 summary(jointest::combine(res, by="Coeff"))
+}
+\references{
+Girardi, Vesely, Lakens, Altoè, Pastore, Calcagnì, Finos (2024). Post-selection Inference in Multiverse Analysis (PIMA): An Inferential Framework Based on the Sign Flipping Score Test. Psychometrika, doi: 10.1007/s11336-024-09973-6.
+
+Hemerik, Goeman, Finos (2020). Robust testing in generalized linear models by sign flipping score contributions. Journal of the Royal Statistical Society, Series B (Statistical Methodology), doi: 10.1111/rssb.12369.
+
+De Santis, Goeman, Hemerik, Davenport, Finos (2024). Inference in generalized linear models with robustness to misspecified variances. Pre-print, doi: 10.48550/arXiv.2209.13918.
 }
