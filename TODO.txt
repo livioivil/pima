@@ -14,7 +14,12 @@
 ## maxT.light. LIVIO 
 - maxT.light deve essere quella di jointest, rimuovere dal package (vedi paolo_utils.R)
 
-## pima() aggiungi arogmento adjust=c("maxT","minp","none"). aggiungere note sulla scelta del metodo
+## pima()
+- aggiungi arogmento adjust=c("maxT","minp","none"). aggiungere note sulla scelta del metodo
+- debuggare argomento "output_models" (per il momento non fa nulla, l'errore è in jointest)
+- decidere se lasciare "statistics" e "score_type" come argomenti o metterli in "..." e fare riferimento a jointest
+- nell'esempio, non serve più la riga "for(i in 1:length(mods)){mods[[i]]$call$data=eval(D)}" (tolto per pima(), controllare ed eventualmente debuggare le altre funzioni)
+
 
 ## plot.pima
 - secondo me adjusted dovrebbe essere il default, perché il nostro messaggio è proprio quello di correggere
@@ -57,6 +62,8 @@ levels(hurricane$gender_mf)<-c("Male","Female")
 ############### old
 nomi automatici ai modelli: mod1, mod2, etc + (funzione get:)  tabella conversione mod* -> call (più avanti forse formula+family)
 nomi automatici ai coefficiente testato: usa i coefficienti della model matrix: (.get_coeff_model_name)  "X @ mod1",  X1 @ mod1,  X2 @ mod1
+
+
 
 object pima: 
 - (list modelli) lunghezza nmodelli
