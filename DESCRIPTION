@@ -1,11 +1,19 @@
 Package: pima
+Type: Package
+Title: Post-selection Inference in Multiverse Analysis
 Version: 1.2.0
 Date: 2022-09-15
-Title: Multivariate testing trought joint sign-flip scores [Hemerik, Goeman and Finos (2020)]
-Author: Livio Finos
+Author: Livio Finos, Paolo Girardi, Filippo Gambarota, Anna Vesely, Giulia Calignano, Massimiliano Pastore, Gianmarco Altoè
 Maintainer: Livio Finos <livio.finos@unipd.it>
-Description: runs resampling-based tests jointly (e.i. sign-flip score tests [Hemerik, Goeman and Finos (2020)] to allow for multivariate testing -- e.g. weak and strong control of the Familywise Error Rate or True Discovery Proportion.
-Imports: flipscores, ggplot2, methods, flip 
-Encoding: UTF-8
-License: GPL-2
+Description: Runs resampling-based tests jointly to allow for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate and True Discovery Proportions. As main feature, it applies the PIMA procedure, a general and flexible framework based on the sign-flip score test. Details can be found in Girardi et al. (2024) <doi:10.1007/s11336-024-09973-6>.
+License: GPL (>= 2)
+Imports:
+    flipscores,
+    ggplot2,
+    methods,
+    flip 
 RoxygenNote: 7.3.2
+Encoding: UTF-8
+Language: en-US
+BugReports: https://github.com/livioivil/pima/issues
+URL: https://github.com/livioivil/pima
