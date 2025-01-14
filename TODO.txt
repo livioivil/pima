@@ -4,7 +4,7 @@
 ## help: iniziare a rivedere: ANNA E GIULIA
 
 ## fare un print.pima? SUMMARY ETC. FILIPPO?
-- print() call della funzione
+- OK print() call della funzione
 - summary() con un minimo di sintesi (quanti modelli, quanti significativi con correzione etc)
 - creare funzione extract_summary_table() o simili
 - subset(), select()?
