@@ -1,5 +1,5 @@
 ## unity testing
-- chi lo fa? FILIPPO
+- chi lo fa? FILIPPO e MAX
 
 ## help: iniziare a rivedere: ANNA E GIULIA
 
@@ -12,13 +12,13 @@
 ## coefficienti > 2 funzione di combinazione: LIVIO
 
 ## maxT.light. LIVIO 
-- maxT.light deve essere quella di jointest, rimuovere dal package (vedi paolo_utils.R)
+- OK maxT.light deve essere quella di jointest, rimuovere dal package (vedi paolo_utils.R)
 
 ## pima()
-- aggiungi arogmento adjust=c("maxT","minp","none"). aggiungere note sulla scelta del metodo
+- OK codice, vedere help  -> aggiungi arogmento adjust=c("maxT","minp","none"). aggiungere note sulla scelta del metodo
 - debuggare argomento "output_models" (per il momento non fa nulla, l'errore è in jointest)
-- decidere se lasciare "statistics" e "score_type" come argomenti o metterli in "..." e fare riferimento a jointest
-- nell'esempio, non serve più la riga "for(i in 1:length(mods)){mods[[i]]$call$data=eval(D)}" (tolto per pima(), controllare ed eventualmente debuggare le altre funzioni)
+- OK decidere se lasciare "statistics" e "score_type" come argomenti o metterli in "..." e fare riferimento a jointest
+- OK nell'esempio, non serve più la riga "for(i in 1:length(mods)){mods[[i]]$call$data=eval(D)}" (tolto per pima(), controllare ed eventualmente debuggare le altre funzioni)
 
 
 ## plot.pima
@@ -41,8 +41,7 @@
 - deve usare i p adjusted, default classifica i p
 
 
-- summary.pima <- jointest:::summary.jointest
-o eliminare la funzione, dovrebbe prendere il metodo da jointest (la colonna .assign non va visualizzata, per questo lo dico. inoltre mi pare che per ora non ci sia nulla di diverso da mostrare
+- OKsummary.pima <- jointest:::summary.jointest o eliminare la funzione, dovrebbe prendere il metodo da jointest (la colonna .assign non va visualizzata, per questo lo dico. inoltre mi pare che per ora non ci sia nulla di diverso da mostrare
 
 - nella vignette si dice "Since the overall p-value is lower than <0.05, we can select among the estimated models a significant model ". è preferibile dire che siccome c'è almeno un p aggiustato significativo possiamo scegliere quello che preferiamo. in realtà facendo maxt o minp le due cose corrispondono, ma non è vero in generale.
 
