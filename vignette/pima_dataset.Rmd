@@ -80,7 +80,7 @@ opts_chunk$set(echo=FALSE,
                message=FALSE,
                warning=FALSE)
 
-load("pimads.rda")
+load("../data/pimads.rda")
 
 pimads=na.omit(pimads)
 #writexl::write_xlsx(pimads,path="PIMAds.xlsx")
