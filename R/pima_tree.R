@@ -16,8 +16,8 @@
 #' @export
 pima_tree <- function(res, p.values="raw",cp=0.05) {
   # Extract data
-  data_ori <- res$mods[[1]]$data
-  cmb <- names(res$mods)
+  #data_ori <- res$mods[[1]]$data
+  cmb <- names(res$mods) # in altri modi: unique(res$summary_table$Model) ??
   n_spec <- length(cmb)
   # Legend of specifications
   comb_wide<-res$info

@@ -23,7 +23,7 @@
 #' De Santis, Goeman, Hemerik, Davenport, Finos (2024). Inference in generalized linear models with robustness to misspecified variances. Pre-print, doi: 10.48550/arXiv.2209.13918.
 #' 
 # @docType _PACKAGE
-#' @author Livio Finos
+#' @author Livio Finos, Paolo Girardi, Filippo Gambarota, Anna Vesely, Giulia Calignano, Massimiliano Pastore, Gianmarco Altoè
 #' @name pima-package
 
 NULL
