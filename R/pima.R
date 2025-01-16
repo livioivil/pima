@@ -11,14 +11,14 @@
 #' or a list of the same length as \code{mods}, where each element is a vector of names.
 #' If \code{NULL}, all coefficients are tested.
 #' @param n_flips number of sign flips.
-# #' @param score_type type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
-# #' The default \code{standardized} takes into account nuisance estimation and provides
-# #' good control of the type I error even for small sample sizes.
-# #' @param statistics test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
-# #' Different statistics will affect the multivariate inference, but not the univariate.
-# #' @param seed seed. Can be specified to ensure replicability of results.
-# #' @param output_models \code{TRUE} to return the list of model objects produced by \code{flipscores}.
-#' @param ... any other further parameters of function \code{\link[jointest::join_flipscores]{jointest::join_flipscores} (e.g. \code{score_type} and \code{statistics}).
+#' @param score_type type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
+#' The default \code{standardized} takes into account nuisance estimation and provides
+#' good control of the type I error even for small sample sizes.
+#' @param statistics test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
+#' Different statistics will affect the multivariate inference, but not the univariate.
+#' @param seed seed. Can be specified to ensure replicability of results.
+#' @param output_models \code{TRUE} to return the list of model objects produced by \code{flipscores}.
+#' @param ... any other further parameters.
 #' @details The procedure builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
 #' For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 #' for the null hypothesis that the coefficient is null against a two-sided alternative.
@@ -75,6 +75,9 @@
 #' summary(jointest::combine(res, by = "Model"))
 #' summary(jointest::combine(res, by = "Coeff"))
 #' 
+#' # Add multiplicity-adjusted p-values
+#' res <- jointest::p.adjust(res)
+#' summary(res)
 #' 
 #' # Lower 95%-confidence bound for the TDP among the 4 coefficients of X1
 #' require(sumSome)
@@ -90,21 +93,16 @@
 #' sumSome::tdp(out)
 #' @export
 
-pima <- function (mods, tested_coeffs = NULL, n_flips = 5000, adjust=c("maxT","minp","none"), ...) 
+pima <- function (mods, tested_coeffs = NULL, n_flips = 5000, score_type = "standardized", 
+                             statistics = "t", seed = NULL, output_models = TRUE, ...) 
 {
-  mf<-match.call()
-  params=as.list(mf[-1])
-  params$adjust=NULL
-  params=lapply(params,eval,parent.frame())
-  out <- do.call(jointest::join_flipscores,params)
+
+  out <- join_flipscores(mods, tested_coeffs = tested_coeffs, n_flips = n_flips, score_type = score_type, 
+                               statistics =statistics, seed=seed, output_models=output_models) 
   
   out$info <- .get_info_models(out$mods)
   out$tested_coeffs<-tested_coeffs
   class(out) <- unique(c("pima", class(out)))
-  
-  if(mf$adjust=="none") return(out)
-  
-  out=jointest::p.adjust(out,method = mf$adjust)
   out
 }
 

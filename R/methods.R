@@ -65,15 +65,11 @@ NULL
 #' #' @method print pima
 #' #' @docType methods
 #' #' @export
-# print.pima <- function(x, ...) 
-# {
-#   cat("Call:\n")
-#   print(x$call)
-#   invisible(x)
-# }
+#' print.pima <- function (object, ...) {
+#'   #summary.pima(object, ...)
+#' }
 
-
-
+# 
 
 #' summary.pima summary method for a pima object.
 #' @rdname pima-method
@@ -85,12 +81,9 @@ NULL
 
 summary.pima <- function (object, ...) 
 {
-  
-  out=object$summary_table[,!(colnames(object$summary_table)%in% c(".assign","Score","Std. Error") )]
-  print(out,digits=4)
+  object$summary_table
  # do.call(rbind,lapply(object, function(ob) ob$summary_table))
 }
-
 
 .get_summary_table_from_flipscores <- function(object){
   tab = as.data.frame(summary(object)$coefficients)
