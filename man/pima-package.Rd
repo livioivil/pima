@@ -19,5 +19,5 @@ Hemerik, Goeman, Finos (2020). Robust testing in generalized linear models by si
 De Santis, Goeman, Hemerik, Davenport, Finos (2024). Inference in generalized linear models with robustness to misspecified variances. Pre-print, doi: 10.48550/arXiv.2209.13918.
 }
 \author{
-Livio Finos
+Livio Finos, Paolo Girardi, Filippo Gambarota, Anna Vesely, Giulia Calignano, Massimiliano Pastore, Gianmarco Altoè
 }

@@ -15,10 +15,12 @@
 - maxT.light deve essere quella di jointest, rimuovere dal package (vedi paolo_utils.R)
 
 ## pima()
-- aggiungi arogmento adjust=c("maxT","minp","none"). aggiungere note sulla scelta del metodo
-- debuggare argomento "output_models" (per il momento non fa nulla, l'errore è in jointest)
-- decidere se lasciare "statistics" e "score_type" come argomenti o metterli in "..." e fare riferimento a jointest
-- nell'esempio, non serve più la riga "for(i in 1:length(mods)){mods[[i]]$call$data=eval(D)}" (tolto per pima(), controllare ed eventualmente debuggare le altre funzioni)
+- Correggere di default. Aggiungi argomento adjust=c("maxT","minp","none"), con default maxT. aggiungere note sulla scelta del metodo (@anna/livio)
+- Fare un wrapper per jointest::combine (@filippo)
+- Debuggare argomento "output_models" (per il momento non fa nulla, l'errore è in jointest). Togliere? Vedere gestione memoria? Vediamo se ci servono nelle funzioni per i plot, forse possiamo salvarci solo quello che ci serve. Forse togliere anche jointest, tanto la differenza di spazio usato è minima?
+- Togliere "output_models", "statistics", "score_type" e "seed". Ora ricadono in ... e fare riferimento a jointest (nell'help lo metto tra i ...). Lasciare il commento nei dettagli (@anna) FARE UNA PROVA SU COME GESTIRE I ... NOTA: forse devo dirgli "as.list" se non funziona con i puntini e basta? do.call?
+- Nell'esempio, non serve più la riga "for(i in 1:length(mods)){mods[[i]]$call$data=eval(D)}" (tolto per pima(), controllare ed eventualmente debuggare le altre funzioni)
+- Chiedere ad Angela per mettere sumSome in jointest. Lasciare anche su pima nell'esempio?
 
 
 ## plot.pima
