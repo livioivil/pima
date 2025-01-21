@@ -4,7 +4,7 @@
 \alias{pima}
 \title{Post-selection Inference in Multiverse Analysis}
 \usage{
-pima(mods, tested_coeffs = NULL, n_flips = 5000, score_type = "standardized", statistics = "t", seed = NULL, output_models = TRUE, ...)
+pima(mods, tested_coeffs = NULL, n_flips = 5000, ...)
 }
 \arguments{
 \item{mods}{list of objects that can be evaluated by \code{\link[flipscores]{flipscores}}, usually
@@ -16,18 +16,7 @@ If \code{NULL}, all coefficients are tested.}
 
 \item{n_flips}{number of sign flips.}
 
-\item{score_type}{type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
-The default \code{standardized} takes into account nuisance estimation and provides
-good control of the type I error even for small sample sizes.}
-
-\item{statistics}{test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
-Different statistics will affect the multivariate inference, but not the univariate.}
-
-\item{seed}{seed. Can be specified to ensure replicability of results.}
-
-\item{output_models}{\code{TRUE} to return the list of model objects produced by \code{flipscores}.}
-
-\item{...}{any other further parameters.}
+\item{...}{further parameters of \code{\link[join_flipscores]{join_flipscores}}.}
 }
 \value{
 Returns an object of class \code{pima}, containing:
@@ -63,9 +52,17 @@ possibly by model or by coefficient: "Is there at least one significant effect?"
 "How many of the considered effects are significant?"
 }
 
+Further parameters include:
+\itemize{
+\item \code{score_type}: type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
 When the standardized scores are used as test statistics (default \code{score_type = "standardized"}),
 the method has exact control of the type I error asymptotically in the sample size
 and, for practical purposes, almost exact control for any sample size.
+\item \code{statistics}: test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
+Different statistics will affect the multivariate inference, but not the univariate.
+\item \code{seed}: can be specified to ensure replicability of results.
+\item \code{output_models}: \code{TRUE} to return the list of model objects produced by \code{flipscores}.
+}
 }
 \examples{
 # Generate data

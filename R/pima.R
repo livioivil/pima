@@ -4,21 +4,14 @@
 #' The method jointly computes resampling-based test statistics for all coefficients of interest in all models.
 #' The output allows for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate (FWER)
 #' and confidence bounds for True Discovery Proportions (TDPs).
-#' @usage pima(mods, tested_coeffs = NULL, n_flips = 5000, score_type = "standardized", statistics = "t", seed = NULL, output_models = TRUE, ...) 
+#' @usage pima(mods, tested_coeffs = NULL, n_flips = 5000, ...) 
 #' @param mods list of objects that can be evaluated by \code{\link[flipscores]{flipscores}}, usually
 #' model objects produced by \code{glm} or \code{flipscores}.
 #' @param tested_coeffs tested coefficients. It can be a vector of names (common to all models)
 #' or a list of the same length as \code{mods}, where each element is a vector of names.
 #' If \code{NULL}, all coefficients are tested.
 #' @param n_flips number of sign flips.
-#' @param score_type type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
-#' The default \code{standardized} takes into account nuisance estimation and provides
-#' good control of the type I error even for small sample sizes.
-#' @param statistics test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
-#' Different statistics will affect the multivariate inference, but not the univariate.
-#' @param seed seed. Can be specified to ensure replicability of results.
-#' @param output_models \code{TRUE} to return the list of model objects produced by \code{flipscores}.
-#' @param ... any other further parameters.
+#' @param ... further parameters of \code{\link[join_flipscores]{join_flipscores}}.
 #' @details The procedure builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
 #' For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 #' for the null hypothesis that the coefficient is null against a two-sided alternative.
@@ -32,9 +25,17 @@
 #' \item \code{sumStats} and \code{sumPvals} (\strong{sumSome}) compute a lower confidence bound for the TDP, among all tested effects or within a subset:
 #' "How many of the considered effects are significant?"
 #' }
-#' @details When the standardized scores are used as test statistics (default \code{score_type = "standardized"}),
+#' @details Further parameters include:
+#' \itemize{
+#' \item \code{score_type}: type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
+#' When the standardized scores are used as test statistics (default \code{score_type = "standardized"}),
 #' the method has exact control of the type I error asymptotically in the sample size
 #' and, for practical purposes, almost exact control for any sample size.
+#' \item \code{statistics}: test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
+#' Different statistics will affect the multivariate inference, but not the univariate.
+#' \item \code{seed}: can be specified to ensure replicability of results.
+#' \item \code{output_models}: \code{TRUE} to return the list of model objects produced by \code{flipscores}.
+#' }
 #' @return Returns an object of class \code{pima}, containing:
 #' \itemize{
 #' \item \code{Tspace}: data frame of test statistics, where columns correspond to tested coefficients, and rows to sign-flipping transformations
@@ -93,16 +94,22 @@
 #' sumSome::tdp(out)
 #' @export
 
-pima <- function (mods, tested_coeffs = NULL, n_flips = 5000, score_type = "standardized", 
-                             statistics = "t", seed = NULL, output_models = TRUE, ...) 
-{
-
-  out <- join_flipscores(mods, tested_coeffs = tested_coeffs, n_flips = n_flips, score_type = score_type, 
-                               statistics =statistics, seed=seed, output_models=output_models) 
+pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, ...) {
+  
+  extra_args <- list(...)
+  
+  # Call join_flipscores with the captured arguments
+  out <- do.call(join_flipscores, c(
+    list(mods=mods, tested_coeffs=tested_coeffs, n_flips=n_flips), 
+    extra_args
+  ))
   
   out$info <- .get_info_models(out$mods)
-  out$tested_coeffs<-tested_coeffs
+  out$tested_coeffs <- tested_coeffs
   class(out) <- unique(c("pima", class(out)))
-  out
+  
+  return(out)
 }
 
+
+#score_type = "standardized",  statistics = "t", seed = NULL, output_models = TRUE,
