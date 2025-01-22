@@ -4,15 +4,15 @@
 \alias{global_tests}
 \title{Global tests in multiverse analysis}
 \usage{
-global_tests(obj, comb_funct = "maxT", by = NULL)
+global_tests(obj, by = NULL, comb_funct = "maxT")
 }
 \arguments{
 \item{obj}{a \code{jointest} object, e.g., produced by \code{\link{pima}}.}
 
-\item{comb_funct}{combining function (see \code{\link[jointest]{combine-methods}} for more datails).}
-
 \item{by}{name of the column of \code{summary_table} used for combining.
 If \code{NULL} (default), a single global null hypothesis is tested.}
+
+\item{comb_funct}{combining function (see \code{\link[jointest]{combine-methods}} for more datails).}
 }
 \value{
 Returns an object of class \code{jointest}, containing:
@@ -24,7 +24,7 @@ combined test statistic and p-value.
 }
 }
 \description{
-Tests global null hypotheses for weak FWER control, considering one or more parameters within a multiverse of models.
+Tests global null hypotheses for weak control of the Family-Wise Error Rate, considering one or more parameters within a multiverse of models.
 }
 \details{
 This function builds on the function \code{combine} of the \strong{jointest} package.
