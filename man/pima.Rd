@@ -23,7 +23,7 @@ If \code{NULL}, all coefficients are tested.}
 \value{
 Returns an object of class \code{pima}, containing:
 \itemize{
-\item \code{Tspace}: data frame of test statistics, where columns correspond to tested coefficients, and rows to sign-flipping transformations
+\item \code{Tspace}: data frame of test statistics, where columns correspond to tests, and rows to sign-flipping transformations
 (the first is the identity).
 \item \code{summary_table}: data frame containing a summary for each tested coefficient in each model:
 estimate, score, standard error, z value, partial correlation, raw p-value, adjusted p-value.
@@ -50,7 +50,7 @@ Post-selection inference is achieved by merging information from the considered 
 \itemize{
 \item the output summary shows adjusted p-values for strong FWER control:
 "Which effects in which models are significant?"
-\item \code{combine} (\strong{jointest}) produces a global p-value for weak FWER control,
+\item \code{global_tests} produces a global p-value for weak FWER control,
 possibly by model or by coefficient: "Is there at least one significant effect?"
 \item \code{sumStats} and \code{sumPvals} (\strong{sumSome}) compute a lower confidence bound for the TDP, among all tested effects or within a subset:
 "How many of the considered effects are significant?"
@@ -68,8 +68,7 @@ Different statistics will affect the multivariate inference, but not the univari
 }
 \examples{
 # Generate data
-seed <- 123
-set.seed(seed)
+set.seed(123)
 n <- 20
 D <- data.frame(X1 = rnorm(n), X2 = rnorm(n)^2, Z1 = rnorm(n), Z2 = rnorm(n))
 D$Y <- D$X1 + D$Z1 + rnorm(n)
@@ -86,9 +85,9 @@ res <- pima(mods, tested_coeffs = c("X1","X2"))
 summary(res)
 
 # Global p-values: overall, by model and by coefficient
-summary(jointest::combine(res))
-summary(jointest::combine(res, by = "Model"))
-summary(jointest::combine(res, by = "Coeff"))
+summary(global_tests(res))
+summary(global_tests(res, by = "Model"))
+summary(global_tests(res, by = "Coeff"))
 
 # Lower 95\%-confidence bound for the TDP among the 4 coefficients of X1
 require(sumSome)

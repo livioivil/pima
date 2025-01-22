@@ -3,6 +3,7 @@
 S3method(as,pima)
 S3method(plot,pima)
 S3method(summary,pima)
+export(global_tests)
 export(pima)
 export(pima_tree)
 export(spec_curve)
