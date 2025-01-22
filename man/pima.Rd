@@ -4,7 +4,7 @@
 \alias{pima}
 \title{Post-selection Inference in Multiverse Analysis}
 \usage{
-pima(mods, tested_coeffs = NULL, n_flips = 5000, ...)
+pima(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...)
 }
 \arguments{
 \item{mods}{list of objects that can be evaluated by \code{\link[flipscores]{flipscores}}, usually
@@ -16,6 +16,8 @@ If \code{NULL}, all coefficients are tested.}
 
 \item{n_flips}{number of sign flips.}
 
+\item{method}{correction method, can be abbreviated.}
+
 \item{...}{further parameters of \code{\link[join_flipscores]{join_flipscores}}.}
 }
 \value{
@@ -24,7 +26,7 @@ Returns an object of class \code{pima}, containing:
 \item \code{Tspace}: data frame of test statistics, where columns correspond to tested coefficients, and rows to sign-flipping transformations
 (the first is the identity).
 \item \code{summary_table}: data frame containing a summary for each tested coefficient in each model:
-estimate, score, standard error, z value, partial correlation, p-value.
+estimate, score, standard error, z value, partial correlation, raw p-value, adjusted p-value.
 \item \code{mods}: list of model objects computed by \code{flipscores}.
 \item \code{tested_coeffs}: tested coefficients, as in input.
 }
@@ -40,14 +42,16 @@ and confidence bounds for True Discovery Proportions (TDPs).
 The procedure builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
 For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 for the null hypothesis that the coefficient is null against a two-sided alternative.
+If \code{method} is \code{maxT} (default) or \code{minP}, multiplicity-adjusted p-values are added
+using the step-down method of Westfall and Young (1993). Adjusted p-values provide control of the FWER
+asymptotically in the sample size and, for practical purposes, almost exact control for any sample size.
 
-Post-selection inference is achieved by merging information from the considered models, i.e.,
-by combining the resulting test statistics (maximum, mean, sum, etc.):
+Post-selection inference is achieved by merging information from the considered models:
 \itemize{
+\item the output summary shows adjusted p-values for strong FWER control:
+"Which effects in which models are significant?"
 \item \code{combine} (\strong{jointest}) produces a global p-value for weak FWER control,
 possibly by model or by coefficient: "Is there at least one significant effect?"
-\item \code{p.adjust} (\strong{jointest}) adds to the output summary multiplicity-adjusted p-values for strong FWER control:
-"Which effects in which models are significant?"
 \item \code{sumStats} and \code{sumPvals} (\strong{sumSome}) compute a lower confidence bound for the TDP, among all tested effects or within a subset:
 "How many of the considered effects are significant?"
 }
@@ -55,9 +59,7 @@ possibly by model or by coefficient: "Is there at least one significant effect?"
 Further parameters include:
 \itemize{
 \item \code{score_type}: type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
-When the standardized scores are used as test statistics (default \code{score_type = "standardized"}),
-the method has exact control of the type I error asymptotically in the sample size
-and, for practical purposes, almost exact control for any sample size.
+The almost exact control of the error is provided for the default setting \code{score_type = "standardized"}.
 \item \code{statistics}: test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
 Different statistics will affect the multivariate inference, but not the univariate.
 \item \code{seed}: can be specified to ensure replicability of results.
@@ -79,18 +81,14 @@ mod3 <- glm(Y ~ X1 + X2 + Z1 + poly(Z2,2), data = D)
 mod4 <- glm(Y ~ X1 + X2 + poly(Z1,2) + poly(Z2,2), data = D)
 mods <- list(mod1 = mod1, mod2 = mod2, mod3 = mod3, mod4 = mod4)
 
-# Test the coefficients of X1 and X2 (raw p-values)
-res <- pima(mods, tested_coeffs = c("X1","X2"), seed = seed)
+# Test the coefficients of X1 and X2 (raw and adjusted p-values)
+res <- pima(mods, tested_coeffs = c("X1","X2"))
 summary(res)
 
 # Global p-values: overall, by model and by coefficient
 summary(jointest::combine(res))
 summary(jointest::combine(res, by = "Model"))
 summary(jointest::combine(res, by = "Coeff"))
-
-# Add multiplicity-adjusted p-values
-res <- jointest::p.adjust(res)
-summary(res)
 
 # Lower 95\%-confidence bound for the TDP among the 4 coefficients of X1
 require(sumSome)
