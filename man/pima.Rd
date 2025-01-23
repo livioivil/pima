@@ -16,7 +16,7 @@ If \code{NULL}, all coefficients are tested.}
 
 \item{n_flips}{number of sign flips.}
 
-\item{method}{correction method, can be abbreviated.}
+\item{method}{correction method among \code{maxT}, \code{minP} and \code{none}. Can be abbreviated.}
 
 \item{...}{further parameters of \code{\link[join_flipscores]{join_flipscores}}.}
 }
@@ -51,8 +51,8 @@ Post-selection inference is achieved by merging information from the considered 
 \item the output summary shows adjusted p-values for strong FWER control:
 "Which effects in which models are significant?"
 \item \code{global_tests} produces a global p-value for weak FWER control,
-possibly by model or by coefficient: "Is there at least one significant effect?"
-\item \code{sumStats} and \code{sumPvals} (\strong{sumSome}) compute a lower confidence bound for the TDP, among all tested effects or within a subset:
+possibly by coefficient or by model: "Is there at least one significant effect?"
+\item \code{pimaAnalysis} (\strong{sumSome}) computes a lower confidence bound for the TDP, among all tested effects or within a subset:
 "How many of the considered effects are significant?"
 }
 
@@ -89,18 +89,9 @@ summary(global_tests(res))
 summary(global_tests(res, by = "Model"))
 summary(global_tests(res, by = "Coeff"))
 
-# Lower 95\%-confidence bound for the TDP among the 4 coefficients of X1
-require(sumSome)
-alpha <- 0.05
-S <- which(names(res$Tspace) == "X1")
-# - using the sum of test statistics
-scores <- abs(as.matrix(res$Tspace))
-out <- sumSome::sumStats(scores, S, alpha = alpha)
-sumSome::tdp(out)
-# - using p-value combinations (e.g., Fisher with truncation)
-pvalues <- flip::t2p(scores, obs.only = FALSE)
-out <- sumSome::sumPvals(pvalues, S, alpha = alpha, type = "fisher")
-sumSome::tdp(out)
+# Lower 95\%-confidence bound for the TDP by coefficient
+# require(sumSome)
+# pimaAnalysis(obj, by = "Coeff", alpha = 0.05)
 }
 \references{
 Girardi, Vesely, Lakens, Altoè, Pastore, Calcagnì, Finos (2024). Post-selection Inference in Multiverse Analysis (PIMA): An Inferential Framework Based on the Sign Flipping Score Test. Psychometrika, doi: 10.1007/s11336-024-09973-6.
