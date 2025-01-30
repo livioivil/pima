@@ -87,7 +87,7 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   extra_args <- list(...)
   
-  out <- do.call(join_flipscores, c(
+  out <- do.call(jointest::join_flipscores, c(
     list(mods=mods, tested_coeffs=tested_coeffs, n_flips=n_flips), 
     extra_args
   ))
