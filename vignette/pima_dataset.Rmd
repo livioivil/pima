@@ -7,58 +7,45 @@ date: "2024-12-16"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,collapse = TRUE,warning = FALSE)
 ```
 
 # PIMA Indians Diabetes dataset
 
-Riferimenti Bibliografici:  
+Riferences:  
 - Smith, J. W., Everhart, J. E., Dickson, W. C., Knowler, W. C. and Johannes, R. S. (1988) Using the ADAP learning algorithm to forecast the onset of diabetes mellitus. In Proceedings of the Symposium on Computer Applications in Medical Care (Washington, 1988), ed. R. A. Greenes, pp. 261–265. Los Alamitos, CA: IEEE Computer Society Press.  
 - Newman, D.J. & Hettich, S. & Blake, C.L. & Merz, C.J. (1998). UCI Repository of machine learning databases <http://www.ics.uci.edu/~mlearn/MLRepository.html>. Irvine, CA: University of California, Department of Information and Computer Science.
 
 
 
-Il dataset PIMA Indians studia i predittori associati all'insorgenza di diabete. Il campione include 532 donne della tribù Pima di indiani nativi americani. 
+The PIMA Indians dataset studies the predictors associated with the onset of diabetes. The sample includes 532 women from the Pima tribe of Native Americans.
 
-- `npreg`: numero di gravidanze  
-- `glucose`: glucose concentration in an oral glucose tolerance test.   
-- `pressure`: diastolic blood pressure (mm Hg).   
-- `skin`: triceps skin fold thickness (mm).  
-- `bmi`: body bmi index (weight in kg)/(height in m)$^2$.  
-- `pedigree`: diabetes pedigree function (familiarità).  
-- `age`: age in years.  
-- `diabetes`: `pos` o `neg` for diabetic according to WHO criteria.  
+- `npreg`: number of pregnancies  
+- `glucose`: glucose concentration in an oral glucose tolerance test.
+- `pressure`: diastolic blood pressure (mm Hg).
+- `skin`: triceps skin fold thickness (mm).
+- `bmi`: body mass index (weight in kg)/(height in m)^2.
+- `pedigree`: diabetes pedigree function (familiarity).
+- `age`: age in years.
+- `diabetes`: `pos` or `neg` for diabetic according to WHO criteria.
 
+In particular, we are interested in evaluating the effect of `npreg` on the presence of diabetes (`diabetes = pos`).
 
-In particolare siamo interessati alla valutazione dell'effetto di `npreg` sulla presenza di diabete (`diabetes = pos`).
+**NOTE:** Missing data has been removed for convenience of presentation. However, handling missing data (are they random? can I replace them with plausible values without distorting the results?) is a crucial aspect in the analysis of real data and an active area of research.
 
-**NOTA BENE:** I dati mancanti sono stati rimossi per comodità di esposizione. La gestione dei dati mancanti (sono casuali? posso sostituorli con valori plausibili senza distorcere i risultati?) è comunque un aspetto cruciale nell'analisi di dati reali e un ambito di ricerca molto attivo.
+# Observational Studies
 
+In the case of observational studies like this (as opposed to randomized studies), it is essential to analyze the data taking into account possible **confounders**; it is necessary to include in our model all other variables that may influence the response (presence of diabetes).
 
-## Studi osservazionali
+It is easy to assume that variables such as `glucose`, `bmi`, and `pedigree` are associated with (and predictors of) diabetes.
 
-Nel caso di studi osservazionali come questo (al contrario degli studi randomizzati) è indispensabile analizzare i dati tenendo in considerazione i possibili **confondenti**; è necessario cioè includerere nel nostro modello tutte le altre variabili che sono possono influenzare la risposta (presenza di diabete).
-
-E' facile supporre che varibili come `glucose`, `bmi` e `pedigree` siano associate (e predittori) al diabete.
-
-Inoltre variabli fortemente associate al numero di gravidanze `npreg`, come ad esempio l'età `age` (la correlazione tra queste due variabili è 0.642) rischiano di nascondere o ingrandire l'effetto osservato. Ad esempio, se l'età risulta positivamente associata all'insorgenza del diabete, si osserverà anche un'associazione tra numero di gravidanze e diabete. Questa associazione però risulta spuria perchè le donne con maggior numero di gravidanze risulta, in media, anche maggiore d'età.
-
-
+Furthermore, variables strongly associated with the number of pregnancies `npreg`, such as `age` (the correlation between these two variables is 0.642), risk concealing or magnifying the observed effect. For example, if age is positively associated with the onset of diabetes, an association between the number of pregnancies and diabetes will also be observed. However, this association is spurious because women with a higher number of pregnancies are, on average, also older.
 
 ```{r knitr_init, echo=TRUE, cache=FALSE}
 rm(list=ls())
 #### some libraries
-#### core functions (to be dropped when the pima package is ready)
-library(jointest)
-library(flipscores)
-setwd("G:\\Il mio Drive\\lavorincorso\\PIMA\\talk_catania\\pima-main\\vignette")
-source("../R/filippo_utils.R")
-source("../R/paolo_utils.R")
-source("../R/pima.R")
-source("../R/methods.R")
-source("../R/spec_curve.R")
-source("../R/pima_tree.R")
-source("../R/utils_internal.R")
+
+
 ############
 
 # results reporting
@@ -70,8 +57,13 @@ library(gridExtra)
 library(corrplot)
 # models 
 library(MASS)
-# read STATA dataset
-library(readstata13)
+
+# palettes
+options(ggplot2.continuous.colour="viridis")
+options(ggplot2.continuous.fill = "viridis")
+scale_colour_discrete <- scale_colour_viridis_d
+scale_fill_discrete <- scale_fill_viridis_d
+
 opts_chunk$set(echo=FALSE,
                cache=FALSE,
                prompt=FALSE,
@@ -80,14 +72,18 @@ opts_chunk$set(echo=FALSE,
                message=FALSE,
                warning=FALSE)
 
-load("pimads.rda")
 
+######################
+#### core functions (to be dropped when the pima package is ready)
+library(jointest)
+library(flipscores)
+
+library(pima)
+data("pimads")
 pimads=na.omit(pimads)
-#writexl::write_xlsx(pimads,path="PIMAds.xlsx")
-
 ```
 
-## Analisi Esplorativa e Descrittiva
+# Exploratory Data Analysis
 
 ```{r}
 summary(pimads)
@@ -108,33 +104,34 @@ pm <- ggpairs(pimads, columns = c(1:7),aes(color= diabetes),upper = list(continu
 pm
 ```
 
-Correlazione molto alta tra `pelle` e `bmi` (0,68) e tra `età` e `npreg` (0,64),
+Very high correlation between skin and bmi (0.68) and between age and npreg (0.64).
 
-## Modello Logistico
+#  Logistic Model
 
-Disegno di studio osservazionale:
+Observational study design:
 
-- Esito: Diabete  
-- Determinante: numero di gravidanze  
-- Confondenti: glucosio, pressione, pelle, bmi, pedigree, età.
+- Outcome: Diabetes  
+- Determinant: number of pregnancies  
+- Confounders: glucose, pressure, skin, bmi, pedigree, age.
 
-Consideriamo la regressione logistica
+Let's consider logistic regression
 
 $$logit(\pi)=log(\pi/(1-\pi))=\beta_0+\beta_1\mbox{npreg}+\beta_2\mbox{glucose}+\beta_3\mbox{pressure}+\beta_4\mbox{skin}+\beta_5\mbox{bmi}+\beta_6\mbox{pedigree}+\beta_7\mbox{age}$$
-dove $\pi$ è la probabilità di diabete e quindi (sostituiamo $\beta_0+\beta_1\mbox{npreg}+\beta_2\mbox{glucose}+\beta_3\mbox{pressure}+\beta_4\mbox{skin}+\beta_5\mbox{bmi}+\beta_6\mbox{pedigree}+\beta_7\mbox{age} = XB$):  
+where $\pi$ is the probability of diabetes, and therefore 
+
+(substituting $\beta_0+\beta_1\mbox{npreg}+\beta_2\mbox{glucose}+\beta_3\mbox{pressure}+\beta_4\mbox{skin}+\beta_5\mbox{bmi}+\beta_6\mbox{pedigree}+\beta_7\mbox{age} = XB$):  
 
 $$\mbox{diabetes} \sim Bernulli(\pi=expit(XB))$$
-$expit()$ è l'inversa della funzione logit: $$expit(XB)=\frac{e^{XB}}{1+e^{XB}}$$
+$expit()$ is the inverse of logit function: $$expit(XB)=\frac{e^{XB}}{1+e^{XB}}$$
 
 
-## MULTIVERSE ANALYSIS 
+# MULTIVERSE ANALYSIS 
 
-Nell'analisi di dati reali non sappiamo se (e non è sempre verosimile assumere che) il legame dei preidittori sia lineare, potrebbe essere opportuno considerare effetti non lineari delle variabili, come ad esempio la trasformazione quadratica ($X^2$) o la radice quadrata $\sqrt{X}$. Questo può valere per tutti i predittori.
+In the analysis of real data, we do not know if (and it is not always plausible to assume that) the relationship of the predictors is linear. It might be appropriate to consider non-linear effects of the variables, such as the quadratic transformation ($X^2$) or the square root $\sqrt{X}$. This could apply to all predictors.
 
-Nei dati reali inoltre potremmo cercare se si sono osservazioni troppo influenti (leverage) o outlier. Potremmo anche valutare diversi modi di imputare i dati mancanti. O di includere interazioni tra variabili etc...
+Furthermore, in real data, we might look for observations that are too influential (leverage) or outliers. We could also evaluate different ways of imputing missing data or including interactions between variables, etc.
 
-
-Proviamo qualche modello possibile
+Let's try some possible models.
 
 ```{r}
 mod=glm(diabetes ~ .,data=pimads,family=binomial)
@@ -148,16 +145,17 @@ summary(mod)
 
 ```
 
-Tutti i confondenti sono continui. Decidiamo di esplorare per ogni predittore le seguenti trasformazioni:   
-- Radice quadrata ($sqrt(x)$);  
-- identità ($x$);  
-- Polinomio di secondo ordine ($x+x^2$) (o semplicemente $x^2$ per npreg).  
+All confounders are continuous. We decide to explore the following transformations for each predictor:
+
+- Square root ($sqrt(x)$)  
+- Identity ($x$)   
+- Second-order polynomial ($x+x^2$) (or simply $x^2$ for npreg)  
 
 
 ```{r,echo=TRUE}
 
 
-########################################### possible specifications:
+########################################## possible specifications:
 combinations_matrix=expand.grid(list(
   c("npreg","sqrt(npreg)","I(npreg^2)"),
   c("age","sqrt(age)","poly(age, 2)"),
@@ -168,11 +166,11 @@ combinations_matrix=expand.grid(list(
 combinations=apply(combinations_matrix,1,paste,collapse="+")
 ```
 
-Poi stimiamo tutti i modelli ($3^5=243$) specificati  
 
+Then we estimate all specified models ($3^5=243$)
 
 ```{r,echo=TRUE}
-##################### one list of formulas for each model:
+#################### one list of formulas for each model:
 #######
 formulas1=sapply(combinations,function(cmb) paste0("diabetes ~ ",cmb," + pressure + skin"))
 mod1=glm(as.formula(formulas1[1]),data=pimads,family=binomial)
@@ -182,44 +180,133 @@ summary(mod1)
 mods=lapply(formulas1, function(frml) update(mod1,formula. = as.formula(frml)))
 ```
 
-Utilizzando la funzione \texttt{pima()} applichiamo la procedura PIMA all'elenco di modelli all'interno dell'elenco mods.
-E correggiamo per molteplicità (min-p).
-
+Using the \texttt{pima()} function, we apply the PIMA procedure to the list of models within the list mods. 
+And we correct for multiplicity (max-T).
 
 ```{r,echo=TRUE}
 library(pima)
+#res=pima(mods,tested_coeffs =  c("npreg","sqrt(npreg)","I(npreg^2)"),n_flips = 2000)
 
-# res=pima(mods,tested_coeffs =  c("npreg","sqrt(npreg)","I(npreg^2)"),n_flips = 2000,
-#                           score_type = "standardized",seed = 1)
-
-# res=p.adjust(res,"minp",alphas=c(0.001, (1:99)/1000, (1:9)/10))
-# save(res, file="G:/Il mio Drive/lavorincorso/PIMA/talk_catania/pima_res.Rdata")
- load("G:/Il mio Drive/lavorincorso/PIMA/talk_catania/pima_res.Rdata")
-
-summary(res)
-
-
-source("G:/Il mio Drive/lavorincorso/PIMA/talk_catania/funzioni_new.R")
-plot.pima(res,p.values="raw")
-plot.pima(res,p.values="adjusted")
-
-# pseudo |Z| = qnorm ( 1 - p/2) (quantile di una normale standard)
+load(file="G:/Il mio Drive/lavorincorso/PIMA/talk_4M/pima_res_maxT.Rdata")
 
 ```
 
-L'output è composto da:  
-- `Tspace`: tabella delle statistiche test (osservate nella prima riga)  
-- `summary_table`: summary dei risultati  
-- `mods`: list dei 243 modelli stimati (uno per ogni specifica)  
-- `info`: informazioni sulle specifiche (oggetto ausiliario)  
+Correlations among coefficients in all model specifications
+
+```{r}
+TT <- res$Tspace
+rownames(TT) <- NULL
+names(TT) <- paste0("m", 1:ncol(TT))
+
+cor(TT) |> 
+    reshape2::melt() |> 
+    ggplot(aes(x = Var1, y = Var2, fill = value)) +
+    geom_tile() +
+    theme(axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.ticks.y = element_blank()) +
+    labs(
+        fill = latex2exp::TeX("$\\rho$"),
+        x = "M",
+        y = "M"
+    ) +
+    coord_fixed()
+```
+
+# Some plots
+
+## Vulcano Plot
+
+```{r,echo=TRUE}
+pima:::plot.pima(res,p.values="raw")
+pima:::plot.pima(res,p.values="raw",x="Part. Cor",y="z value")
+pima:::plot.pima(res,p.values="adjusted",x="Part. Cor",y="z value")
+
+#plot.pima(res,p.values="raw",x="-log10(p)",y="-log10(p.adj.maxT)")
+
+
+#summary(res) |> filter(p.adj.maxT<.05)
+```
+
+## Specification-Curve-like Plot
+
+```{r}
+
+multi_res=left_join(res$summary_table,res$info)
+
+
+#spec_curve(res)
+spec_data <- multi_res |> 
+    # sorting
+    arrange(desc(`Part. Cor`)) |> 
+    # index with the order
+    mutate(spec = n():1)
+names(spec_data)[12:20]=paste0("x_",names(spec_data)[12:20])
+
+spec_data$x_npreg[is.na(spec_data$x_npreg)]=spec_data$`x_npreg^2`[is.na(spec_data$x_npreg)]
+spec_data$`x_npreg^2`=NULL
+spec_data$x_outlier=NULL
+spec_data$x_leverage=NULL
+
+spec_data$is_signif=spec_data$p.adj.maxT<=.05
 
 
 
-## Scegli il tuo modello
+top <- spec_data |> 
+    ggplot(aes(x = spec, y = `Part. Cor`)) +
+    geom_point(aes(colour = is_signif)) +scale_colour_manual(values=c("darkgrey", "firebrick"))+
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank())+
+  theme_bw()+theme(legend.position = "none")
 
-Ora possiamo considerare i modelli i cui p-value sono ancora significativi dopo la correzione.
 
-Possiamo prendere quello con significatività più elevata (minimo p-value) o quello che ci sembra ragionevole:
+
+bottom <- spec_data |> 
+    pivot_longer(starts_with("x_")) |> 
+    drop_na() |> 
+    mutate(name = gsub("x_", "", name)) |> 
+    ggplot(aes(x = spec, y = value)) +
+    geom_point(aes(colour = is_signif)) +scale_colour_manual(values=c("darkgrey", "firebrick"))+
+    theme(axis.title.y = element_blank(),
+          strip.text.y = element_text(size = 9),
+          axis.text.y = element_text(size = 9)) +
+    xlab("Specification") +
+    facet_grid(name~., scales = "free")+
+  theme_bw()+theme(legend.position = "none")
+
+
+library(patchwork)
+top / bottom + plot_layout(heights = c(0.3, 1))
+
+```
+
+
+## The Pima Tree
+
+What characteristics do the significant models have?
+
+```{r}
+library(rpart)
+pima_tree(res)
+
+
+table(res$info$age,res$info$npreg,res$summary_table$p.adj.maxT<=0.05)
+```
+
+
+The output consists of:
+- `Tspace`: table of test statistics (observed in the first row)
+- `summary_table`: summary of the results
+- `mods`: list of the 243 estimated models (one for each specification)
+- `info`: information about the specifications (auxiliary object)
+
+# Choose Your Model
+
+Now we can consider the models whose p-values are still significant after correction.
+
+We can take the one with the highest significance (minimum p-value) or the one that seems reasonable to us:
 
 ```{r,echo=TRUE}
 sel_model<-which(res$summary_table$p.adj<0.05)
@@ -228,20 +315,9 @@ tab=res$summary_table
 tab$.assign=NULL
 tab[sel_model,]
 ```
+Here is the translation of the provided markdown text:
 
-## Esplorazione dei risultati
 
-Quali caratteristiche hanno i modelli significativi?
+# Problematic Aspects
 
-```{r}
-library(rpart)
-#res$info$npreg=pmax(res$info$npreg,res$info$`npreg^2`,na.rm = TRUE)
-#res$info$`npreg^2`=NULL
-pima_tree(res)
-tab=res$info[res$summary_table$p.adj.minp<=.05,]
-  table(tab$age,tab$npreg,tab$pedigree)
-```
-
-## Aspetti problematici
-
-Naturalmente tutte queste conclusioni valgono fin tanto che sono valide le assunzioni che facciamo sui modelli che stimiamo. E' opportuno fare delle valutazioni di adeguatezza dei modelli stimati (es grafici di diagnostica, indici di fit).
+Of course, all these conclusions hold as long as the assumptions we make about the models we estimate are valid. It is appropriate to make adequacy assessments of the estimated models (e.g., diagnostic plots, fit indices).

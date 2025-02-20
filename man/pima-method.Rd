@@ -12,7 +12,13 @@
 
 \method{as}{pima}(object, names_obj = NULL, ...)
 
-\method{plot}{pima}(object, p.values = c("raw", "adjusted"), alpha = 0.05)
+\method{plot}{pima}(
+  object,
+  p.values = c("adjusted", "raw"),
+  alpha = 0.05,
+  y = "-log10(p)",
+  x = "Estimate"
+)
 }
 \arguments{
 \item{object}{an object of class \code{pima}.}
@@ -24,6 +30,10 @@
 \item{p.values}{use "raw" or "adjusted" (i.e. corrected for selective inference)}
 
 \item{alpha}{a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.}
+
+\item{y}{`"-log10(p)"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"z value"`) or any other expression e.g. `"-log10(p)"`.}
+
+\item{x}{`"Estimate"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"Part. Cor"`) or any other expression e.g. `"-log10(p)"`.}
 }
 \description{
 Methods for \code{pima} objects. 

@@ -82,7 +82,7 @@ NULL
 summary.pima <- function (object, ...) 
 {
   object$summary_table
- # do.call(rbind,lapply(object, function(ob) ob$summary_table))
+  # do.call(rbind,lapply(object, function(ob) ob$summary_table))
 }
 
 .get_summary_table_from_flipscores <- function(object){
@@ -91,7 +91,7 @@ summary.pima <- function (object, ...)
   colnames(tab)[ncol(tab)]="p"
   tab = cbind( Coeff = rownames(tab), tab)
 }
- 
+
 
 is_signif=NULL
 ###########################
@@ -118,6 +118,8 @@ as.pima <- function (object, names_obj=NULL, ...)
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
 #' @param p.values  use "raw" or "adjusted" (i.e. corrected for selective inference) 
+#' @param y `"-log10(p)"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"z value"`) or any other expression e.g. `"-log10(p)"`.
+#' @param x `"Estimate"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"Part. Cor"`) or any other expression e.g. `"-log10(p)"`.
 #' @param alpha a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked. 
 #' @param ... additional arguments to be passed
 #' @method  plot pima
@@ -125,51 +127,58 @@ as.pima <- function (object, names_obj=NULL, ...)
 #' @export
 #' @import ggplot2
 
-plot.pima <- function(object,
-                    p.values=c("raw","adjusted"),
-                    alpha=.05){
-  
-  p.values=p.values[1]
-  y="-log10(p.vals)"
-  x="Estimate"
-  group="Coeff"
-  D=summary.pima(object)
-  if(p.values =="raw"){
-    if(!is.null(D$`Pr(>|z|)`)) D$p.vals=D$`Pr(>|z|)` else
-      D$p.vals=D$`Pr(>|t|)`
-    if(is.null(D$p.vals)) D$p.vals=D$p
-  } else
-    if(p.values=="adjusted")
-      D$p.vals=maxT.light(object$Tspace,exp(seq(-8,0,0.5)))
-  D$is_signif=(D$p.vals<=alpha)
-  
-  if(p.values=="raw") title="(Raw) p-values" else title="Adjusted p-values"
-  
-  p <- ggplot(D, aes_string(y=y, 
-                            x=x, 
-                            group=group,color=group)) +
-    geom_point(aes(shape=is_signif),size=2)+ 
-    ggtitle(title) + theme_minimal() 
-  if(!(alpha%in%c(0,1))){
-    p <- p +
-      scale_shape_manual(values=c(3,19),name = paste(p.values,
-                                                     "p-value"), 
-                         labels = paste0(c("p >  ", "p <= "),
-                                         alpha))
-  }
-  #RIRR and RP indices 
-  IRR<-exp(object$summary_table$Estimate)
-  RIRR<-as.numeric(quantile(IRR,c(0.99))/quantile(IRR,c(0.01)))
-  #Relative pvalues
-  RP_raw<-as.numeric(diff(-log10(quantile(object$summary_table$p,c(0.99,0.01)))))
-  RP_adjusted<-as.numeric(diff(-log10(quantile(object$summary_table$p.adj,c(0.99,0.01)))))
-  if(p.values=="raw") {
-    indices<-paste("RIRR=",round(RIRR,3),"\nRP=",round(RP_raw,3),sep="")
-    p + geom_text(x=quantile(D$Estimate,0.05), y=quantile(-log10(D$p),0.95), label=indices)
-  }
+
+plot.pima <-
+  function(object,
+           p.values=c("adjusted","raw"),
+           alpha=.05,
+           y="-log10(p)",
+           x="Estimate"){
+    
+    p.values=p.values[1]
+    group="Coeff"
+    D=object$summary_table
+    D$.assign=NULL
+    colnames(D)=gsub(" ","",colnames(D))
+    x=x[1]#match.arg(x[1],c("Estimate","Part. Cor"))
+    y=y[1]#match.arg(y[1], c("-log10(p)","z value"))
+    x=gsub(" ","",x)
+    y=gsub(" ","",y)
+    # 
+    if(p.values =="raw"){
+      D$is_signif=(D$p<=alpha)
+    } else { #adj
+      adj_id=grep("p.adj",colnames(D))[1]
+      D$is_signif=(D[,adj_id]<=alpha)
+    }
+    
+    if(p.values=="raw") title="(Raw) p-values" else title="Adjusted p-values"
+    
+    p <- ggplot(D, aes_string(y=y, 
+                              x=x, 
+                              group=group,color=group)) +
+      geom_point(aes(shape=is_signif),size=2)+ #is_signif))+ 
+      ggtitle(title) + theme_minimal() 
+    if(!(alpha%in%c(0,1))){
+      p <- p +
+        scale_shape_manual(values=c(3,19),name = paste(p.values,
+                                                       "p-value"), 
+                           labels = paste0(c("p >  ", "p <= "),
+                                           alpha))
+    }
+    #RIRR and RP indices
+    IRR<-exp(object$summary_table$Estimate)
+    RIRR<-as.numeric(quantile(IRR,c(0.99))/quantile(IRR,c(0.01)))
+    #Relative pvalues
+    RP_raw<-as.numeric(diff(-log10(quantile(object$summary_table$p,c(0.99,0.01)))))
+    RP_adjusted<-as.numeric(diff(-log10(quantile(object$summary_table$p.adj,c(0.99,0.01)))))
+    if(p.values=="raw") {
+      indices<-paste("RIRR=",round(RIRR,3),"\nRP=",round(RP_raw,3),sep="")
+      #  p= p + geom_text(x=quantile(D$Estimate,0.05), y=quantile(-log10(D$p),0.95), label=indices)
+    }
     if(p.values=="adjusted"){
       indices<-paste("RIRR=",round(RIRR,3),"\nRP=",round(RP_adjusted,3),sep="")
-      p + geom_text(x=quantile(D$Estimate,0.05), y=quantile(-log10(D$p),0.95), label=indices)
+      # p=p + geom_text(x=quantile(D$Estimate,0.05), y=quantile(-log10(D$p),0.95), label=indices)
     }
-  p
-}
+    p
+  }

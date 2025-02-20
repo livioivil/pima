@@ -78,6 +78,11 @@
   info$outlier <- FALSE
   info$leverage <- FALSE
   
+  if("npreg"%in%colnames(info)) {
+    info$npreg[is.na(info$npreg)]=info$`npreg^2`[is.na(info$npreg)]
+    info$`npreg^2`=NULL
+  }
+  if(names(info[,3,drop=FALSE])=="Model") info=info[,-3]
   return(info)
 }
 

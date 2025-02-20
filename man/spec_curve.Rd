@@ -4,14 +4,14 @@
 \alias{spec_curve}
 \title{Specification Curve Analysis}
 \usage{
-spec_curve(res, alpha = 0.05, p.values = c("raw", "adjusted"))
+spec_curve(res, alpha = 0.05, p.values = c("adjusted", "raw"))
 }
 \arguments{
 \item{res}{A list object with regression model results, including `mods` (a list of models) and `summary_table` (a data frame containing estimates and p-values).}
 
 \item{alpha}{A numeric value specifying the significance level for the confidence intervals. Default is 0.05.}
 
-\item{p.values}{A char string indicating which type of p-values to use. Options are `"raw"` (default) or `"adjusted"`. When `"raw"`, the function uses the p-values from the `summary_table`. When `"adjusted"`, p-values are adjusted using the `maxT.light` function.}
+\item{p.values}{A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). In both cases, they are taken from the `summary_table`.}
 }
 \value{
 A plot displaying the specification curve with confidence intervals and p-values, as well as a legend showing the variable combinations used in each specification.

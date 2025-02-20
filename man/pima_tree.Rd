@@ -4,12 +4,18 @@
 \alias{pima_tree}
 \title{Classification Tree with Adjusted p-values}
 \usage{
-pima_tree(res, p.values = "raw", cp = 0.05)
+pima_tree(res, p.values = "adjusted", method = "class", alpha = 0.05, ...)
 }
 \arguments{
 \item{res}{A list object with a specific structure containing regression model results. It should contain `mods`, a list of models, and `summary_table`, a data frame with the summary of results, including estimates and p-values.}
 
-\item{p.values}{A char string indicating which type of p-values to use. Options are `"raw"` (default) or `"adjusted"`. When `"raw"`, the function uses the p-values from the `summary_table`. When `"adjusted"`, p-values are adjusted using the `maxT.light` function.}
+\item{p.values}{A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the p-values from the `summary_table`.}
+
+\item{method}{used in function `rpart::rpart` if `method="class"` it will classify significant p-values at level `alpha`}
+
+\item{alpha}{used only when `method="class"`}
+
+\item{...}{any other parameter of `rpart::rpart`.}
 }
 \value{
 A plot of the classification tree using `rpart.plot()`.

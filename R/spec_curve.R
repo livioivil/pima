@@ -4,7 +4,7 @@
 #'
 #' @param res A list object with regression model results, including `mods` (a list of models) and `summary_table` (a data frame containing estimates and p-values).
 #' @param alpha A numeric value specifying the significance level for the confidence intervals. Default is 0.05.
-#' @param p.values A char string indicating which type of p-values to use. Options are `"raw"` (default) or `"adjusted"`. When `"raw"`, the function uses the p-values from the `summary_table`. When `"adjusted"`, p-values are adjusted using the `maxT.light` function.
+#' @param p.values A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). In both cases, they are taken from the `summary_table`.
 #'
 #' @return A plot displaying the specification curve with confidence intervals and p-values, as well as a legend showing the variable combinations used in each specification.
 #'
@@ -17,17 +17,18 @@
 #' # Example usage (assuming `res` is a pre-computed result object):
 #' # spec_curve(res, alpha = 0.05)
 #' 
-spec_curve <- function(res, alpha = 0.05,p.values=c("raw","adjusted")) {
+spec_curve <- function(res, alpha = 0.05,p.values=c("adjusted","raw")) {
   # Extract data from res
   data_ori <- res$mods[[1]]$data
   cmb <- names(res$mods)
   n_spec <- length(res$mods)
   num_var_test<-length(res$tested_coeffs)
-  if(num_var_test>1){stop("The number of tested coefficients is higher 1")}
+  # if(num_var_test>1){stop("The number of tested coefficients is higher 1")}
   
   # Calculate approximate confidence intervals 
   if(p.values=="raw"){
     z_value <- qnorm(1 - alpha / 2)
+    #if(num_var_test>1) coeff_estimates <- res$summary_table$`Part. Cor` else 
     coeff_estimates <- res$summary_table$Estimate
     std_devs<-res$summary_table$Estimate/qnorm(1-res$summary_table$p/2)
     lower_ci <- coeff_estimates - z_value * std_devs
@@ -37,7 +38,8 @@ spec_curve <- function(res, alpha = 0.05,p.values=c("raw","adjusted")) {
   # Calculate approximate confidence intervals
   if(p.values=="adjusted"){
     z_value <- qnorm(1 - alpha / 2)
-    res$summary_table$p.adj<- maxT.light(res$Tspace,exp(seq(-8,0,0.5)))
+    #res$summary_table$p.adj<- maxT.light(res$Tspace,exp(seq(-8,0,0.5)))
+    #if(num_var_test>1) coeff_estimates <- res$summary_table$`Part. Cor` else 
     coeff_estimates <- res$summary_table$Estimate
     std_devs<-res$summary_table$Estimate/qnorm(1-res$summary_table$p.adj/2)
     lower_ci <- coeff_estimates - z_value * std_devs
@@ -48,7 +50,7 @@ spec_curve <- function(res, alpha = 0.05,p.values=c("raw","adjusted")) {
   # Prepare data for plotting
   if(p.values=="raw"){
     df <- data.frame(
-      SpecID = rank(res$summary_table$Estimate),
+      SpecID = rank(coeff_estimates),
       Coefficients = coeff_estimates,
       StdDev = std_devs,
       PValue = p,
@@ -59,13 +61,13 @@ spec_curve <- function(res, alpha = 0.05,p.values=c("raw","adjusted")) {
   }
     if(p.values=="adjusted"){
       df <- data.frame(
-        SpecID = rank(res$summary_table$Estimate),
+        SpecID = rank(coeff_estimates),
         Coefficients = coeff_estimates,
         StdDev = std_devs,
         PValue = p,
         LowerCI = lower_ci,
         UpperCI = upper_ci,
-        Significance = ifelse(p.adj < alpha, "Yes-adjusted",ifelse(p < alpha, "Yes","No"))
+        Significance = ifelse(p.adj < alpha, "Yes (adjusted)","No")
       )
   }
   # Plot the specification curve
@@ -83,8 +85,9 @@ spec_curve <- function(res, alpha = 0.05,p.values=c("raw","adjusted")) {
   
   # Legend of specifications
   combinations_wide<-res$info
+  
   combinations_wide$SpecID<-rank(res$summary_table$Estimate)
-  confounders_names<-names(combinations_wide)[(4+num_var_test):(length(combinations_wide)-1)]
+  confounders_names<-names(combinations_wide)[(3+num_var_test):(length(combinations_wide)-1)]
   combinations_long<-reshape(combinations_wide,direction="long",idvar = "SpecID", varying = list((4+num_var_test):(length(combinations_wide)-1)),v.names = "Type")
   names(combinations_long)[5+num_var_test]<-"Variable"
   combinations_long$Type[combinations_long$Type=="FALSE"]<-"false("
@@ -102,13 +105,13 @@ spec_curve <- function(res, alpha = 0.05,p.values=c("raw","adjusted")) {
   combineLegend <- cowplot::plot_grid(legend, legend1, nrow = 2)
   
   # Combine plots into a grid
-  prow <- plot_grid(p1 + theme(legend.position = "none"),
+  prow <- cowplot::plot_grid(p1 + theme(legend.position = "none"),
                     p2 + theme(legend.position = "none"),
                     align = 'v',
                     labels = c("A", "B"),
                     hjust = -1,
                     nrow = 2)
-  p <- plot_grid(prow, combineLegend, rel_widths = c(3, 0.3))
+  p <- cowplot::plot_grid(prow, combineLegend, rel_widths = c(3, 0.3))
   
   return(p)
 }
