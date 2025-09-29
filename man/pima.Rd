@@ -59,7 +59,7 @@ possibly by coefficient or by model: "Is there at least one significant effect?"
 Further parameters include:
 \itemize{
 \item \code{score_type}: type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
-The almost exact control of the error is provided for the default setting \code{score_type = "standardized"}.
+The default \code{"standardized"} provides almost exact control of the error for any sample size.
 \item \code{statistics}: test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
 Different statistics will affect the multivariate inference, but not the univariate.
 \item \code{seed}: can be specified to ensure replicability of results.
@@ -91,12 +91,12 @@ summary(global_tests(res, by = "Coeff"))
 
 # Lower 95\%-confidence bound for the TDP by coefficient
 # require(sumSome)
-# pimaAnalysis(obj, by = "Coeff", alpha = 0.05)
+# pimaAnalysis(res, by = "Coeff", alpha = 0.05)
 }
 \references{
 Girardi, Vesely, Lakens, Altoè, Pastore, Calcagnì, Finos (2024). Post-selection Inference in Multiverse Analysis (PIMA): An Inferential Framework Based on the Sign Flipping Score Test. Psychometrika, doi: 10.1007/s11336-024-09973-6.
 
 Hemerik, Goeman, Finos (2020). Robust testing in generalized linear models by sign flipping score contributions. Journal of the Royal Statistical Society, Series B (Statistical Methodology), doi: 10.1111/rssb.12369.
 
-De Santis, Goeman, Hemerik, Davenport, Finos (2024). Inference in generalized linear models with robustness to misspecified variances. Pre-print, doi: 10.48550/arXiv.2209.13918.
+De Santis, Goeman, Hemerik, Davenport, Finos (2025). Inference in generalized linear models with robustness to misspecified variances. Journal of the American Statistical Association, doi: 10.1080/01621459.2025.2491775.
 }
