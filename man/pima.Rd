@@ -71,7 +71,7 @@ Different statistics will affect the multivariate inference, but not the univari
 set.seed(123)
 n <- 30
 D <- data.frame(X1 = rnorm(n), X2 = rnorm(n)^2,
-                X3 = sample(c("A", "B", "C"), n, replace = TRUE),
+                X3 = sample(c("A","B","C"), n, replace = TRUE),
                 Z1 = rnorm(n), Z2 = rnorm(n))
 D$X3 <- factor(D$X3)
 D$Y <- D$X1 + ifelse(D$X3 == "C", 3, 0) + D$Z1 + rnorm(n)
@@ -92,8 +92,16 @@ summary(global_tests(res))
 summary(global_tests(res, by = "Model"))
 summary(global_tests(res, by = "Coeff"))
 
-# Lower 95\%-confidence bound for the TDP by coefficient
+# Global tests for each factor
+summary(global_tests(res, by = "individual", comb_factors = TRUE))
+
+# These tests can be aggregated as before (e.g., by coefficient)
+summary(global_tests(res, by = "Coeff", comb_factors = TRUE))
+
+# Lower 95\%-confidence bound for the TDP
 # require(sumSome)
+# pimaAnalysis(res, alpha = 0.4)
+# pimaAnalysis(res, by = "Model", alpha = 0.4)
 # pimaAnalysis(res, by = "Coeff", alpha = 0.4)
 }
 \references{
