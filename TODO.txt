@@ -15,9 +15,9 @@
 - maxT.light deve essere quella di jointest, rimuovere dal package (vedi paolo_utils.R)
 
 ## pima()
-- FATTO tdp_bounds: come fare in modo che la libreria non dipenda, ma se lo installi funziona? Oppure lo metto in sumSome come pima_sumSome o qualcosa del genere?
 - global_tests: mettere anche un esempio con var categoriali e fare una funzione wrapper per combine_contrasts
-- AGGIUNGERE NELL'HELP Correggere di default. Aggiungi argomento adjust=c("maxT","minp","none"), con default maxT. aggiungere note sulla scelta del metodo (@anna/livio) Anna: ho messo una cosa più generica, aggiungendo sia i p-value raw che corretti
+- FATTO! tdp_bounds: come fare in modo che la libreria non dipenda, ma se lo installi funziona? Oppure lo metto in sumSome come pima_sumSome o qualcosa del genere?
+- FATTO! AGGIUNGERE NELL'HELP Correggere di default. Aggiungi argomento adjust=c("maxT","minp","none"), con default maxT. aggiungere note sulla scelta del metodo (@anna/livio) Anna: ho messo una cosa più generica, aggiungendo sia i p-value raw che corretti
 - FATTO!! DECIDERE NOME. Fare un wrapper per jointest::combine (@filippo)
 - Debuggare argomento "output_models" (per il momento non fa nulla, l'errore è in jointest). Togliere? Vedere gestione memoria? Vediamo se ci servono nelle funzioni per i plot, forse possiamo salvarci solo quello che ci serve. Forse togliere anche jointest, tanto la differenza di spazio usato è minima?
 - FATTO! Togliere "output_models", "statistics", "score_type" e "seed". Ora ricadono in ...

@@ -69,19 +69,22 @@ Different statistics will affect the multivariate inference, but not the univari
 \examples{
 # Generate data
 set.seed(123)
-n <- 20
-D <- data.frame(X1 = rnorm(n), X2 = rnorm(n)^2, Z1 = rnorm(n), Z2 = rnorm(n))
-D$Y <- D$X1 + D$Z1 + rnorm(n)
+n <- 30
+D <- data.frame(X1 = rnorm(n), X2 = rnorm(n)^2,
+                X3 = sample(c("A", "B", "C"), n, replace = TRUE),
+                Z1 = rnorm(n), Z2 = rnorm(n))
+D$X3 <- factor(D$X3)
+D$Y <- D$X1 + ifelse(D$X3 == "C", 3, 0) + D$Z1 + rnorm(n)
 
 # Multiverse of 4 models (list)
-mod1 <- glm(Y ~ X1 + X2 + Z1 + Z2, data = D)
-mod2 <- glm(Y ~ X1 + X2 + poly(Z1,2) + Z2, data = D)
-mod3 <- glm(Y ~ X1 + X2 + Z1 + poly(Z2,2), data = D)
-mod4 <- glm(Y ~ X1 + X2 + poly(Z1,2) + poly(Z2,2), data = D)
+mod1 <- glm(Y ~ X1 + X2 + X3 + Z1 + Z2, data = D)
+mod2 <- glm(Y ~ X1 + X2 + X3 + poly(Z1,2) + Z2, data = D)
+mod3 <- glm(Y ~ X1 + X2 + X3 + Z1 + poly(Z2,2), data = D)
+mod4 <- glm(Y ~ X1 + X2 + X3 + poly(Z1,2) + poly(Z2,2), data = D)
 mods <- list(mod1 = mod1, mod2 = mod2, mod3 = mod3, mod4 = mod4)
 
-# Test the coefficients of X1 and X2 (raw and adjusted p-values)
-res <- pima(mods, tested_coeffs = c("X1","X2"))
+# Test selected coefficients (raw and adjusted p-values)
+res <- pima(mods, tested_coeffs = c("X1","X2","X3B","X3C"))
 summary(res)
 
 # Global p-values: overall, by model and by coefficient
@@ -91,7 +94,7 @@ summary(global_tests(res, by = "Coeff"))
 
 # Lower 95\%-confidence bound for the TDP by coefficient
 # require(sumSome)
-# pimaAnalysis(res, by = "Coeff", alpha = 0.05)
+# pimaAnalysis(res, by = "Coeff", alpha = 0.4)
 }
 \references{
 Girardi, Vesely, Lakens, Altoè, Pastore, Calcagnì, Finos (2024). Post-selection Inference in Multiverse Analysis (PIMA): An Inferential Framework Based on the Sign Flipping Score Test. Psychometrika, doi: 10.1007/s11336-024-09973-6.
