@@ -14,9 +14,10 @@ If \code{NULL} (default), a single global null hypothesis is tested.}
 
 \item{comb_funct}{combining function (see \code{\link[jointest]{combine-methods}} for more datails).}
 
-\item{comb_factors}{\code{TRUE} to obtain a single global test for each factor variable, combining the tests derived from the contrasts}
+\item{comb_factors}{logical. If \code{FALSE}, coefficients for the levels of factor variables are considered separately.
+If \code{TRUE}, a single global test is performed for each factor variable.}
 
-\item{comb_factors_funct}{combining function for contrasts (see \code{\link[jointest]{combine_contrasts}} for more datails).}
+\item{comb_factors_funct}{combining function for contrasts of factor variables (see \code{\link[jointest]{combine_contrasts}} for more datails).}
 }
 \value{
 Returns an object of class \code{jointest}, containing:
@@ -37,12 +38,14 @@ In the default \code{by = NULL}, the procedure tests the global null hypothesis
 that there are no significant effects (all considered coefficients in all models are null)
 against the alternative that there is at least one significant effect
 (one non-null coefficient in one model). Other inputs of the argument \code{by}
-test analogous null hypotheses, defined by model (\code{"Model"}), by coefficient (\code{"Coeff"}) or individually (\code{"individual"}).
+test analogous null hypotheses, defined by model (\code{Model}), by coefficient (\code{Coeff}) or individually (\code{individual}).
 
-For each categorical predictor, by default (\code{comb_factors = FALSE}), non-baseline coefficients are considered separately. 
-If \code{comb_factors = TRUE}, a single global test is performed by combining the tests from all contrasts. Continuous predictors are unaffected by this argument.
+The argument \code{comb_factors} affects only categorical predictors. For each categorical predictor, by default (\code{FALSE}), non-baseline coefficients are considered separately. 
+If \code{TRUE}, a single global test is performed by combining the tests derived from the contrasts
+with the function specified by \code{comb_factors_funct}.
 
-The option \code{by = "individual"} only changes the input p-values if \code{comb_factors = TRUE} and categorical predictors are present.
+With the option \code{by = "individual"}, the input p-values are returned unchanged, 
+except when categorical predictors are present and \code{comb_factors = TRUE}.
 }
 \examples{
 # Generate data
