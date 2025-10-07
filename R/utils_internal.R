@@ -71,3 +71,18 @@
   })
   res
 }
+
+.trim <- function(x, n = 4){
+  k <- nrow(x)
+  if(k <= 4){
+    print(head(x, n = n))
+  } else{
+    print(head(x, n = n))
+    cat("\n")
+    cat("...")
+    cat("\n")
+    print(tail(x, n = n))
+  }
+}
+
+
