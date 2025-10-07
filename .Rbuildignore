@@ -1,2 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^docs$
+^altdoc$
+^_quarto$
+^_pkgdown\.yml$
+^pkgdown$
