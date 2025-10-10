@@ -3,4 +3,4 @@
 
 /.quarto/
 **/*.quarto_ipynb
-*_cache/
+*_cache
