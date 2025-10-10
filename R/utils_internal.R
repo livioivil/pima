@@ -85,4 +85,130 @@
   }
 }
 
+.get_info_models <- function(mods){
+  info <- data.frame(
+    Model = names(mods),
+    Formula = sapply(mods, .get_formula)
+  )
+  # extract the predictors expanding interactions and sorting them alphabetically
+  XS <- lapply(mods, function(x) .get_x_name(x))
+  
+  # here we keep the full set of variables and we sort them alphabetically
+  # thus we can match them to each specification
+  all_x <- unique(unname(unlist(XS)))
+  all_x_clean <- .clean_x_name(all_x)
+  names(all_x) <- all_x_clean
+  
+  ll <- max(sapply(XS, length))
+  XS <- lapply(XS, function(x) {
+    if(length(x) < ll){
+      c(x, rep(NA, ll - length(x)))
+    }else{
+      x
+    }
+  })
+  
+  # # then we create a list where missing elements receive an NA (is not present)
+  # # in the specification and other receive the specific specification
+  # XS <- lapply(XS, function(spec) replace(all_x, !all_x %in% spec, NA))
+  
+  XS <- data.frame(t(data.frame(XS)))
+  nn <- colnames(XS)
+  XS$Model <- rownames(XS)
+  
+  XSL <- reshape(
+    XS, 
+    direction = "long",
+    idvar = c("Model"),
+    varying = list(nn),
+    v.names = "value",
+    timevar = "var"
+  )
+  
+  XSL$var <- .clean_x_name(XSL$value)
+  XSL <- XSL[!is.na(XSL$value), ]
+  
+  XS <- reshape(
+    XSL,
+    idvar = "Model",
+    timevar = "var",
+    direction = "wide"
+  )
+  
+  colnames(XS) <- gsub("value\\.", "", colnames(XS))
+  
+  info <- cbind(info, XS)
+  
+  # # TODO fix this when outlier and leverage are implemented
+  # info$outlier <- FALSE
+  # info$leverage <- FALSE
+  
+  if("npreg" %in% colnames(info)) {
+    info$npreg[is.na(info$npreg)]=info$`npreg^2`[is.na(info$npreg)]
+    info$`npreg^2`=NULL
+  }
+  
+  if(names(info[,3,drop=FALSE])=="Model") info=info[,-3]
+  
+  attr(info, "xs") <- unique(XSL$var)
+  info
+}
 
+.get_formula <- function(x){
+  # with formula.tools
+  # formula.tools:::as.character.formula(x$formula)
+  # without formula.tools
+  Reduce(paste, deparse(x$formula))
+}
+
+.get_formula_x <- function(x){
+  # with formula tools
+  formula.tools::rhs.vars(x)
+}
+
+.get_formula_y <- function(x){
+  # with formula tools
+  formula.tools::lhs.vars(x)
+}
+
+.get_x_name <- function(x){
+  attr(x$terms, which = "term.labels")
+}
+
+.keep_bare_x_name <- function(x){
+  match_par <- gregexpr("(?<=\\().+?(?=\\))", x, perl = TRUE)
+  x_clean <- ifelse(unlist(match_par) == -1, x, regmatches(x, match_par))
+  x_clean <- unlist(x_clean)
+  x_clean <- sub("(.+?)\\s*[\\,\\+\\-\\*/]\\s*.+", "\\1", x_clean)
+  x_clean <- gsub("\\s*", "", unname(x_clean)) # TODO check this for ``
+  return(x_clean)
+}
+
+.clean_x_name <- function(x){
+  xp <- strsplit(x, ":") # splitting interactions
+  xp <- sapply(xp, .keep_bare_x_name)
+  xp <- sapply(xp, paste0, collapse = ":")
+  return(xp)
+}
+
+.transf_p <- function(p,
+                      type = "raw"){
+  if(!is.function(type)){
+    type <- match.arg(type, c(
+      "raw",
+      "-log10",
+      "z"
+    ))
+    
+    if(type == "-log10"){
+      -log10(p)
+    } else if(type == "z"){
+      qnorm(1 - p/2)
+    } else{
+      p
+    }
+    
+  } else{
+    type(p)
+  }
+}
