@@ -17,3 +17,7 @@ Encoding: UTF-8
 Language: en-US
 BugReports: https://github.com/livioivil/pima/issues
 URL: https://github.com/livioivil/pima
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
