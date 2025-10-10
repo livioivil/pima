@@ -112,8 +112,8 @@ create_multi <- function(formula,
     mods <- vector(mode = "list", length = length(out$calls))
     
     for(i in 1:length(mods)){
-      mm <-  do.call(fit.fun, c(list(formula = as.formula(out$calls[i])), fit.fun.args))
-      #mm$call$formula <- as.formula(out$calls[i])
+      mm <-  do.call(fit.fun, c(list(formula = as.formula(out$calls[i]), data = data), fit.fun.args))
+      mm$call$formula <- as.formula(out$calls[i])
       mods[[i]] <- mm
     }
     

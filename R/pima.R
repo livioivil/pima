@@ -98,18 +98,34 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   extra_args <- list(...)
   
-  out <- do.call(jointest::join_flipscores, c(
-    list(mods=mods, tested_coeffs=tested_coeffs, n_flips=n_flips), 
+  join_flipscores_args <- c(
+    list(mods = mods, tested_coeffs = tested_coeffs, n_flips = n_flips), 
     extra_args
-  ))
+  )
   
-  out$info <- .get_info_models(out$mods)
-  out$tested_coeffs <- tested_coeffs
-  class(out) <- unique(c("pima", class(out)))
+  out <- do.call(jointest::join_flipscores, join_flipscores_args)
+  
+  old_class <- class(out)
+  
+  # TODO check if removing res$call is problematic
+  out <- out[names(out) != "call"]
   
   if(method != "none"){
+    # TODO is tail something to put as parameter?
     out <- jointest::p.adjust(out, method = method, tail = 0)
   }
+  
+  # get all the arguments of jointest::join_flipscores to be
+  # used in other functions
+  
+  join_flipscores_args <- .get_fn_args(jointest::join_flipscores, 
+                                       new.args = join_flipscores_args, 
+                                       exclude = c("...", "mods"))
+  out$info <- .get_info_models(out$mods)
+  out$tested_coeffs <- tested_coeffs
+  out <- c(out, join_flipscores_args)
+  out$p.adjust.method <- method
+  class(out) <- unique(c("pima", old_class))
   
   return(out)
 }

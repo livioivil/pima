@@ -16,13 +16,15 @@ NULL
 #' @method print pima
 #' @docType methods
 #' @export
-print.pima <- function (object, n = 4, ...) {
-  # TODO check if print is useful like this and check the usage of n (not working here)
-  n <- nrow(object$info)
-  msg <- sprintf("Multiverse analysis with %s models", n)
+print.pima <- function (object, n = 4) {
+  nr <- nrow(object$info)
+  msg <- sprintf("== Multiverse analysis with %s scenarios ==", nr)
+  cat("\n")
   cat(msg)
   cat("\n\n")
+  rownames(object$info) <- NULL
   .trim(object$info, n = n)
+  cat("\n")
 }
 
 #' summary.pima summary method for a pima object.
@@ -35,7 +37,6 @@ print.pima <- function (object, n = 4, ...) {
 
 summary.pima <- function(object, ...) {
   object$summary_table
-  # do.call(rbind,lapply(object, function(ob) ob$summary_table))
 }
 
 .get_summary_table_from_flipscores <- function(object) {
@@ -45,7 +46,6 @@ summary.pima <- function(object, ...) {
   tab = cbind(Coeff = rownames(tab), tab)
 }
 
-###########################
 #' as.pima method for a pima object.
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
@@ -67,7 +67,7 @@ as.pima <- function(object, names_obj = NULL, ...) {
   class(object) <- unique(c("pima", class(object)))
   object
 }
-#############################################
+
 #' plot.pima summary method for a pima object.
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
@@ -81,11 +81,12 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' @export
 
 plot.pima <- function(
-    object, 
-    p.values = "adjusted",
+    object,
+    p.adjusted = TRUE,
     alpha = .05,
     xvar = NULL,
-    yvar = NULL,
+    p.values = NULL,
+    p.transf = "-log10",
     ...
   )
   {
@@ -95,7 +96,6 @@ plot.pima <- function(
   # avoid conflicting with base plot(x = ) argument
   
   if(is.null(xvar)) xvar <- "Estimate"
-  if(is.null(yvar)) yvar <- "-log10(p)"
   
   D = object$summary_table
   D$.assign = NULL

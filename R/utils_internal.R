@@ -77,11 +77,11 @@
   if(k <= 4){
     print(head(x, n = n))
   } else{
-    print(head(x, n = n))
+    print(head(x, n = n), row.names = FALSE)
     cat("\n")
-    cat("...")
+    cat("...\n")
     cat("\n")
-    print(tail(x, n = n))
+    print(tail(x, n = n), row.names = FALSE)
   }
 }
 
@@ -211,4 +211,13 @@
   } else{
     type(p)
   }
+}
+
+.get_fn_args <- function(f, new.args = NULL, exclude = c("...")){
+  f_args <- formals(f)
+  if(!is.null(new.args)){
+    f_args[names(new.args)] <- new.args
+  }
+  f_args <- f_args[!names(f_args) %in% exclude]
+  f_args
 }
