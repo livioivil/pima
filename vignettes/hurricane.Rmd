@@ -21,6 +21,7 @@ knitr::opts_chunk$set(
 devtools::load_all()
 library(jointest)
 library(flipscores)
+library(pima)
 # results reporting
 library(gtsummary)
 library(tidyverse)
@@ -28,11 +29,12 @@ library(GGally)
 library(knitr)
 library(gridExtra)
 library(corrplot)
+library(ggplot2)
+library(cowplot)
 # models 
 library(MASS)
-# read STATA dataset
-library(readstata13)
-library(here)
+# manage strings
+library(stringr)
 
 opts_chunk$set(echo=FALSE,
                cache=FALSE,
@@ -42,7 +44,7 @@ opts_chunk$set(echo=FALSE,
                message=FALSE,
                warning=FALSE)
 
-hurricane<-read.dta13(here("data", "hurricanes_2015_01_09.dta"))
+data(hurricane)
 
 #Original analysis from https://www.pnas.org/content/111/24/8782  
 #year: year of the hurricane
@@ -93,7 +95,7 @@ Correlation very high between min and wind (-0.85)
 
 ## GLM Model
 
-Quasi-Poisson model since the number of deaths right-skew distributed  
+To model the relationship between the number of deaths and the femininity of the hurricane's name, we adopted a Generalised Linear Model (GLM) with a Quasi-Poisson distribution, since the number of deaths was over-dispersed and right-skewed.  
 
 ```{r,echo=TRUE}
 hist(hurricane$alldeaths,ylab="Frequency",xlab="Number of deaths")
@@ -118,13 +120,13 @@ Some considerations:
 - limited sample size: n=94  
 - model with 5 predictors and 1 intercept  
 
-We consider a simple additive regression model like the follwing one:
+We consider a simple additive regression model like the following one:
 
 $$g(\mu)=\alpha+\beta_1 mf+ \beta_2 year+\beta_3 min+\beta_4 wind+\beta_5 ndam15$$
 The coefficient $\beta_1$ expresses the increase of the log-death due to a 1-point increase in the $mf$ variable. The results of a Poisson regression models are commonly expressed in terms of Incidence Rate Ratio (IRR) just by exponentiation of the coefficients. (IRR=$\exp(\beta_1)$).
 
 ### Theoretical model  
-We know in advance that the number of deaths depends on the strength of the hurricane (combination of min and wind) and of high population density and relative damages (ndam15).
+We know in advance that the number of deaths depends on the strength of the hurricane (combination of min and wind) and of high population density and relative damages (ndam15). 
 In addition the year is an important confounder for two reasons:  
 - 1) the alternating of the male/female name to an hurricane began in 1978 (https://www.nhc.noaa.gov/aboutnames_history.shtml)   
 - 2) The year is a key factor for assessing the spread of information and its use in the general population over the year.   
@@ -136,40 +138,43 @@ ggplot(hurricane,aes(x=year,y=masfem,col=gender_mf))+ylab("Degree of femininity"
 
 ## MULTIVERSE ANALYSIS 
 
-All the four confounders are continuous. In addition to the identity, we decide to explore for each confounders the following transformations:   
-- Square Root ($\sqrt(x)$);  
-- Log ($\sqrt(x)$);  
-- Second order polynomial ($x+x^2$).  
+All four confounding factors have been included in the model in continuous form. In addition to the identity variable, we have decided to explore a series of transformations for each confounder:  
+- square root ($\sqrt{x}$).  
+- logarithm ($\ln(x)$).  
+- second order polynomial: $x+x^2$.   
+
+We want all combinations to contain the four confounders.
 
 ```{r,echo=TRUE}
 ########################################### possible specifications:
-combinations_matrix=expand.grid(list(
-  c("min","sqrt(min)","log(min)","poly(min,2)"),
-  c("wind","sqrt(wind)","log(wind)","poly(wind,2)"),
-  c("year","sqrt(year)","log(year)","poly(year,2)"),
-  c("ndam15","sqrt(ndam15)","log(ndam15)","poly(ndam15,2)")))
-
-combinations=apply(combinations_matrix,1,paste,collapse="+")
+poly2<-function(x) poly(x,degree=2)
+combinations<-create_multi(~ masfem +min+wind+year+ndam15,focal = "masfem", 
+             nfuns = c("log","sqrt","poly2"), 
+             data = hurricane)
+# keep only full models (those models with four "+" in the formula string)
+cmb<-combinations$call[sapply(combinations$calls, str_count, fixed("+"))==4]
 ```
 
-Then we combine all the transformations in $4^4=256$ specifications  
+Then, we evaluate the GLM model for each of the 256 specifications.   
 
 ```{r,echo=TRUE}
 ##################### one list of formulas for each comparison of interest:
 #######
-formulas1=sapply(combinations,function(cmb) paste0("alldeaths ~ masfem +",cmb))
+formulas1=paste("alldeaths",cmb)
+# calculate the model for the first specifications
 mod1=glm(as.formula(formulas1[1]),data=hurricane,family=quasipoisson())
+# reevaluate the model for all the specifications.
 mods1=lapply(formulas1, function(frml) update(mod1,formula. = as.formula(frml)))
 ```
 
 Using the \texttt{pima} function() we apply the PIMA procedure to the list of models inside the mods1 list.
 
-```{r,echo=TRUE}
-res1=pima(mods1,tested_coeffs =  c("masfem"),n_flips = 5000,
-                          score_type = "standardized",seed = 167)
-names(res1)
-plot.pima(res1,p.values="raw")
-plot.pima(res1,p.values="adjusted")
+```{r,echo=TRUE,set.seed(1)}
+res=pima(mods1,tested_coeffs =  c("masfem"),n_flips = 5000,
+                          score_type = "standardized",seed = 1)
+plot(res,p.values="raw")
+plot(res,p.values="adjusted",)
+summary(global_tests(res))
 ```
 
 The output is composed by:  
@@ -178,20 +183,15 @@ The output is composed by:
 - mods: 256 models estimated (one for each specification)  
 - info: specifications info (auxiliary object)  
 
-
 ### Specification curve 
 ```{r,echo=TRUE}
-#######
-#ggplot2 e cowplot
-library(ggplot2)
-library(cowplot)
-spec_curve1<-spec_curve(res1,alpha = 0.05,p.values = "raw")
+spec_curve1<-spec_curve(res,alpha = 0.05,p.values = "raw")
 spec_curve1
-spec_curve2<-spec_curve(res1,alpha = 0.05,p.values = "adjusted")
+spec_curve2<-spec_curve(res,alpha = 0.05,p.values = "adjusted")
 spec_curve2
 
-t_stat_h0<-apply(res1$Tspace,1,max)
-observed_t<-max(summary(res1)$Score)
+t_stat_h0<-apply(res$Tspace,1,max)
+observed_t<-max(summary(res)$Score)
 2*mean(abs(t_stat_h0)>abs(observed_t))
 ho_t<-ggplot(data = data.frame(t_stat_h0), aes(x = t_stat_h0)) +
   geom_histogram(aes(y = ..density..), fill = "lightblue", color = "black", alpha = 0.7) +
@@ -209,25 +209,14 @@ ho_t
 
 
 #adjusted pvalues
-res1$summary_table$p.adj<-jointest:::maxT.light(res1$Tspace,exp(seq(-8,0,0.5)))
+res$summary_table$p.adj<-jointest:::maxT.light(res$Tspace,exp(seq(-8,0,0.5)))
 
-p3<-plot(res1)
-#pdf("graph_raw.pdf",height = 5,width = 8)
-p3
-#dev.off()
-
-p4 <- plot(res1,p.values = "adjusted")
-#pdf("graph_adj.pdf",height = 5,width = 8)
-p4
-#dev.off()
-
-sum(res1$summary_table$p.adj<.05)
+sum(res$summary_table$p.adj<.05)
 
 library(rpart)
 library(rpart.plot)
-pima_tree(res=res1) #raw
-pima_tree(res=res1,p.values = "adjusted") #FWER adjusted pvalues
-pima_tree(res=res1,p.values = "adjusted",cp=0.001) #higher complexity
+pima_tree(res) #raw
+pima_tree(res,p.values = "adjusted") #FWER adjusted pvalues
 ```
 
 ### Pick up a model
@@ -236,9 +225,9 @@ pima_tree(res=res1,p.values = "adjusted",cp=0.001) #higher complexity
 Since the overall p-value is lower than <0.05, we can select among the estimated models a significant model 
 
 ```{r,echo=TRUE}
-sel_model<-which.min(res1$summary_table$p.adj)
+sel_model<-which.min(res$summary_table$p.adj)
 summary(mods1[[sel_model]])
-exp(summary(mods1[[sel_model]])$coef[2,1])
+sjPlot::tab_model ( exp(summary(mods1[[sel_model]])$coef[2,1])
 ```
 
 In the selected model the adjusted effect of the masfem variable is significant. 1-point increase in masfem variables implies an increase of the risk of death of `r  round((exp(summary(mods1[[sel_model]])$coef[2,1])-1)*100,2)` \%
