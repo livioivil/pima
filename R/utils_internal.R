@@ -191,28 +191,6 @@
   return(xp)
 }
 
-.transf_p <- function(p,
-                      type = "raw"){
-  if(!is.function(type)){
-    type <- match.arg(type, c(
-      "raw",
-      "-log10",
-      "z"
-    ))
-    
-    if(type == "-log10"){
-      -log10(p)
-    } else if(type == "z"){
-      qnorm(1 - p/2)
-    } else{
-      p
-    }
-    
-  } else{
-    type(p)
-  }
-}
-
 .get_fn_args <- function(f, new.args = NULL, exclude = c("...")){
   f_args <- formals(f)
   if(!is.null(new.args)){
@@ -220,4 +198,21 @@
   }
   f_args <- f_args[!names(f_args) %in% exclude]
   f_args
+}
+
+transf_p <- function(p, method = "raw") {
+  stopifnot(is.numeric(p), all(p >= 0 & p <= 1, na.rm = TRUE))
+  
+  if (is.function(method)) {
+    return(method(p))
+  }
+  
+  method <- match.arg(method, c("raw", "-log10", "z"))
+  
+  switch(
+    method,
+    "raw"    = p,
+    "-log10" = -log10(p),
+    "z"      = qnorm(p / 2, lower.tail = FALSE)
+  )
 }
