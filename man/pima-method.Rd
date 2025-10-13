@@ -3,21 +3,25 @@
 \docType{methods}
 \name{pima-method}
 \alias{pima-method}
+\alias{print.pima}
 \alias{summary.pima}
 \alias{as.pima}
 \alias{plot.pima}
 \title{Methods for pima objects}
 \usage{
+\method{print}{pima}(object, n = 4, ...)
+
 \method{summary}{pima}(object, ...)
 
 \method{as}{pima}(object, names_obj = NULL, ...)
 
 \method{plot}{pima}(
   object,
-  p.values = c("adjusted", "raw"),
+  p.values = "adjusted",
   alpha = 0.05,
-  y = "-log10(p)",
-  x = "Estimate"
+  xvar = NULL,
+  yvar = NULL,
+  ...
 )
 }
 \arguments{
@@ -27,7 +31,7 @@
 
 \item{names_obj}{a vector of names, its length must be equal to the length of \code{object}}
 
-\item{p.values}{use "raw" or "adjusted" (i.e. corrected for selective inference)}
+\item{p.values}{use "raw" or "adjusted" (i.e. corrected for selective inference). Default to "raw".}
 
 \item{alpha}{a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.}
 
@@ -36,7 +40,7 @@
 \item{x}{`"Estimate"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"Part. Cor"`) or any other expression e.g. `"-log10(p)"`.}
 }
 \description{
-Methods for \code{pima} objects. 
+Methods for \code{pima} objects.
 The following are methods to extract and manipulate relevant information from
 a \code{pima} object.
 }

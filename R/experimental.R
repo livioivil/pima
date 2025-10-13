@@ -7,7 +7,6 @@
 #' @param data the dataset for the model
 #'
 #' @return a list
-#' @export
 #' @examples
 #' create_multi(~ Sepal.Length + Petal.Width + Species, 
 #'              focal = "Sepal.Length", 
@@ -18,8 +17,12 @@ create_multi <- function(formula,
                          focal = NULL,
                          nfuns = NULL,
                          cfuns = NULL,
-                         data){
+                         data,
+                         fit = FALSE,
+                         fit.fun = NULL,
+                         fit.fun.args = NULL){
   xs <- formula.tools::rhs.vars(formula)
+  y <- formula.tools::lhs.vars(formula)
   xs_type <- sapply(data, class)[xs]
   
   xs_num <- xs[xs_type == "numeric" | xs_type == "integer"]
@@ -97,13 +100,26 @@ create_multi <- function(formula,
   }
   
   forms_call <- lapply(forms, paste, collapse = " + ")
-  forms_call <- paste("~", forms_call)
+  forms_call <- paste(y, "~", forms_call)
   
   # # check if the marginality principle is respected
   # forms_as_formula <- sapply(forms_call, as.formula)
   # is_marginal <- sapply(forms_as_formula, function(x) check_marginality(x))
   # forms_call <- forms_call[!is_marginal]
-  out <- list(X = X, calls = unlist(forms_call))
+  out <- list(X = X, calls = unlist(forms_call), data = data)
+  
+  if(fit){
+    mods <- vector(mode = "list", length = length(out$calls))
+    
+    for(i in 1:length(mods)){
+      mm <-  do.call(fit.fun, c(list(formula = as.formula(out$calls[i]), data = data), fit.fun.args))
+      mm$call$formula <- as.formula(out$calls[i])
+      mods[[i]] <- mm
+    }
+    
+    out$mods <- mods
+  }
+  
   return(out)
 }
 

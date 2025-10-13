@@ -2,5 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+altdoc/freeze.rds
+_quarto/*
+!_quarto/_freeze/
+inst/doc
+*_cache
+*_files
 docs
-.DS_Store
+local

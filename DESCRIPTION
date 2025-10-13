@@ -16,4 +16,8 @@ RoxygenNote: 7.3.2
 Encoding: UTF-8
 Language: en-US
 BugReports: https://github.com/livioivil/pima/issues
-URL: https://github.com/livioivil/pima, https://livioivil.github.io/pima/
+URL: https://github.com/livioivil/pima
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
