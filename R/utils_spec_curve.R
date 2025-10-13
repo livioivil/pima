@@ -18,7 +18,8 @@
                               v.names = "var.spec",
                               timevar = "var")
   
-  spec_data_bottom <- spec_data_bottom[complete.cases(spec_data_bottom), ]
+  # when missing add the (removed) string
+  spec_data_bottom$var.spec <- ifelse(is.na(spec_data_bottom$var.spec), sprintf("%s (removed)", spec_data_bottom$var), spec_data_bottom$var.spec)
   
   list(
     dtop = spec_data,
