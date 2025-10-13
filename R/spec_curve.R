@@ -23,8 +23,8 @@
 #' 
 spec_curve <- function(x,
                        focal = NULL,
-                       yvar = "Estimate",
-                       p.values = "p.adj.maxT",
+                       yvar = NULL,
+                       p.adjusted = TRUE,
                        alpha = 0.05,
                        tbr = c(0.4, 0.6),
                        colors = NULL,
@@ -33,7 +33,8 @@ spec_curve <- function(x,
                        xlab = NULL,
                        ylab = NULL,
                        top.theme = NULL,
-                       bottom.theme = NULL) {
+                       bottom.theme = NULL,
+                       redundant = TRUE) {
   
   stopifnot(inherits(x, "pima"))
   
@@ -47,8 +48,21 @@ spec_curve <- function(x,
   
   if(is.null(top.theme)) top.theme <- ggplot2::theme_minimal
   if(is.null(bottom.theme)) bottom.theme <- ggplot2::theme_minimal
+  if(is.null(focal)) focal <- x$tested_coeffs
+  
+  if(length(focal) > 1 & is.null(yvar)){
+    yvar <- "Part. Cor"
+    warning("the number of tested coefficients is > 1 and no yvar specified. Using 'Part. Cor' as yvar.")
+  }
   
   yvar <- match.arg(yvar, choices = colnames(x$summary_table), several.ok = FALSE)
+  
+  if(p.adjusted){
+    p.values <- sprintf("p.adj.%s", x$p.adjust.method)
+  } else{
+    p.values <- "p"
+  }
+  
   p.values <- match.arg(p.values, choices = colnames(x$summary_table), several.ok = FALSE)
   
   if(is.null(xlab)) xlab <- "Specification"
@@ -56,31 +70,33 @@ spec_curve <- function(x,
   
   xs <- attributes(x$info)$xs
   
-  if(is.null(focal) & is.null(x$tested_coeffs)){
-    stop("when no tested_coeffs are indicated in the pima() call, focal cannot be NULL!")
+  if(!is.null(focal)){
+    x$summary_table <- subset(x$summary_table, Coeff %in% focal)
   }
-  
-  if(is.null(focal)){
-    focal <- x$tested_coeffs
-    if(length(focal) > 1){
-      # TODO better handling here of tested_coeffs >1 and focal is null
-      warning("the number of tested_coeffs is greater than 1, the specification curve could be misleading!")
-    }
-  }
-  
-  x$summary_table <- subset(x$summary_table, Coeff == focal)
+
   spec_data <- .get_spec_curve_data(x, yvar, p.values, alpha)
+  spec_data$dbottom$var_txt <- ifelse(
+    spec_data$dbottom$var %in% focal,
+    sprintf('atop(bold("%s"), "(focal)")', spec_data$dbottom$var),
+    sprintf('atop(bold("%s"), "")', spec_data$dbottom$var)
+  )
   
-  # remove redundant variables from the plot
-  redundant <- apply(x$info[, xs], 2, function(x) length(unique(x)) == 1)
-  redundant <- names(redundant)[redundant]
+  if(!redundant){
+    # remove redundant variables from the plot
+    redundant <- apply(x$info[, xs], 2, function(x) length(unique(x)) == 1)
+    redundant <- names(redundant)[redundant]
+    spec_data$dbottom <- subset(spec_data$dbottom, var != redundant)
+  }
   
-  spec_data$dbottom <- subset(spec_data$dbottom, var != redundant)
+  # plotting elements
+  
+  if(is.null(shapes)) shapes <- c(3, 19)
   
   top <- ggplot2::ggplot(data = spec_data$dtop,
                          ggplot2::aes(x = .id_spec,
                                       y = .data[[yvar]])) +
-    ggplot2::geom_point(ggplot2::aes(color = is_signif), show.legend = FALSE) +
+    #ggplot2::geom_point(ggplot2::aes(color = is_signif), show.legend = FALSE) +
+    ggplot2::geom_point(ggplot2::aes(color = Coeff, shape = is_signif), show.legend = TRUE) +
     top.theme() +
     ggplot2::theme(
       axis.title.x = ggplot2::element_blank(),
@@ -89,7 +105,12 @@ spec_curve <- function(x,
     ) +
     ggplot2::ggtitle(title) +
     ggplot2::scale_color_manual(values = colors) +
-    ggplot2::scale_shape_manual(values = shapes) +
+    ggplot2::scale_shape_manual(
+      values = shapes,
+      guide = "none",
+      # name = "p-value",
+      # labels = paste0(c("p >  ", "p <= "), alpha)
+    ) +
     ggplot2::labs(
       y = ylab
     )
@@ -97,17 +118,24 @@ spec_curve <- function(x,
   bottom <- ggplot2::ggplot(spec_data$dbottom, 
                             ggplot2::aes(x = .id_spec,
                                          y = var.spec)) +
-    ggplot2::facet_grid(var ~ ., scales = "free_y") +
-    ggplot2::geom_point() +
+    ggplot2::facet_grid(var_txt ~ ., 
+                        scales = "free_y",
+                        labeller = ggplot2::label_parsed) +
+    ggplot2::geom_point(aes(shape = is_signif)) +
     bottom.theme() +
     ggplot2::theme(
       axis.title.y = ggplot2::element_blank()
     ) +
     ggplot2::labs(
       x = xlab
+    ) +
+    ggplot2::scale_shape_manual(
+      values = shapes,
+      guide = "none",
+      # name = "p-value",
+      # labels = paste0(c("p >  ", "p <= "), alpha)
     )
   
   patchwork:::`/.ggplot`(top, bottom) +
     patchwork::plot_layout(heights = tbr)
-  
 }
