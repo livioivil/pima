@@ -93,6 +93,7 @@ plot.pima <- function(
     alpha = 0.05,
     xlab = NULL,
     ylab = NULL,
+    regex = FALSE,
     ...
   )
   {
@@ -125,9 +126,15 @@ plot.pima <- function(
   D = object$summary_table
   D$.assign = NULL
   
-  # if focal is provided, plot only the requested coefficient
+  if(is.null(focal)) focal <- object$tested_coeffs
+  
   if(!is.null(focal)){
-    D <- subset(D, Coeff == focal)
+    if(regex){
+      D <- subset(D, grepl(paste0(focal, collapse = "|"), Coeff))
+    } else{
+      D <- subset(D, Coeff %in% focal)
+    }
+    
   }
   
   # check if is one of the available columns
