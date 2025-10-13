@@ -71,6 +71,8 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' plot.pima summary method for a pima object.
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
+#' @param focal a character vector indicating which coefficients to plot. When > 1 coefficient is provided (or NULL) and `xvar` is not provided the `Part. Cor` column is used instead of the `Estimate`.
+# TODO check the focal documentation
 #' @param xvar character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".
 #' @param p.adjust logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default). 
 #' @param p.transf can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.
@@ -84,6 +86,7 @@ as.pima <- function(object, names_obj = NULL, ...) {
 
 plot.pima <- function(
     object,
+    focal = NULL,
     xvar = NULL,
     p.adjusted = TRUE,
     p.transf = "-log10",
@@ -97,6 +100,14 @@ plot.pima <- function(
   # TODO what about adding a way to transform the p value using custom formula? Also adding critical value (p = 0.05) when using a transformation.
   
   # avoid conflicting with base plot(x = ) argument
+  
+  # if parameters to be plotted > 1 and there is no focal, plot all of them but
+  # use the partial correlation.
+  
+  if(is.null(focal) & length(object$tested_coeffs) > 1 & is.null(xvar)){
+    xvar <- "Part. Cor"
+    warning("the number of tested coefficients is > 1 and no xvar specified. Using 'Part. Cor' as xvar.")
+  }
   
   if(is.null(xvar)) xvar <- "Estimate"
   # TODO fix this in jointest
@@ -113,6 +124,11 @@ plot.pima <- function(
   
   D = object$summary_table
   D$.assign = NULL
+  
+  # if focal is provided, plot only the requested coefficient
+  if(!is.null(focal)){
+    D <- subset(D, Coeff == focal)
+  }
   
   # check if is one of the available columns
   xvar <- match.arg(xvar, choices = colnames(D), several.ok = FALSE)
