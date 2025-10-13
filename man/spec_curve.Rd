@@ -7,8 +7,8 @@
 spec_curve(
   x,
   focal = NULL,
-  yvar = "Estimate",
-  p.values = "p.adj.maxT",
+  yvar = NULL,
+  p.adjusted = TRUE,
   alpha = 0.05,
   tbr = c(0.4, 0.6),
   colors = NULL,
@@ -17,15 +17,14 @@ spec_curve(
   xlab = NULL,
   ylab = NULL,
   top.theme = NULL,
-  bottom.theme = NULL
+  bottom.theme = NULL,
+  redundant = TRUE
 )
 }
 \arguments{
 \item{x}{an object of class `pima`, usually the result of the `pima()` function.}
 
 \item{yvar}{character indicating the column of the `x$summary_table` object to be used in the y axes of the top part of the specification curve (usually the estimated parameter). Default to `"Estimate"`.}
-
-\item{p.values}{character indicating the column of the `x$summary_table` object with the p values. Default to `""p.adj.maxT"` (maxT corrected p values).}
 
 \item{alpha}{A numeric value specifying the significance level for the confidence intervals. Default is 0.05.}
 
@@ -40,6 +39,8 @@ spec_curve(
 \item{top.theme}{a function with a `ggplot2` compatible theme for the top plot. Default to ggplot2::theme_minimal()`}
 
 \item{bottom.theme}{a function with a `ggplot2` compatible theme for the bottom plot Default to `ggplot2::theme_minimal()`}
+
+\item{p.values}{character indicating the column of the `x$summary_table` object with the p values. Default to `""p.adj.maxT"` (maxT corrected p values).}
 
 \item{A}{character vector of two elements with the shapes representing non-significant and significant p-values. Default to simple points.}
 }

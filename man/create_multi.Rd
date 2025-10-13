@@ -6,11 +6,11 @@
 \usage{
 create_multi(
   formula,
+  data,
   focal = NULL,
   nfuns = NULL,
   cfuns = NULL,
-  data,
-  fit = FALSE,
+  transf.focal = FALSE,
   fit.fun = NULL,
   fit.fun.args = NULL
 )
@@ -18,13 +18,13 @@ create_multi(
 \arguments{
 \item{formula}{a formula describing the maximal model with bare variables (no tranformations). Currently not supporting interactions.}
 
+\item{data}{the dataset for the model}
+
 \item{focal}{optional name of the coefficient that is the focus of the analysis. No transformation will be applied to that variable and no model will exclude this variable.}
 
 \item{nfuns}{functions to be applied to numerical variables. functions need to be provided as characters. this argument can be a vector of functions (e.g., `c("log", "exp")`) and the functions will be applied al all numerical variable exluding the focal predictor. In alternative, can be a named list specifing the name of the variable and the functions as string (e.g., `list(x = "log", z = c("exp"))`) in this way the functions are variable-specific. If `NULL` no transformations will be applied.}
 
 \item{cfuns}{same as the `nfuns` but for factor/character variables. If `NULL` no transformations will be applied.}
-
-\item{data}{the dataset for the model}
 }
 \value{
 a list

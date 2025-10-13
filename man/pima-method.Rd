@@ -9,7 +9,7 @@
 \alias{plot.pima}
 \title{Methods for pima objects}
 \usage{
-\method{print}{pima}(object, n = 4, ...)
+\method{print}{pima}(object, n = 4)
 
 \method{summary}{pima}(object, ...)
 
@@ -17,10 +17,14 @@
 
 \method{plot}{pima}(
   object,
-  p.values = "adjusted",
-  alpha = 0.05,
+  focal = NULL,
   xvar = NULL,
-  yvar = NULL,
+  p.adjusted = TRUE,
+  p.transf = "-log10",
+  alpha = 0.05,
+  xlab = NULL,
+  ylab = NULL,
+  regex = FALSE,
   ...
 )
 }
@@ -31,13 +35,19 @@
 
 \item{names_obj}{a vector of names, its length must be equal to the length of \code{object}}
 
-\item{p.values}{use "raw" or "adjusted" (i.e. corrected for selective inference). Default to "raw".}
+\item{focal}{a character vector indicating which coefficients to plot. When > 1 coefficient is provided (or NULL) and `xvar` is not provided the `Part. Cor` column is used instead of the `Estimate`.}
+
+\item{xvar}{character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".}
+
+\item{p.transf}{can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.}
 
 \item{alpha}{a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.}
 
-\item{y}{`"-log10(p)"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"z value"`) or any other expression e.g. `"-log10(p)"`.}
+\item{xlab}{character vector indicating the x-axis label. Default to `xvar`}
 
-\item{x}{`"Estimate"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"Part. Cor"`) or any other expression e.g. `"-log10(p)"`.}
+\item{ylab}{character vector indicating the y-axis label. Default to `p` or `p.adjust.<method>` where method is `object$p.adjust.method`.}
+
+\item{p.adjust}{logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default).}
 }
 \description{
 Methods for \code{pima} objects.
