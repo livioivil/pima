@@ -14,13 +14,14 @@
 #'              data = iris)
 #' 
 create_multi <- function(formula,
+                         data,
                          focal = NULL,
                          nfuns = NULL,
                          cfuns = NULL,
-                         data,
-                         fit = FALSE,
+                         transf.focal = FALSE,
                          fit.fun = NULL,
                          fit.fun.args = NULL){
+  
   xs <- formula.tools::rhs.vars(formula)
   y <- formula.tools::lhs.vars(formula)
   xs_type <- sapply(data, class)[xs]
@@ -67,10 +68,18 @@ create_multi <- function(formula,
   X <- .fac2char(X)
   
   X$focal <- FALSE
-  X$focal[X$x == focal] <- TRUE
+  X$focal[X$x %in% focal] <- TRUE
   
-  if(!is.null(focal)){
-    X$fun <- ifelse(X$x == focal & X$fun != "identity", "identity", X$fun)
+  if(length(transf.focal) != 1 & length(transf.focal) != length(focal)) {
+    stop("transf.focal need to be a logical vector of length 1 or length of focal!")
+  } 
+  
+  if(length(transf.focal) == 1) transf.focal <- rep(transf.focal, length(focal))
+  
+  for(i in 1:length(focal)){
+    if(!transf.focal[i]){
+      X$fun <- ifelse(X$x == focal[i] & X$fun != "identity", "identity", X$fun)
+    }
   }
   
   X$.id_fun <- .make_id(X$fun)
@@ -93,24 +102,29 @@ create_multi <- function(formula,
   forms <- unlist(forms, recursive = FALSE)
   dup <- sapply(forms, function(x) length(unique(names(x))) != length(names(x)))
   forms <- forms[!dup]
+  
+  
   # remove calls without the focal predictor
-  if(!is.null(focal)){
-    has_focal <- sapply(forms, function(x) any(x == focal))
+  
+  if(!is.null(focal)) {
+    has_focal <- matrix(NA, nrow = length(forms), ncol = length(focal))
+    
+    for(i in 1:length(focal)){
+      has_focal[, i] <- sapply(forms, function(f) any(grepl(focal[i], f)))
+    }
+    
+    has_focal <- apply(has_focal, 1, all)
+    
     forms <- forms[has_focal]
+    
   }
   
   forms_call <- lapply(forms, paste, collapse = " + ")
   forms_call <- paste(y, "~", forms_call)
+  out <- list(variables = X, calls = unlist(forms_call))
   
-  # # check if the marginality principle is respected
-  # forms_as_formula <- sapply(forms_call, as.formula)
-  # is_marginal <- sapply(forms_as_formula, function(x) check_marginality(x))
-  # forms_call <- forms_call[!is_marginal]
-  out <- list(X = X, calls = unlist(forms_call), data = data)
-  
-  if(fit){
+  if(!is.null(fit.fun)){
     mods <- vector(mode = "list", length = length(out$calls))
-    
     for(i in 1:length(mods)){
       mm <-  do.call(fit.fun, c(list(formula = as.formula(out$calls[i]), data = data), fit.fun.args))
       mm$call$formula <- as.formula(out$calls[i])
