@@ -71,10 +71,12 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' plot.pima summary method for a pima object.
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
-#' @param p.values  use "raw" or "adjusted" (i.e. corrected for selective inference). Default to "raw".
-#' @param y `"-log10(p)"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"z value"`) or any other expression e.g. `"-log10(p)"`.
-#' @param x `"Estimate"` by default. It can be any column's name of the `summary()` of a `pima-object` (e.g. `"Part. Cor"`) or any other expression e.g. `"-log10(p)"`.
+#' @param xvar character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".
+#' @param p.adjust logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default). 
+#' @param p.transf can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.
 #' @param alpha a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.
+#' @param xlab character vector indicating the x-axis label. Default to `xvar`
+#' @param ylab character vector indicating the y-axis label. Default to `p` or `p.adjust.<method>` where method is `object$p.adjust.method`.
 #' @param ... additional arguments to be passed
 #' @method  plot pima
 #' @docType methods
@@ -82,11 +84,10 @@ as.pima <- function(object, names_obj = NULL, ...) {
 
 plot.pima <- function(
     object,
-    alpha = .05,
     xvar = NULL,
-    p.values = NULL,
-    p.adjust = TRUE,
+    p.adjusted = TRUE,
     p.transf = "-log10",
+    alpha = 0.05,
     xlab = NULL,
     ylab = NULL,
     ...
@@ -99,7 +100,16 @@ plot.pima <- function(
   
   if(is.null(xvar)) xvar <- "Estimate"
   # TODO fix this in jointest
-  if(is.null(p.values)) p.values <- sprintf("p.adj.%s", object$p.adjust.method)
+  
+  if(object$p.adjust.method == "none" & p.adjusted) {
+    stop("the pima() functions as been called without p.values adjustments. Re-run without pima(..., method = 'none')" )
+  }
+  
+  if(p.adjusted){
+    p.values <- sprintf("p.adj.%s", object$p.adjust.method)
+  } else{
+    p.values <- "p"
+  }
   
   D = object$summary_table
   D$.assign = NULL
@@ -126,7 +136,7 @@ plot.pima <- function(
     -log10(quantile(object$summary_table$p.adj, c(0.99, 0.01)))
   ))
   
-  if (p.values == "raw") {
+  if (object$p.adjust.method == "none") {
     D$is_signif = (D$p <= alpha)
     title = "(Raw) p-values"
     
@@ -179,7 +189,7 @@ plot.pima <- function(
     p <- p +
       ggplot2::scale_shape_manual(
         values = c(3, 19),
-        name = paste(p.values, "p-value"),
+        name = "p-value",
         labels = paste0(c("p >  ", "p <= "), alpha)
       )
   }
