@@ -82,11 +82,13 @@ as.pima <- function(object, names_obj = NULL, ...) {
 
 plot.pima <- function(
     object,
-    p.adjusted = TRUE,
     alpha = .05,
     xvar = NULL,
     p.values = NULL,
+    p.adjust = TRUE,
     p.transf = "-log10",
+    xlab = NULL,
+    ylab = NULL,
     ...
   )
   {
@@ -96,23 +98,20 @@ plot.pima <- function(
   # avoid conflicting with base plot(x = ) argument
   
   if(is.null(xvar)) xvar <- "Estimate"
+  # TODO fix this in jointest
+  if(is.null(p.values)) p.values <- sprintf("p.adj.%s", object$p.adjust.method)
   
   D = object$summary_table
   D$.assign = NULL
   
   # check if is one of the available columns
   xvar <- match.arg(xvar, choices = colnames(D), several.ok = FALSE)
+  p.values <- match.arg(p.values, choices = colnames(D), several.ok = FALSE)
+  group <- "Coeff"
   
-  # for yvar the name can be also an expression (as character) to be
-  # evaluated. Thus check if y exist, otherwise try to evaluate the expression
+  # transform the p value
+  D$.p.values.transf <- transf_p(D[[p.values]], method = p.transf)
   
-  if(!yvar %in% colnames(D)){
-    D[[yvar]] <- eval(parse(text = yvar), envir = D)
-  }
-  
-  p.values = match.arg(p.values, choices = c("adjusted", "raw"))
-  group = "Coeff"
-
   # RIRR and RP indices
   
   IRR <- exp(object$summary_table$Estimate)
@@ -156,15 +155,25 @@ plot.pima <- function(
     )
     
   }
+  
+  if(is.null(xlab)) xlab <- xvar
+  
+  p.transf.txt <- if(is.function(p.transf)) "custom" else p.transf
+  
+  if(is.null(ylab)) ylab <- sprintf("%s (%s)", p.values, p.transf.txt)
 
   p <- ggplot2::ggplot(D, 
                ggplot2::aes(x = .data[[xvar]], 
-                  y = .data[[yvar]], 
+                  y = .data[[".p.values.transf"]], 
                   group = .data[[group]], 
                   color = .data[[group]])) +
     ggplot2::geom_point(ggplot2::aes(shape = is_signif), size = 2) +
     ggplot2::ggtitle(title) +
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      x = xlab,
+      y = ylab
+    )
   
   if (!(alpha %in% c(0, 1))) {
     p <- p +
