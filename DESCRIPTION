@@ -9,14 +9,13 @@ Description: Runs resampling-based tests jointly to allow for multiple testing i
 License: GPL (>= 2)
 Imports:
     flipscores,
-    ggplot2,
     methods,
     flip 
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 Language: en-US
 BugReports: https://github.com/livioivil/pima/issues
-URL: https://github.com/livioivil/pima
+URL: https://livioivil.github.io/pima
 Suggests: 
     knitr,
     rmarkdown

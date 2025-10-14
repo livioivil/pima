@@ -13,8 +13,6 @@
 #' @examples
 #' # Example usage (assuming `res` is a pre-computed result object)
 #' # pvalue_tree(res, p.values = "raw")
-#' @import rpart
-#' @import rpart.plot
 #' @export
 pima_tree <- function(res, p.values="adjusted",method="class", alpha=0.05, ... ) {
   # Extract data
@@ -29,9 +27,9 @@ pima_tree <- function(res, p.values="adjusted",method="class", alpha=0.05, ... )
   comb_wide<-merge(res$info,temp,by="Model")
   
   # for (i in 3:length(comb_wide)) comb_wide[, i] <- factor(comb_wide[, i])
-  tree_model <- rpart(p ~ ., data = comb_wide[, -c(1:2)], method = method)
-  printcp(tree_model)
+  tree_model <- rpart::rpart(p ~ ., data = comb_wide[, -c(1:2)], method = method)
+  rpart::printcp(tree_model)
   
-  rpart.plot(tree_model)
+  rpart.plot::rpart.plot(tree_model)
 }
 
