@@ -94,6 +94,7 @@ plot.pima <- function(
     xlab = NULL,
     ylab = NULL,
     regex = FALSE,
+    shapes = NULL,
     ...
   )
   {
@@ -190,6 +191,7 @@ plot.pima <- function(
   }
   
   if(is.null(xlab)) xlab <- xvar
+  if(is.null(shapes)) shapes <- c(4, 19)
   
   p.transf.txt <- if(is.function(p.transf)) "custom" else p.transf
   
@@ -211,7 +213,7 @@ plot.pima <- function(
   if (!(alpha %in% c(0, 1))) {
     p <- p +
       ggplot2::scale_shape_manual(
-        values = c(3, 19),
+        values = c(4, 19),
         name = "p-value",
         labels = paste0(c("p >  ", "p <= "), alpha)
       )
