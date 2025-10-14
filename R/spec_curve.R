@@ -24,7 +24,7 @@
 spec_curve <- function(x,
                        focal = NULL,
                        yvar = NULL,
-                       p.adjusted = TRUE,
+                       p.adjusted = NULL,
                        alpha = 0.05,
                        tbr = c(0.4, 0.6),
                        colors = NULL,
@@ -34,7 +34,8 @@ spec_curve <- function(x,
                        ylab = NULL,
                        top.theme = NULL,
                        bottom.theme = NULL,
-                       redundant = TRUE) {
+                       redundant = TRUE,
+                       conf.int = FALSE) {
   
   stopifnot(inherits(x, "pima"))
   
@@ -49,6 +50,7 @@ spec_curve <- function(x,
   if(is.null(top.theme)) top.theme <- ggplot2::theme_minimal
   if(is.null(bottom.theme)) bottom.theme <- ggplot2::theme_minimal
   if(is.null(focal)) focal <- x$tested_coeffs
+  if(is.null(p.adjusted)) p.adjusted <- x$p.adjust.method != "none"
   
   if(length(focal) > 1 & is.null(yvar)){
     yvar <- "Part. Cor"
@@ -74,7 +76,8 @@ spec_curve <- function(x,
     x$summary_table <- subset(x$summary_table, Coeff %in% focal)
   }
 
-  spec_data <- .get_spec_curve_data(x, yvar, p.values, alpha)
+  spec_data <- .get_spec_curve_data(x, yvar, p.adjusted, p.values, alpha)
+  
   spec_data$dbottom$var_txt <- ifelse(
     spec_data$dbottom$var %in% focal,
     sprintf('atop(bold("%s"), "(focal)")', spec_data$dbottom$var),
@@ -90,7 +93,7 @@ spec_curve <- function(x,
   
   # plotting elements
   
-  if(is.null(shapes)) shapes <- c(3, 19)
+  if(is.null(shapes)) shapes <- c(4, 19)
   
   top <- ggplot2::ggplot(data = spec_data$dtop,
                          ggplot2::aes(x = .id_spec,
@@ -115,13 +118,25 @@ spec_curve <- function(x,
       y = ylab
     )
   
+  if(yvar != "Estimate" & conf.int) {
+    warning("confidence interval can be calculated only for the coefficients!")
+  }
+  
+  if(yvar == "Estimate" & conf.int){
+    top <- top +
+      ggplot2::geom_segment(ggplot2::aes(x = .id_spec,
+                                         xend = .id_spec,
+                                         y = Estimate.ci.lb,
+                                         yend = Estimate.ci.ub))
+  }
+  
   bottom <- ggplot2::ggplot(spec_data$dbottom, 
                             ggplot2::aes(x = .id_spec,
                                          y = var.spec)) +
     ggplot2::facet_grid(var_txt ~ ., 
                         scales = "free_y",
                         labeller = ggplot2::label_parsed) +
-    ggplot2::geom_point(aes(shape = is_signif)) +
+    ggplot2::geom_point(ggplot2::aes(shape = is_signif)) +
     bottom.theme() +
     ggplot2::theme(
       axis.title.y = ggplot2::element_blank()
