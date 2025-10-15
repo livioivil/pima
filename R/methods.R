@@ -41,9 +41,9 @@ summary.pima <- function(object, ...) {
 
 .get_summary_table_from_flipscores <- function(object) {
   tab = as.data.frame(summary(object)$coefficients)
-  tab = tab[!is.na(tab[, "Score"]), ]
+  tab = tab[!is.na(tab[, "score"]), ]
   colnames(tab)[ncol(tab)] = "p"
-  tab = cbind(Coeff = rownames(tab), tab)
+  tab = cbind(coefficient = rownames(tab), tab)
 }
 
 #' as.pima method for a pima object.
@@ -107,23 +107,18 @@ plot.pima <- function(
   # use the partial correlation.
   
   if(is.null(focal) & length(object$tested_coeffs) > 1 & is.null(xvar)){
-    xvar <- "Part. Cor"
-    warning("the number of tested coefficients is > 1 and no xvar specified. Using 'Part. Cor' as xvar.")
+    xvar <- "pcor"
+    warning("the number of tested coefficients is > 1 and no xvar specified. Using pcor as xvar.")
   }
   
-  if(is.null(xvar)) xvar <- "Estimate"
+  if(is.null(xvar)) xvar <- "estimate"
   # TODO fix this in jointest
   
   if(object$p.adjust.method == "none" & p.adjusted) {
     stop("the pima() functions as been called without p.values adjustments. Re-run without pima(..., method = 'none')" )
   }
   
-  if(p.adjusted){
-    p.values <- sprintf("p.adj.%s", object$p.adjust.method)
-  } else{
-    p.values <- "p"
-  }
-  
+  p.values <- if(p.adjusted) "p.adj" else "p"
   D = object$summary_table
   D$.assign = NULL
   
@@ -131,9 +126,9 @@ plot.pima <- function(
   
   if(!is.null(focal)){
     if(regex){
-      D <- subset(D, grepl(paste0(focal, collapse = "|"), Coeff))
+      D <- subset(D, grepl(paste0(focal, collapse = "|"), coefficient))
     } else{
-      D <- subset(D, Coeff %in% focal)
+      D <- subset(D, coefficient %in% focal)
     }
     
   }
@@ -141,14 +136,14 @@ plot.pima <- function(
   # check if is one of the available columns
   xvar <- match.arg(xvar, choices = colnames(D), several.ok = FALSE)
   p.values <- match.arg(p.values, choices = colnames(D), several.ok = FALSE)
-  group <- "Coeff"
+  group <- "coefficient"
   
   # transform the p value
-  D$.p.values.transf <- transf_p(D[[p.values]], method = p.transf)
+  D$p.transf <- transf_p(D[[p.values]], method = p.transf)
   
   # RIRR and RP indices
   
-  IRR <- exp(object$summary_table$Estimate)
+  IRR <- exp(object$summary_table$estimate)
   RIRR <- as.numeric(quantile(IRR, c(0.99)) / quantile(IRR, c(0.01)))
   
   # Relative pvalues
@@ -176,7 +171,7 @@ plot.pima <- function(
     
   } else {
     # adj
-    title = "Adjusted p-values"
+    title = sprintf("Adjusted p-values (%s)", object$p.adjust.method)
     adj_id = grep("p.adj", colnames(D))[1]
     D$is_signif = (D[, adj_id] <= alpha)
     
@@ -199,7 +194,7 @@ plot.pima <- function(
 
   p <- ggplot2::ggplot(D, 
                ggplot2::aes(x = .data[[xvar]], 
-                  y = .data[[".p.values.transf"]], 
+                  y = .data[["p.transf"]], 
                   group = .data[[group]], 
                   color = .data[[group]])) +
     ggplot2::geom_point(ggplot2::aes(shape = is_signif), size = 2) +
