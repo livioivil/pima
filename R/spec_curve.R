@@ -53,18 +53,14 @@ spec_curve <- function(x,
   if(is.null(p.adjusted)) p.adjusted <- x$p.adjust.method != "none"
   
   if(length(focal) > 1 & is.null(yvar)){
-    yvar <- "Part. Cor"
-    warning("the number of tested coefficients is > 1 and no yvar specified. Using 'Part. Cor' as yvar.")
+    yvar <- "pcor"
+    warning("the number of tested coefficients is > 1 and no yvar specified. Using 'pcor' as yvar.")
   }
   
+  if(is.null(yvar)) yvar <- "estimate"
   yvar <- match.arg(yvar, choices = colnames(x$summary_table), several.ok = FALSE)
   
-  if(p.adjusted){
-    p.values <- sprintf("p.adj.%s", x$p.adjust.method)
-  } else{
-    p.values <- "p"
-  }
-  
+  p.values <- if(p.adjusted) "p.adj" else "p"
   p.values <- match.arg(p.values, choices = colnames(x$summary_table), several.ok = FALSE)
   
   if(is.null(xlab)) xlab <- "Specification"
@@ -73,7 +69,7 @@ spec_curve <- function(x,
   xs <- attributes(x$info)$xs
   
   if(!is.null(focal)){
-    x$summary_table <- subset(x$summary_table, Coeff %in% focal)
+    x$summary_table <- subset(x$summary_table, coefficient %in% focal)
   }
 
   spec_data <- .get_spec_curve_data(x, yvar, p.adjusted, p.values, alpha)
@@ -99,7 +95,7 @@ spec_curve <- function(x,
                          ggplot2::aes(x = .id_spec,
                                       y = .data[[yvar]])) +
     #ggplot2::geom_point(ggplot2::aes(color = is_signif), show.legend = FALSE) +
-    ggplot2::geom_point(ggplot2::aes(color = Coeff, shape = is_signif), show.legend = TRUE) +
+    ggplot2::geom_point(ggplot2::aes(color = coefficient, shape = is_signif), show.legend = TRUE) +
     top.theme() +
     ggplot2::theme(
       axis.title.x = ggplot2::element_blank(),
@@ -118,16 +114,16 @@ spec_curve <- function(x,
       y = ylab
     )
   
-  if(yvar != "Estimate" & conf.int) {
+  if(yvar != "estimate" & conf.int) {
     warning("confidence interval can be calculated only for the coefficients!")
   }
   
-  if(yvar == "Estimate" & conf.int){
+  if(yvar == "estimate" & conf.int){
     top <- top +
       ggplot2::geom_segment(ggplot2::aes(x = .id_spec,
                                          xend = .id_spec,
-                                         y = Estimate.ci.lb,
-                                         yend = Estimate.ci.ub))
+                                         y = est.ci.lb,
+                                         yend = est.ci.ub))
   }
   
   bottom <- ggplot2::ggplot(spec_data$dbottom, 
