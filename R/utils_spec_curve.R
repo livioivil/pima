@@ -4,7 +4,7 @@
                                  p.values,
                                  include.p.raw = FALSE,
                                  alpha = 0.05){
-  spec_data <- merge(x$summary_table, x$info, by = "Model")
+  spec_data <- merge(x$summary_table, x$info, by = "model")
   spec_data <- spec_data[order(spec_data[[yvar]]), ]
   spec_data$.id_spec <- 1:nrow(spec_data)
   
@@ -22,9 +22,9 @@
     spec_data$p_for_plot <- spec_data$p
   }
   
-  spec_data$se.adj <- with(spec_data, abs(Estimate) / abs(qnorm(1 - p_for_plot / 2)))
-  spec_data$Estimate.ci.lb <- with(spec_data, Estimate - se.adj * zc)
-  spec_data$Estimate.ci.ub <- with(spec_data, Estimate + se.adj * zc)
+  spec_data$se.adj <- with(spec_data, abs(estimate) / abs(qnorm(1 - p_for_plot / 2)))
+  spec_data$est.ci.lb <- with(spec_data, estimate - se.adj * zc)
+  spec_data$est.ci.ub <- with(spec_data, estimate + se.adj * zc)
   spec_data$is_signif <- spec_data$p_for_plot <= alpha
   
   xs <- attributes(x$info)$xs
