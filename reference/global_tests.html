@@ -121,9 +121,9 @@ except when categorical predictors are present and <code>comb_factors = TRUE</co
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">global_tests</span><span class="op">(</span><span class="va">res</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘jointest’</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">global_tests</span><span class="op">(</span><span class="va">res</span>, by <span class="op">=</span> <span class="st">"Model"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘jointest’</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in match.arg(by, choices = c("coefficient", "model", "individual")):</span> 'arg' should be one of “coefficient”, “model”, “individual”</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">global_tests</span><span class="op">(</span><span class="va">res</span>, by <span class="op">=</span> <span class="st">"Coeff"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘jointest’</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in match.arg(by, choices = c("coefficient", "model", "individual")):</span> 'arg' should be one of “coefficient”, “model”, “individual”</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Global tests for each factor</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">global_tests</span><span class="op">(</span><span class="va">res</span>, by <span class="op">=</span> <span class="st">"individual"</span>, comb_factors <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -131,7 +131,7 @@ except when categorical predictors are present and <code>comb_factors = TRUE</co
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># These tests can be aggregated as before (e.g., by coefficient)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">global_tests</span><span class="op">(</span><span class="va">res</span>, by <span class="op">=</span> <span class="st">"Coeff"</span>, comb_factors <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘jointest’</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in match.arg(by, choices = c("coefficient", "model", "individual")):</span> 'arg' should be one of “coefficient”, “model”, “individual”</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
