@@ -8,7 +8,7 @@ spec_curve(
   x,
   focal = NULL,
   yvar = NULL,
-  p.adjusted = TRUE,
+  p.adjusted = NULL,
   alpha = 0.05,
   tbr = c(0.4, 0.6),
   colors = NULL,
@@ -18,7 +18,8 @@ spec_curve(
   ylab = NULL,
   top.theme = NULL,
   bottom.theme = NULL,
-  redundant = TRUE
+  redundant = TRUE,
+  conf.int = FALSE
 )
 }
 \arguments{

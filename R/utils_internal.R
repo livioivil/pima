@@ -1,7 +1,4 @@
-########### COMBINING FUNCTIONS
-################################
 .get_all_Tspace <- function(mods) {
-  # dplyr::bind_cols(lapply(mods, function(md) md$Tspace))
   tab = lapply(mods, function(x) {
     if (is.null(x$Tspace)) {
       stop("At least one Tspace is missing")
@@ -18,7 +15,6 @@
   tab
 }
 
-
 .get_all_summary_table <- function(mods) {
   res = lapply(1:length(mods), function(i) {
     cbind(model = names(mods)[i], mods[[i]]$summary_table)
@@ -27,12 +23,6 @@
   rownames(res) = NULL
   res
 }
-
-# .get_all_Tspace <- function(mods){
-#   # dplyr::bind_cols(lapply(mods, function(md) md$Tspace))
-#   temp=lapply(mods, function(md) md$Tspace)
-#   data.frame(temp)
-# }
 
 .get_all_tested_coeffs_names <- function(mods) {
   sapply(mods, function(md) colnames(md$Tspace))
@@ -63,14 +53,6 @@
     names(mods)
   }
 }
-
-# .set_comb_names_in_summary_table <- function(combs,comb_names){
-#   res=lapply(1:length(combs), function(i) {
-#     combs[[i]]$summary_table=cbind(Coeff=comb_names[i],combs[[i]]$summary_table)
-#     combs[[i]]
-#   })
-#   res
-# }
 
 .set_comb_names_in_Tspace <- function(combs, comb_names) {
   res = lapply(1:length(combs), function(i) {
@@ -147,10 +129,6 @@
 
   info <- cbind(info, XS)
 
-  # # TODO fix this when outlier and leverage are implemented
-  # info$outlier <- FALSE
-  # info$leverage <- FALSE
-
   if ("npreg" %in% colnames(info)) {
     info$npreg[is.na(info$npreg)] = info$`npreg^2`[is.na(info$npreg)]
     info$`npreg^2` = NULL
@@ -208,21 +186,4 @@
   }
   f_args <- f_args[!names(f_args) %in% exclude]
   f_args
-}
-
-transf_p <- function(p, method = "raw") {
-  stopifnot(is.numeric(p), all(p >= 0 & p <= 1, na.rm = TRUE))
-
-  if (is.function(method)) {
-    return(method(p))
-  }
-
-  method <- match.arg(method, c("raw", "-log10", "z"))
-
-  switch(
-    method,
-    "raw" = p,
-    "-log10" = -log10(p),
-    "z" = qnorm(p / 2, lower.tail = FALSE)
-  )
 }

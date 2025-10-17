@@ -62,13 +62,20 @@
 #' summary(global_tests(res, by = "Coeff", comb_factors = TRUE))
 #' @export
 
-global_tests <- function(obj, by = NULL, comb_funct = "maxT", comb_factors = FALSE, comb_factors_funct = "Mahalanobis"){
+global_tests <- function(obj, 
+                         by = NULL, 
+                         comb_funct = "maxT", 
+                         comb_factors = FALSE, 
+                         comb_factors_funct = "Mahalanobis"){
   
-  if(!is.null(by)){by <- match.arg(by, c("Coeff", "Model", "individual"))}
-  
+  if (!is.null(by)) {
+    by <- match.arg(by, choices = c("coefficient", "model", "individual"))
+  }
   
   if(comb_factors){
-    obj <- jointest::combine_contrasts(obj, comb_funct = comb_factors_funct, tail = 0)
+    obj <- jointest::combine_contrasts(obj, 
+                                       comb_funct = comb_factors_funct, 
+                                       tail = 0)
   }
   
   if(is.null(by) || by != "individual"){

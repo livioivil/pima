@@ -28,7 +28,4 @@ This is the \code{anova} method for \code{pima} object. Remark: it performs type
 }
 \examples{
 set.seed(1)
-
-
-
 }

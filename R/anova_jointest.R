@@ -10,11 +10,9 @@
 #' Default is 5000.
 #' @param id a \code{vector} identifying the clustered observations. If \code{NULL} (default) observations are assumed to be independent. NOTE: if \code{object} is a \code{pima} and \code{model$flip_param_call$id} is not \code{NULL}, this is considered in the inference.
 #' @param ... other parameters allowed in \code{stats::anova}.
+#' @export
 #' @examples
 #' set.seed(1)
-#' 
-#'
-#'
 
 
 anova.pima <- function(object,
@@ -24,8 +22,7 @@ anova.pima <- function(object,
   
   if(is.null(score_type)) score_type = object$score_type
   
-  anova_temp=get("anova.glm", envir = asNamespace("stats"),
-                 inherits = FALSE)
+  anova_temp=get("anova.glm", envir = asNamespace("stats"), inherits = FALSE)
   
   ## comparison of 2 nested models
   if(!is.null(model1)){ 
@@ -66,8 +63,6 @@ anova.pima <- function(object,
     subsets_npc=lapply(unique(varseq[varseq!=0]),function(i)which(varseq==i))
     
     res=mahalanobis_npc_multi(ids_list = subsets_npc,permT = as.matrix(object$Tspace))
-    # flip::npc(ps@permT,comb.funct = "mahalanobist",subsets = subsets_npc)
-    # res@res[, 3]=res@res[, 3]*nrow(ps@permT)
     
     out_param = anova_temp(object,test="Rao")
     heading2=paste0("Model: ",deparse1(formula(object)))

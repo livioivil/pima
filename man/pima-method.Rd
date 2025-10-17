@@ -25,6 +25,7 @@
   xlab = NULL,
   ylab = NULL,
   regex = FALSE,
+  shapes = NULL,
   ...
 )
 }
