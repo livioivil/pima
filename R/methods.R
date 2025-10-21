@@ -113,7 +113,7 @@ plot.pima <- function(
     warning("the number of tested coefficients is > 1 and no xvar specified. Using pcor as xvar.")
   }
   
-  if(is.null(xvar)) xvar <- "estimate"
+  if(is.null(xvar)) xvar <- "pcor"
   # TODO fix this in jointest
   
   if(object$p.adjust.method == "none" & p.adjusted) {
