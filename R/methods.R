@@ -95,6 +95,8 @@ plot.pima <- function(
     ylab = NULL,
     regex = FALSE,
     shapes = NULL,
+    facet = TRUE,
+    facet.scales = NULL,
     ...
   )
   {
@@ -106,7 +108,7 @@ plot.pima <- function(
   # if parameters to be plotted > 1 and there is no focal, plot all of them but
   # use the partial correlation.
   
-  if(is.null(focal) & length(object$tested_coeffs) > 1 & is.null(xvar)){
+  if(is.null(focal) && length(object$tested_coeffs) > 1 && is.null(xvar) && is.null(facet)){
     xvar <- "pcor"
     warning("the number of tested coefficients is > 1 and no xvar specified. Using pcor as xvar.")
   }
@@ -212,6 +214,16 @@ plot.pima <- function(
         name = "p-value",
         labels = paste0(c("p >  ", "p <= "), alpha)
       )
+  }
+  
+  if(!is.null(facet.scales)) {
+    facet.scales <- match.arg(facet.scales, choices = c("fixed", "free", "free_x", "free_y"), several.ok = FALSE)
+  } else{
+    facet.scales <- "free_x"
+  }
+  
+  if(facet){
+    p <- p + ggplot2::facet_wrap("coefficient", scales = facet.scales)
   }
   p
 }
