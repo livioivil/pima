@@ -89,7 +89,7 @@ plot.pima <- function(
     focal = NULL,
     xvar = NULL,
     p.adjusted = TRUE,
-    p.transf = "-log10",
+    p.transf = "z",
     alpha = 0.05,
     xlab = NULL,
     ylab = NULL,
