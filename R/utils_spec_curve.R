@@ -46,5 +46,6 @@
   data$est.ci.lb <- with(data, estimate - se.adj * zc)
   data$est.ci.ub <- with(data, estimate + se.adj * zc)
   data$is_signif <- data$p_for_plot <= alpha
+  data$is_signif <- factor(ifelse(data$is_signif, 1, 0), levels = c(0, 1))
   data
 }

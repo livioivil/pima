@@ -95,7 +95,7 @@ plot.pima <- function(
     ylab = NULL,
     regex = FALSE,
     shapes = NULL,
-    facet = TRUE,
+    facet = FALSE,
     facet.scales = NULL,
     ...
   )
@@ -187,6 +187,9 @@ plot.pima <- function(
     
   }
   
+  D$is_signif <- ifelse(D$is_signif, 1, 0)
+  D$is_signif <- factor(D$is_signif, levels = c(0, 1))
+  
   if(is.null(xlab)) xlab <- xvar
   if(is.null(shapes)) shapes <- c(4, 19)
   
@@ -199,7 +202,7 @@ plot.pima <- function(
                   y = .data[["p.transf"]], 
                   group = .data[[group]], 
                   color = .data[[group]])) +
-    ggplot2::geom_point(ggplot2::aes(shape = is_signif), size = 2) +
+    ggplot2::geom_point(ggplot2::aes(shape = is_signif), size = 2, show.legend = TRUE) +
     ggplot2::ggtitle(title) +
     ggplot2::theme_minimal() +
     ggplot2::labs(
@@ -212,6 +215,7 @@ plot.pima <- function(
       ggplot2::scale_shape_manual(
         values = c(4, 19),
         name = "p-value",
+        drop = FALSE,
         labels = paste0(c("p >  ", "p <= "), alpha)
       )
   }

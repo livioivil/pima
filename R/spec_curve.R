@@ -94,21 +94,23 @@ spec_curve <- function(x,
   top <- ggplot2::ggplot(data = spec_data$dtop,
                          ggplot2::aes(x = .id_spec,
                                       y = .data[[yvar]])) +
-    #ggplot2::geom_point(ggplot2::aes(color = is_signif), show.legend = FALSE) +
-    ggplot2::geom_point(ggplot2::aes(color = coefficient, shape = is_signif), show.legend = TRUE) +
+    ggplot2::geom_point(ggplot2::aes(color = coefficient, 
+                                     shape = is_signif), 
+                        show.legend = TRUE) +
     top.theme() +
     ggplot2::theme(
       axis.title.x = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_blank(),
-      axis.ticks.x = ggplot2::element_blank()
+      axis.ticks.x = ggplot2::element_blank(),
+      legend.position = "bottom"
     ) +
     ggplot2::ggtitle(title) +
     ggplot2::scale_color_manual(values = colors) +
     ggplot2::scale_shape_manual(
       values = shapes,
       guide = "none",
-      # name = "p-value",
-      # labels = paste0(c("p >  ", "p <= "), alpha)
+      name = "p-value",
+      labels = paste0(c("p >  ", "p <= "), alpha)
     ) +
     ggplot2::labs(
       y = ylab
@@ -132,19 +134,21 @@ spec_curve <- function(x,
     ggplot2::facet_grid(var_txt ~ ., 
                         scales = "free_y",
                         labeller = ggplot2::label_parsed) +
-    ggplot2::geom_point(ggplot2::aes(shape = is_signif)) +
+    ggplot2::geom_point(ggplot2::aes(shape = is_signif), show.legend = TRUE) +
     bottom.theme() +
     ggplot2::theme(
-      axis.title.y = ggplot2::element_blank()
+      axis.title.y = ggplot2::element_blank(),
+      legend.position = "bottom"
     ) +
     ggplot2::labs(
       x = xlab
     ) +
     ggplot2::scale_shape_manual(
       values = shapes,
-      guide = "none",
-      # name = "p-value",
-      # labels = paste0(c("p >  ", "p <= "), alpha)
+      #guide = "none",
+      name = "p-value",
+      drop = FALSE,
+      labels = paste0(c("p >  ", "p <= "), alpha)
     )
   
   patchwork:::`/.ggplot`(top, bottom) +
