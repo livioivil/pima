@@ -155,7 +155,7 @@ plot.pima <- function(
     -log10(quantile(object$summary_table$p.adj, c(0.99, 0.01)))
   ))
   
-  if (object$p.adjust.method == "none") {
+  if (object$p.adjust.method == "none" || !p.adjusted) {
     D$is_signif = (D$p <= alpha)
     title = "(Raw) p-values"
     
