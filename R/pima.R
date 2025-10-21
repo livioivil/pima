@@ -94,6 +94,14 @@
 
 pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...) {
   
+  mods_are_glm <- sapply(mods, function(x) inherits(x, "glm"))
+
+  if(!all(mods_are_glm)){
+    # TODO check if refitting is safe
+    # stop("all models within mods must be of class glm!")
+    mods <- lapply(mods, as.glm)
+  }
+  
   method <- match.arg(method, c("maxT", "minP", "none"))
   
   extra_args <- list(...)

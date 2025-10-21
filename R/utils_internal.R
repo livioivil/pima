@@ -203,5 +203,19 @@ clapply <- function(x, class, FUN, ...) {
   res
 }
 
+# TODO check if better using a different approach
+as.glm <- function(x){
+  if(inherits(x, "lm")){
+    call <- getCall(x)
+    call_as_list <- as.list(call)
+    # lm to glm
+    call_as_list[[1]] <- quote(glm)
+    eval(as.call(call_as_list), envir = environment(formula(x)))
+  } else{
+    x
+  }
+}
+
+
 
 
