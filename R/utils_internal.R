@@ -187,3 +187,21 @@
   f_args <- f_args[!names(f_args) %in% exclude]
   f_args
 }
+
+clapply <- function(x, class, FUN, ...) {
+  stopifnot(inherits(x, c("list", "data.frame")))
+  res <- lapply(x, function(cc) {
+    if(inherits(cc, class)){
+      FUN(cc, ...)
+    } else{
+      cc
+    }
+  })
+  if(inherits(x, "data.frame")){
+    res <- data.frame(res)
+  }
+  res
+}
+
+
+
