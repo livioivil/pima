@@ -30,13 +30,20 @@ print.pima <- function (object, n = 4) {
 #' summary.pima summary method for a pima object.
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
+#' @param digits number of digits when rounding. Default to `NULL` thus no rounding.
 #' @param ... additional arguments to be passed
 #' @method  summary pima
 #' @docType methods
 #' @export
 
-summary.pima <- function(object, ...) {
-  object$summary_table
+summary.pima <- function(object, digits = NULL, ...) {
+  summ <- object$summary_table
+  summ <- summ[, !colnames(summ) %in% c(".assign")]
+  if(!is.null(digits)){
+    clapply(summ, "numeric", round, digits)
+  } else{
+    summ
+  }
 }
 
 .get_summary_table_from_flipscores <- function(object) {
