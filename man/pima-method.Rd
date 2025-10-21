@@ -11,7 +11,7 @@
 \usage{
 \method{print}{pima}(object, n = 4)
 
-\method{summary}{pima}(object, ...)
+\method{summary}{pima}(object, digits = NULL, ...)
 
 \method{as}{pima}(object, names_obj = NULL, ...)
 
@@ -20,17 +20,21 @@
   focal = NULL,
   xvar = NULL,
   p.adjusted = TRUE,
-  p.transf = "-log10",
+  p.transf = "z",
   alpha = 0.05,
   xlab = NULL,
   ylab = NULL,
   regex = FALSE,
   shapes = NULL,
+  facet = FALSE,
+  facet.scales = NULL,
   ...
 )
 }
 \arguments{
 \item{object}{an object of class \code{pima}.}
+
+\item{digits}{number of digits when rounding. Default to `NULL` thus no rounding.}
 
 \item{...}{additional arguments to be passed}
 

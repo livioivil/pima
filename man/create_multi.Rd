@@ -11,6 +11,7 @@ create_multi(
   nfuns = NULL,
   cfuns = NULL,
   transf.focal = FALSE,
+  subset = NULL,
   fit.fun = NULL,
   fit.fun.args = NULL
 )
