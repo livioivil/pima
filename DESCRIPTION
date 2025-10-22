@@ -4,7 +4,7 @@ Title: Post-selection Inference in Multiverse Analysis
 Version: 1.2.0
 Date: 2022-09-15
 Author: Livio Finos, Paolo Girardi, Filippo Gambarota, Anna Vesely, Giulia Calignano, Massimiliano Pastore, Gianmarco Altoè
-Maintainer: Livio Finos <livio.finos@unipd.it>
+Maintainer: Filippo Gambarota <filippo.gambarota@unipd.it>
 Description: Runs resampling-based tests jointly to allow for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate and True Discovery Proportions. As main feature, it applies the PIMA procedure, a general and flexible framework based on the sign-flip score test. Details can be found in Girardi et al. (2024) <doi:10.1007/s11336-024-09973-6>.
 License: GPL (>= 2)
 Imports:
