@@ -19,15 +19,16 @@ pima_tree <- function(res, p.values="adjusted",method="class", alpha=0.05, ... )
   # data_ori <- res$mods[[1]]$data
   # cmb <- names(res$mods)  # in altri modi: unique(res$summary_table$Model) ??
   # n_spec <- length(cmb)
+
   # Legend of specifications
-  if(names(res$info[,3,drop=FALSE])=="Model") res$info=res$info[,-3]
+  p.values=match.arg(arg = p.values,c("adjusted","raw"))
   if (p.values == "adjusted") res$summary_table$p <- res$summary_table$p.adj 
-  if(method=="class") res$summary_table$p=res$summary_table$p<=.05
-  temp=res$summary_table[,c("Model","p")]
-  comb_wide<-merge(res$info,temp,by="Model")
+  if(method=="class") res$summary_table$p=res$summary_table$p<=alpha
+  temp=res$summary_table[,c("model","p")]
+  comb_wide<-merge(res$info,temp,by="model")
   
-  # for (i in 3:length(comb_wide)) comb_wide[, i] <- factor(comb_wide[, i])
-  tree_model <- rpart::rpart(p ~ ., data = comb_wide[, -c(1:2)], method = method)
+  comb_wide$formula=comb_wide$model=NULL
+  tree_model <- rpart::rpart(p ~ ., data = comb_wide, method = method)
   rpart::printcp(tree_model)
   
   rpart.plot::rpart.plot(tree_model)

@@ -16,8 +16,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-#library(pima)
-devtools::load_all()
+library(pima)
+#devtools::load_all()
 ```
 
 # PIMA Indians Diabetes dataset
@@ -224,67 +224,14 @@ cor(TT) |>
 ## Vulcano Plot
 
 ```{r,echo=TRUE}
-pima:::plot.pima(res,p.values="raw")
-pima:::plot.pima(res,p.values="raw",x="Part. Cor",y="z value")
-pima:::plot.pima(res,p.values="adjusted",x="Part. Cor",y="z value")
-
-#plot.pima(res,p.values="raw",x="-log10(p)",y="-log10(p.adj.maxT)")
-
-
-#summary(res) |> filter(p.adj.maxT<.05)
+plot(res)
+summary(res) |> filter(p.adj<.05)
 ```
 
 ## Specification-Curve-like Plot
 
 ```{r}
-
-multi_res=left_join(res$summary_table,res$info)
-
-
 #spec_curve(res)
-spec_data <- multi_res |> 
-    # sorting
-    arrange(desc(`Part. Cor`)) |> 
-    # index with the order
-    mutate(spec = n():1)
-names(spec_data)[12:20]=paste0("x_",names(spec_data)[12:20])
-
-spec_data$x_npreg[is.na(spec_data$x_npreg)]=spec_data$`x_npreg^2`[is.na(spec_data$x_npreg)]
-spec_data$`x_npreg^2`=NULL
-spec_data$x_outlier=NULL
-spec_data$x_leverage=NULL
-
-spec_data$is_signif=spec_data$p.adj.maxT<=.05
-
-
-
-top <- spec_data |> 
-    ggplot(aes(x = spec, y = `Part. Cor`)) +
-    geom_point(aes(colour = is_signif)) +scale_colour_manual(values=c("darkgrey", "firebrick"))+
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank())+
-  theme_bw()+theme(legend.position = "none")
-
-
-
-bottom <- spec_data |> 
-    pivot_longer(starts_with("x_")) |> 
-    drop_na() |> 
-    mutate(name = gsub("x_", "", name)) |> 
-    ggplot(aes(x = spec, y = value)) +
-    geom_point(aes(colour = is_signif)) +scale_colour_manual(values=c("darkgrey", "firebrick"))+
-    theme(axis.title.y = element_blank(),
-          strip.text.y = element_text(size = 9),
-          axis.text.y = element_text(size = 9)) +
-    xlab("Specification") +
-    facet_grid(name~., scales = "free")+
-  theme_bw()+theme(legend.position = "none")
-
-
-library(patchwork)
-top / bottom + plot_layout(heights = c(0.3, 1))
-
 ```
 
 
@@ -294,10 +241,15 @@ What characteristics do the significant models have?
 
 ```{r}
 library(rpart)
+
+#in questo primo esempio cerchiamo di capire quali 
+#specificazioni di modelli portano ad avere p-value (adjusted) significativi
 pima_tree(res)
 
+#in questo primo esempio cerchiamo di predirre il p-value (adjusted) sulla
+#base delle specificazioni dei modelli
+pima_tree(res,method = "anova")
 
-table(res$info$age,res$info$npreg,res$summary_table$p.adj.maxT<=0.05)
 ```
 
 
