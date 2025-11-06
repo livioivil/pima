@@ -129,10 +129,10 @@
 
   info <- cbind(info, XS)
 
-  if ("npreg" %in% colnames(info)) {
-    info$npreg[is.na(info$npreg)] = info$`npreg^2`[is.na(info$npreg)]
-    info$`npreg^2` = NULL
-  }
+  # if ("npreg" %in% colnames(info)) {
+  #   info$npreg[is.na(info$npreg)] = info$`npreg^2`[is.na(info$npreg)]
+  #   info$`npreg^2` = NULL
+  # }
 
   if (names(info[, 3, drop = FALSE]) == "model") {
     info = info[, -3]
@@ -167,7 +167,8 @@
   match_par <- gregexpr("(?<=\\().+?(?=\\))", x, perl = TRUE)
   x_clean <- ifelse(unlist(match_par) == -1, x, regmatches(x, match_par))
   x_clean <- unlist(x_clean)
-  x_clean <- sub("(.+?)\\s*[\\,\\+\\-\\*/]\\s*.+", "\\1", x_clean)
+  # TODO check for extra operators such as ^
+  x_clean <- sub("(.+?)\\s*[\\,\\+\\-\\^\\*/]\\s*.+", "\\1", x_clean)
   x_clean <- gsub("\\s*", "", unname(x_clean)) # TODO check this for ``
   return(x_clean)
 }

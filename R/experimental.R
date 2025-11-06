@@ -162,17 +162,11 @@ create_multi <- function(formula,
   
   if(!is.null(fit.fun)){
     
-    if(is.null(names(subset))) {
-      names(subset) <- paste0("sub", 1:length(subset))
-    }
-    
-    conds <- expand.grid(subset = names(subset), calls = out$calls)
-    mods <- vector(mode = "list", length = nrow(conds))
+    mods <- vector(mode = "list", length = length(out$calls))
     
     for(i in 1:length(mods)){
-      subi <- subset[conds$subset[i]]
-      mm <-  do.call(fit.fun, c(list(formula = as.formula(conds$calls[i]), data = data[subi, ]), fit.fun.args))
-      mm$call$formula <- as.formula(conds$calls[i])
+      mm <-  do.call(fit.fun, c(list(formula = as.formula(out$calls[i]), data = data), fit.fun.args))
+      mm$call$formula <- as.formula(out$calls[i])
       mods[[i]] <- mm
     }
     

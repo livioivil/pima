@@ -16,8 +16,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(pima)
-#devtools::load_all()
+#library(pima)
+devtools::load_all()
 ```
 
 # PIMA Indians Diabetes dataset
@@ -192,8 +192,8 @@ Using the \texttt{pima()} function, we apply the PIMA procedure to the list of m
 And we correct for multiplicity (max-T).
 
 ```{r,echo=TRUE, cache = TRUE}
-library(pima)
-res=pima(mods,tested_coeffs = c("npreg","sqrt(npreg)","I(npreg^2)"),n_flips = 2000)
+#library(pima)
+res=pima(mods,tested_coeffs = c("npreg","sqrt(npreg)","I(npreg^2)"), n_flips = 2000)
 ```
 
 Correlations among coefficients in all model specifications
@@ -231,9 +231,8 @@ summary(res) |> filter(p.adj<.05)
 ## Specification-Curve-like Plot
 
 ```{r}
-#spec_curve(res)
+spec_curve(res)
 ```
-
 
 ## The Pima Tree
 

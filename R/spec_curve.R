@@ -37,14 +37,27 @@ spec_curve <- function(x,
                        redundant = TRUE,
                        conf.int = FALSE) {
   
+  # # default parameters for debigging
+  # 
+  # focal = NULL
+  # yvar = NULL
+  # p.adjusted = NULL
+  # alpha = 0.05
+  # tbr = c(0.4, 0.6)
+  # colors = NULL
+  # shapes = NULL
+  # title = NULL
+  # xlab = NULL
+  # ylab = NULL
+  # top.theme = NULL
+  # bottom.theme = NULL
+  # redundant = TRUE
+  # conf.int = FALSE
+
   stopifnot(inherits(x, "pima"))
   
   if(is.null(title)){
     title <- sprintf("Specification Curve (n = %s scenarios)", nrow(x$info))
-  }
-  
-  if(is.null(colors)){
-    colors <- c(scales::alpha("black", 0.5), "firebrick")
   }
   
   if(is.null(top.theme)) top.theme <- ggplot2::theme_minimal
@@ -75,7 +88,7 @@ spec_curve <- function(x,
   spec_data <- .get_spec_curve_data(x, yvar, p.adjusted, p.values, alpha)
   
   spec_data$dbottom$var_txt <- ifelse(
-    spec_data$dbottom$var %in% focal,
+    spec_data$dbottom$var.spec %in% focal,
     sprintf('atop(bold("%s"), "(focal)")', spec_data$dbottom$var),
     sprintf('atop(bold("%s"), "")', spec_data$dbottom$var)
   )
@@ -105,7 +118,6 @@ spec_curve <- function(x,
       legend.position = "bottom"
     ) +
     ggplot2::ggtitle(title) +
-    ggplot2::scale_color_manual(values = colors) +
     ggplot2::scale_shape_manual(
       values = shapes,
       guide = "none",
@@ -115,6 +127,10 @@ spec_curve <- function(x,
     ggplot2::labs(
       y = ylab
     )
+  
+  if(!is.null(colors)){
+    top <- top + scale_color_manual(values = colors)
+  }
   
   if(yvar != "estimate" & conf.int) {
     warning("confidence interval can be calculated only for the coefficients!")
