@@ -30,6 +30,7 @@ pima_tree <- function(res,
   if (p.values == "adjusted") res$summary_table$p <- res$summary_table$p.adj 
   if(method=="class") res$summary_table$p=res$summary_table$p<=alpha
   temp=res$summary_table[,c("model","coefficient","p")]
+  
   temp$coefficient=factor(temp$coefficient)
   comb_wide<-merge(res$info,temp,by="model")
   
