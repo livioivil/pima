@@ -7,14 +7,19 @@
 #' @param p.values A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the p-values from the `summary_table`.
 #' @param method used in function `rpart::rpart` if `method="class"` it will classify significant p-values at level `alpha`
 #' @param alpha used only when `method="class"`
-#' @param ... any other parameter of `rpart::rpart`. 
+#' @param control is `rpart.control(minsplit = 3)` by default. 
 #' @return A plot of the classification tree using `rpart.plot()`.
 #'
 #' @examples
 #' # Example usage (assuming `res` is a pre-computed result object)
 #' # pvalue_tree(res, p.values = "raw")
 #' @export
-pima_tree <- function(res, p.values="adjusted",method="class", alpha=0.05, ... ) {
+pima_tree <- function(res, 
+                      p.values="adjusted",
+                      method="class", 
+                      alpha=0.05, 
+                      control = rpart.control(minsplit = 3), 
+                      ... ) {
   # Extract data
   # data_ori <- res$mods[[1]]$data
   # cmb <- names(res$mods)  # in altri modi: unique(res$summary_table$Model) ??
@@ -24,11 +29,12 @@ pima_tree <- function(res, p.values="adjusted",method="class", alpha=0.05, ... )
   p.values=match.arg(arg = p.values,c("adjusted","raw"))
   if (p.values == "adjusted") res$summary_table$p <- res$summary_table$p.adj 
   if(method=="class") res$summary_table$p=res$summary_table$p<=alpha
-  temp=res$summary_table[,c("model","p")]
+  temp=res$summary_table[,c("model","coefficient","p")]
+  temp$coefficient=factor(temp$coefficient)
   comb_wide<-merge(res$info,temp,by="model")
   
   comb_wide$formula=comb_wide$model=NULL
-  tree_model <- rpart::rpart(p ~ ., data = comb_wide, method = method)
+  tree_model <- rpart::rpart(p ~ ., data = comb_wide, method = method,control=control)
   rpart::printcp(tree_model)
   
   rpart.plot::rpart.plot(tree_model)
