@@ -5,3 +5,4 @@
 ^_quarto$
 ^_pkgdown\.yml$
 ^pkgdown$
+^debug$

@@ -113,6 +113,11 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   out <- do.call(jointest::join_flipscores, join_flipscores_args)
   
+  # get response variable
+  ys <- sapply(mods, .get_response_var)
+  out$summary_table$response <- ys[out$summary_table$model]
+  out$summary_table <- out$summary_table[, c("model", ".assign", "response", "coefficient", "estimate", "score", "se", "z", "pcor", "p")]
+  
   old_class <- class(out)
   
   # TODO check if removing res$call is problematic

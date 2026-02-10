@@ -217,6 +217,9 @@ as.glm <- function(x){
   }
 }
 
+.get_response_var <- function(x){
+  as.character(x$formula[[2]])
+}
 
 
 
