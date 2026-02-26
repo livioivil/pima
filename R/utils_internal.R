@@ -159,9 +159,14 @@
   formula.tools::lhs.vars(x)
 }
 
-.get_x_name <- function(x) {
-  attr(x$terms, which = "term.labels")
+# .get_x_name <- function(x) {
+#   attr(x$terms, which = "term.labels")
+# }
+.get_x_name  <- function(x) {
+  c(ifelse(attr(x$terms, which = "intercept"),".Intercept.",NULL), 
+    attr(x$terms, which = "term.labels"))
 }
+
 
 .keep_bare_x_name <- function(x) {
   match_par <- gregexpr("(?<=\\().+?(?=\\))", x, perl = TRUE)
