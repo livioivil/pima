@@ -4,7 +4,7 @@
 #' The method jointly computes resampling-based test statistics for all coefficients of interest in all models.
 #' The output allows for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate (FWER)
 #' and confidence bounds for True Discovery Proportions (TDPs).
-#' @usage pimax(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...) 
+#' @usage pimax(formulas, summstats_within, data, cluster, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...) 
 #' @param formulas A formula or a list of formulas. It can be a (list) of complete models as.formula or a list of formulas
 #' @param summstats_within A (list of) vector of summary statistics model within the data or a (list of) function with argument data.
 #' @param data The dataset to be used for fitting the model.
@@ -27,10 +27,6 @@
 #' }
 #' @details Further parameters include:
 #' \itemize{
-#' \item \code{score_type}: type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
-#' The default \code{"standardized"} provides almost exact control of the error for any sample size.
-#' \item \code{statistics}: test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
-#' Different statistics will affect the multivariate inference, but not the univariate.
 #' \item \code{seed}: can be specified to ensure replicability of results.
 #' \item \code{output_models}: \code{TRUE} to return the list of model objects produced by \code{flipscores}.
 #' }
@@ -40,7 +36,7 @@
 #' (the first is the identity).
 #' \item \code{summary_table}: data frame containing a summary for each tested coefficient in each model:
 #' estimate, score, standard error, z value, partial correlation, raw p-value, adjusted p-value.
-#' \item \code{mods}: list of model objects computed by \code{flipscores}.
+#' \item \code{mods}: list of model objects computed by \code{flip2sss}.
 #' \item \code{tested_coeffs}: tested coefficients, as in input.
 #' }
 #' @references
@@ -49,7 +45,6 @@
 #' Andreella, A., Goeman, J., Hemerik, J., Finos, L. (2025). Robust Inference for Generalized Linear Mixed Models: A “Two-Stage Summary Statistics” Approach Based on Score Sign Flipping. Psychometrika, 1-23. doi: 10.1017/psy.2024.22  
 #' 
 #' @examples
-#' @example 
 #' N=20
 #' n=rpois(N,20)
 #' reff=rep(rnorm(N),n)
@@ -88,11 +83,14 @@
 #' @export
 
 pimax <-  function(formulas, summstats_within, data, cluster, tested_coeffs = NULL, n_flips = 5000, flips = NULL,
-                   seed=NULL, ...) {
+                   seed=NULL, method = c("maxT", "minP", "none"), ...) {
   
   
 
   extra_args <- list(...)
+  
+  method <- match.arg(method, c("maxT", "minP", "none"))
+  
   
   join_flip2sss_args <- c(
     list(formulas = formulas, summstats_within = summstats_within, data = data, cluster = cluster, n_flips = n_flips), 
@@ -104,7 +102,7 @@ pimax <-  function(formulas, summstats_within, data, cluster, tested_coeffs = NU
   old_class <- class(out)
   
   # TODO check if removing res$call is problematic
-  out <- out[names(out) != "call"]
+ # out <- out[names(out) != "call"]
   
   if(method != "none"){
     # TODO is tail something to put as parameter?
@@ -114,12 +112,12 @@ pimax <-  function(formulas, summstats_within, data, cluster, tested_coeffs = NU
   # get all the arguments of jointest::join_flipscores to be
   # used in other functions
   
-  join_flip2sss_args <- .get_fn_args(jointest::join_flip2sss, 
+  join_flip2sss_args <- .get_fn_args(join_flip2sss, 
                                        new.args = join_flip2sss_args, 
                                        exclude = c("...", "mods"))
-  out$info <- .get_info_models(out$mods)
-  out$tested_coeffs <- tested_coeffs
-  out <- c(out, join_flipscores_args)
+#  out$info <- .get_info_models(out$mods)
+#  out$tested_coeffs <- tested_coeffs
+  out <- c(out, join_flip2sss_args)
   out$p.adjust.method <- method
   class(out) <- unique(c("pima", old_class))
   
