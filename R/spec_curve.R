@@ -38,9 +38,11 @@ spec_curve <- function(
   top.theme = NULL,
   bottom.theme = NULL,
   redundant = TRUE,
-  conf.int = FALSE
+  conf.int = FALSE,
+  facet.y = TRUE,
+  which.response = NULL
 ) {
-  # # default parameters for debigging
+  # # default parameters for debugging
   #
   # focal = NULL
   # yvar = NULL
@@ -59,8 +61,10 @@ spec_curve <- function(
 
   stopifnot(inherits(x, "pima"))
 
+  nspec <- nrow(x$info)
+
   if (is.null(title)) {
-    title <- sprintf("Specification Curve (n = %s scenarios)", nrow(x$info))
+    title <- sprintf("Specification Curve (n = %s scenarios)", nspec)
   }
 
   if (is.null(top.theme)) {
@@ -112,6 +116,10 @@ spec_curve <- function(
     x$summary_table <- subset(x$summary_table, coefficient %in% focal)
   }
 
+  if(!is.null(which.response)){
+    x$summary_table <- subset(x$summary_table, response %in% which.response)
+  }
+
   spec_data <- .get_spec_curve_data(x, yvar, p.adjusted, p.values, alpha)
 
   spec_data$dbottom$var_txt <- ifelse(
@@ -139,12 +147,20 @@ spec_curve <- function(
     spec_data$dtop <- subset(spec_data$dtop, response %in% yname)
   }
 
+  is_multi_y <- length(unique(x$summary_table)) == 1
+
+  if(facet.y){
+    spec_data$dtop$.coefficient_y <- sprintf("~ %s", spec_data$dtop$coefficient)
+  } else{
+    spec_data$dtop$.coefficient_y <- sprintf("%s ~ %s", spec_data$dtop$response, spec_data$dtop$coefficient)
+  }
+
   top <- ggplot2::ggplot(
     data = spec_data$dtop,
     ggplot2::aes(x = .id_spec, y = .data[[yvar]])
   ) +
     ggplot2::geom_point(
-      ggplot2::aes(color = coefficient, shape = is_signif),
+      ggplot2::aes(color = .coefficient_y, shape = is_signif),
       show.legend = TRUE
     ) +
     top.theme() +
@@ -152,7 +168,8 @@ spec_curve <- function(
       axis.title.x = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
-      legend.position = "bottom"
+      legend.position = "bottom",
+      legend.title = ggplot2::element_blank()
     ) +
     ggplot2::ggtitle(title) +
     ggplot2::scale_shape_manual(
@@ -164,7 +181,7 @@ spec_curve <- function(
     ggplot2::labs(
       y = ylab
     )
-
+  
   if (!is.null(colors)) {
     top <- top + scale_color_manual(values = colors)
   }
@@ -183,14 +200,11 @@ spec_curve <- function(
       ))
   }
 
-  # if (length(unique(spec_data$dtop$response)) != 1) {
-  #   top <- top +
-  #     facet_grid(response ~ .)
-  # }
-
-  top <- top +
-    facet_grid(response ~ .)
-
+  if(facet.y){
+    top <- top +
+      ggplot2::facet_grid(response ~ .)
+  }
+  
   bottom <- ggplot2::ggplot(
     spec_data$dbottom,
     ggplot2::aes(x = .id_spec, y = var.spec)
@@ -211,12 +225,11 @@ spec_curve <- function(
     ) +
     ggplot2::scale_shape_manual(
       values = shapes,
-      #guide = "none",
       name = "p-value",
       drop = FALSE,
       labels = paste0(c("p >  ", "p <= "), alpha)
     )
-
+  
   patchwork:::`/.ggplot`(top, bottom) +
     patchwork::plot_layout(heights = tbr)
 }
