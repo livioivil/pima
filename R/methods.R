@@ -86,6 +86,12 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' @param alpha a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.
 #' @param xlab character vector indicating the x-axis label. Default to `xvar`
 #' @param ylab character vector indicating the y-axis label. Default to `p` or `p.adjust.<method>` where method is `object$p.adjust.method`.
+#' @param p.adjusted logical indicating whether to plot adjusted p-values (\code{TRUE}, default) or raw p-values (\code{FALSE}).
+#' @param regex logical. If \code{TRUE}, the \code{focal} argument is treated as a regular expression to match coefficient names. Default is \code{FALSE}.
+#' @param shapes a numeric vector of length 2 specifying the ggplot2 shapes to use for non-significant and significant points, respectively. Default is \code{c(4, 19)}.
+#' @param facet.scales character string indicating if scales should be \code{"fixed"}, \code{"free"}, \code{"free_x"}, or \code{"free_y"}. Default is \code{"free_x"}.
+#' @param facet a formula for facetting the plot, passed to \code{\link[ggplot2]{facet_grid}}.
+#' @param which.response a character vector specifying a subset of response variables to be plotted.
 #' @param ... additional arguments to be passed
 #' @method  plot pima
 #' @docType methods
