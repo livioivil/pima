@@ -10,7 +10,8 @@ output:
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "README-"
+  fig.path = "man/figures/README-", # Crucial: Saves plots to the figures folder
+  out.width = "100%"
 )
 ```
 
@@ -39,25 +40,45 @@ To **install** this github version type (in R):
 ## A (minimal) example
 
 ```{r,  message = FALSE}
+devtools::load_all()
+library(patchwork)
+library(ggplot2)
+
 n=20
 set.seed(123)
 D=data.frame(X=rnorm(n),Z1=rnorm(n),Z2=rnorm(n))
 D$Y=D$Z1+D$X+rnorm(n)
+D$Y2 = D$Z1+D$X+rnorm(n)
 mod1=glm(Y~X+Z1+Z2,data=D)
 mod2=glm(Y~X+poly(Z1,2)+Z2,data=D)
 mod3=glm(Y~X+poly(Z1,2)+poly(Z2,2),data=D)
 mod4=glm(Y~X+Z1+poly(Z2,2),data=D)
-mods=list(mod1=mod1,mod2=mod2,mod3=mod3,mod4=mod4)
-for(i in 1:length(mods))
- mods[[i]]$call$data=eval(D)
-# library(pima)
-# using devtools for testing
-devtools::load_all()
-res=join_flipscores(mods,n_flips = 5000,        seed = 1, tested_coeffs = "X")
-summary(res)
-summary(combine(res))
-res=pima:::p.adjust.pima(res)
-summary(res)
+mod5= glm(Y2~X,data=D)
+mods=list(mod1=mod1,mod2=mod2,mod3=mod3,mod4=mod4, mod5 = mod5)
+
+res = pima(mods)
+
+# by default the function create the coefficient name as
+# response ~ coefficient
+plot(res)
+
+# you can also avoid this and divide the response variable
+plot(res, facet = response ~ .)
+
+# to create different specification curves 
+plot(res, facet = response ~ ., which.response = "Y") /
+  plot(res, facet = response ~ ., which.response = "Y2")
+
+# this (mostly) works also for the specification curve
+
+# by default create the combination of response/coefficient
+spec_curve(res)
+
+# subset a specific response
+spec_curve(res, which.response = "Y")
+
+# faceting the response
+spec_curve(res, facet.y = TRUE)
 ```
 
 
