@@ -116,7 +116,7 @@ spec_curve <- function(
     x$summary_table <- subset(x$summary_table, coefficient %in% focal)
   }
 
-  if(!is.null(which.response)){
+  if (!is.null(which.response)) {
     x$summary_table <- subset(x$summary_table, response %in% which.response)
   }
 
@@ -147,12 +147,16 @@ spec_curve <- function(
     spec_data$dtop <- subset(spec_data$dtop, response %in% yname)
   }
 
-  is_multi_y <- length(unique(x$summary_table)) == 1
+  is_multi_y <- length(unique(x$summary_table$response)) > 1
 
-  if(facet.y){
+  if (facet.y) {
     spec_data$dtop$.coefficient_y <- sprintf("~ %s", spec_data$dtop$coefficient)
-  } else{
-    spec_data$dtop$.coefficient_y <- sprintf("%s ~ %s", spec_data$dtop$response, spec_data$dtop$coefficient)
+  } else {
+    spec_data$dtop$.coefficient_y <- sprintf(
+      "%s ~ %s",
+      spec_data$dtop$response,
+      spec_data$dtop$coefficient
+    )
   }
 
   top <- ggplot2::ggplot(
@@ -181,9 +185,9 @@ spec_curve <- function(
     ggplot2::labs(
       y = ylab
     )
-  
+
   if (!is.null(colors)) {
-    top <- top + scale_color_manual(values = colors)
+    top <- top + ggplot2::scale_color_manual(values = colors)
   }
 
   if (yvar != "estimate" & conf.int) {
@@ -200,11 +204,11 @@ spec_curve <- function(
       ))
   }
 
-  if(facet.y){
+  if (facet.y) {
     top <- top +
       ggplot2::facet_grid(response ~ .)
   }
-  
+
   bottom <- ggplot2::ggplot(
     spec_data$dbottom,
     ggplot2::aes(x = .id_spec, y = var.spec)
@@ -229,7 +233,7 @@ spec_curve <- function(
       drop = FALSE,
       labels = paste0(c("p >  ", "p <= "), alpha)
     )
-  
+
   patchwork:::`/.ggplot`(top, bottom) +
     patchwork::plot_layout(heights = tbr)
 }

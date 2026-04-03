@@ -16,7 +16,7 @@ NULL
 #' @method print pima
 #' @docType methods
 #' @export
-print.pima <- function (object, n = 4) {
+print.pima <- function(object, n = 4) {
   nr <- nrow(object$info)
   msg <- sprintf("== Multiverse analysis with %s scenarios ==", nr)
   cat("\n")
@@ -39,9 +39,9 @@ print.pima <- function (object, n = 4) {
 summary.pima <- function(object, digits = NULL, ...) {
   summ <- object$summary_table
   summ <- summ[, !colnames(summ) %in% c(".assign")]
-  if(!is.null(digits)){
+  if (!is.null(digits)) {
     clapply(summ, "numeric", round, digits)
-  } else{
+  } else {
     summ
   }
 }
@@ -81,7 +81,7 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' @param focal a character vector indicating which coefficients to plot. When > 1 coefficient is provided (or NULL) and `xvar` is not provided the `Part. Cor` column is used instead of the `Estimate`.
 # TODO check the focal documentation
 #' @param xvar character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".
-#' @param p.adjust logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default). 
+#' @param p.adjust logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default).
 #' @param p.transf can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.
 #' @param alpha a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.
 #' @param xlab character vector indicating the x-axis label. Default to `xvar`
@@ -92,84 +92,113 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' @export
 
 plot.pima <- function(
-    object,
-    focal = NULL,
-    xvar = NULL,
-    p.adjusted = TRUE,
-    p.transf = "z",
-    alpha = 0.05,
-    xlab = NULL,
-    ylab = NULL,
-    regex = FALSE,
-    shapes = NULL,
-    facet = FALSE,
-    facet.scales = NULL,
-    ...
-  )
-  {
-  
+  object,
+  focal = NULL,
+  xvar = NULL,
+  p.adjusted = TRUE,
+  p.transf = "z",
+  alpha = 0.05,
+  xlab = NULL,
+  ylab = NULL,
+  regex = FALSE,
+  shapes = NULL,
+  facet.scales = NULL,
+  facet = NULL,
+  which.response = NULL,
+  ...
+) {
   # TODO what about adding a way to transform the p value using custom formula? Also adding critical value (p = 0.05) when using a transformation.
-  
+
   # avoid conflicting with base plot(x = ) argument
-  
+
   # if parameters to be plotted > 1 and there is no focal, plot all of them but
   # use the partial correlation.
-  
-  if(is.null(focal) && length(object$tested_coeffs) > 1 && is.null(xvar) && is.null(facet)){
+
+  nspec <- nrow(object$info)
+
+  if (!is.null(which.response)) {
+    object$summary_table <- subset(
+      object$summary_table,
+      response %in% which.response
+    )
+  }
+
+  is_multi_y <- length(unique(object$summary_table$response)) > 1
+
+  object$summary_table$.coefficient_y <- sprintf(
+    "%s ~ %s",
+    object$summary_table$response,
+    object$summary_table$coefficient
+  )
+
+  if (
+    is.null(focal) &&
+      length(object$tested_coeffs) > 1 &&
+      is.null(xvar) &&
+      is.null(facet.coef)
+  ) {
     xvar <- "pcor"
-    warning("the number of tested coefficients is > 1 and no xvar specified. Using pcor as xvar.")
+    warning(
+      "the number of tested coefficients is > 1 and no xvar specified. Using pcor as xvar."
+    )
   }
-  
-  if(is.null(xvar)) xvar <- "pcor"
+
+  if (is.null(xvar)) {
+    xvar <- "pcor"
+  }
   # TODO fix this in jointest
-  
-  if(object$p.adjust.method == "none" & p.adjusted) {
-    stop("the pima() functions as been called without p.values adjustments. Re-run without pima(..., method = 'none')" )
+
+  if (object$p.adjust.method == "none" & p.adjusted) {
+    stop(
+      "the pima() functions as been called without p.values adjustments. Re-run without pima(..., method = 'none')"
+    )
   }
-  
-  p.values <- if(p.adjusted) "p.adj" else "p"
+
+  p.values <- if (p.adjusted) "p.adj" else "p"
   D = object$summary_table
   D$.assign = NULL
-  
-  if(is.null(focal)) focal <- object$tested_coeffs
-  
-  if(!is.null(focal)){
-    if(regex){
+
+  if (is.null(focal)) {
+    focal <- object$tested_coeffs
+  }
+
+  if (!is.null(focal)) {
+    if (regex) {
       D <- subset(D, grepl(paste0(focal, collapse = "|"), coefficient))
-    } else{
+    } else {
       D <- subset(D, coefficient %in% focal)
     }
-    
   }
-  
+
   # check if is one of the available columns
   xvar <- match.arg(xvar, choices = colnames(D), several.ok = FALSE)
   p.values <- match.arg(p.values, choices = colnames(D), several.ok = FALSE)
-  group <- "coefficient"
-  
+
+  group <- ".coefficient_y"
+
   # transform the p value
   D$p.transf <- transf_p(D[[p.values]], method = p.transf)
-  
+
   # RIRR and RP indices
-  
+
   IRR <- exp(object$summary_table$estimate)
   RIRR <- as.numeric(quantile(IRR, c(0.99)) / quantile(IRR, c(0.01)))
-  
+
   # Relative pvalues
   RP_raw <- as.numeric(diff(
     -log10(quantile(object$summary_table$p, c(0.99, 0.01)))
   ))
-  
+
   RP_adjusted <- as.numeric(diff(
     -log10(quantile(object$summary_table$p.adj, c(0.99, 0.01)))
   ))
-  
+
   if (object$p.adjust.method == "none" || !p.adjusted) {
     D$is_signif = (D$p <= alpha)
     title = "(Raw) p-values"
-    
+
     # TODO how to use thr RIIR and RP indexes?
-    
+
     indices <- paste(
       "RIRR=",
       round(RIRR, 3),
@@ -177,13 +206,16 @@ plot.pima <- function(
       round(RP_raw, 3),
       sep = ""
     )
-    
   } else {
     # adj
-    title = sprintf("Adjusted p-values (%s)", object$p.adjust.method)
+    title = sprintf(
+      "Multiverse Analysis (n = %s scenarios) - Adjusted p-values (%s)",
+      nspec,
+      object$p.adjust.method
+    )
     adj_id = grep("p.adj", colnames(D))[1]
     D$is_signif = (D[, adj_id] <= alpha)
-    
+
     indices <- paste(
       "RIRR=",
       round(RIRR, 3),
@@ -191,32 +223,46 @@ plot.pima <- function(
       round(RP_adjusted, 3),
       sep = ""
     )
-    
   }
-  
+
   D$is_signif <- ifelse(D$is_signif, 1, 0)
   D$is_signif <- factor(D$is_signif, levels = c(0, 1))
-  
-  if(is.null(xlab)) xlab <- xvar
-  if(is.null(shapes)) shapes <- c(4, 19)
-  
-  p.transf.txt <- if(is.function(p.transf)) "custom" else p.transf
-  
-  if(is.null(ylab)) ylab <- sprintf("%s (%s)", p.values, p.transf.txt)
 
-  p <- ggplot2::ggplot(D, 
-               ggplot2::aes(x = .data[[xvar]], 
-                  y = .data[["p.transf"]], 
-                  group = .data[[group]], 
-                  color = .data[[group]])) +
-    ggplot2::geom_point(ggplot2::aes(shape = is_signif), size = 2, show.legend = TRUE) +
+  if (is.null(xlab)) {
+    xlab <- xvar
+  }
+  if (is.null(shapes)) {
+    shapes <- c(4, 19)
+  }
+
+  p.transf.txt <- if (is.function(p.transf)) "custom" else p.transf
+
+  if (is.null(ylab)) {
+    ylab <- sprintf("%s (%s)", p.values, p.transf.txt)
+  }
+
+  p <- ggplot2::ggplot(
+    D,
+    ggplot2::aes(
+      x = .data[[xvar]],
+      y = .data[["p.transf"]],
+      group = .data[[group]],
+      color = .data[[group]]
+    )
+  ) +
+    ggplot2::geom_point(
+      ggplot2::aes(shape = is_signif),
+      size = 2,
+      show.legend = TRUE
+    ) +
     ggplot2::ggtitle(title) +
     ggplot2::theme_minimal() +
     ggplot2::labs(
       x = xlab,
-      y = ylab
+      y = ylab,
+      color = "coefficient"
     )
-  
+
   if (!(alpha %in% c(0, 1))) {
     p <- p +
       ggplot2::scale_shape_manual(
@@ -226,15 +272,20 @@ plot.pima <- function(
         labels = paste0(c("p >  ", "p <= "), alpha)
       )
   }
-  
-  if(!is.null(facet.scales)) {
-    facet.scales <- match.arg(facet.scales, choices = c("fixed", "free", "free_x", "free_y"), several.ok = FALSE)
-  } else{
+
+  if (!is.null(facet.scales)) {
+    facet.scales <- match.arg(
+      facet.scales,
+      choices = c("fixed", "free", "free_x", "free_y"),
+      several.ok = FALSE
+    )
+  } else {
     facet.scales <- "free_x"
   }
-  
-  if(facet){
-    p <- p + ggplot2::facet_wrap("coefficient", scales = facet.scales)
+
+  if (is.null(facet) && !is_multi_y) {
+    facet <- response ~ .
   }
+  p <- p + ggplot2::facet_grid(facet, scales = facet.scales)
   p
 }
