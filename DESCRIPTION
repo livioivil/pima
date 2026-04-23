@@ -11,7 +11,7 @@ Imports:
     flipscores,
     methods,
     flip 
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Encoding: UTF-8
 Language: en-US
 BugReports: https://github.com/livioivil/pima/issues
