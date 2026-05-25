@@ -4,7 +4,14 @@
 \alias{pima_tree}
 \title{Classification Tree with Adjusted p-values}
 \usage{
-pima_tree(res, p.values = "adjusted", method = "class", alpha = 0.05, ...)
+pima_tree(
+  res,
+  p.values = "adjusted",
+  method = "class",
+  alpha = 0.05,
+  control = rpart.control(minsplit = 3),
+  ...
+)
 }
 \arguments{
 \item{res}{A list object with a specific structure containing regression model results. It should contain `mods`, a list of models, and `summary_table`, a data frame with the summary of results, including estimates and p-values.}
@@ -15,7 +22,7 @@ pima_tree(res, p.values = "adjusted", method = "class", alpha = 0.05, ...)
 
 \item{alpha}{used only when `method="class"`}
 
-\item{...}{any other parameter of `rpart::rpart`.}
+\item{control}{is `rpart.control(minsplit = 3)` by default.}
 }
 \value{
 A plot of the classification tree using `rpart.plot()`.
