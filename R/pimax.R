@@ -93,7 +93,7 @@ pimax <-  function(formulas, summstats_within, data, cluster, tested_coeffs = NU
   
   
   join_flip2sss_args <- c(
-    list(formulas = formulas, summstats_within = summstats_within, data = data, cluster = cluster, n_flips = n_flips), 
+    list(formulas = formulas, summstats_within = summstats_within, data = data, cluster = cluster, n_flips = n_flips, tested_coeffs = tested_coeffs), 
     extra_args
   )
   
