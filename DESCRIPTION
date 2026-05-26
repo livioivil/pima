@@ -1,7 +1,7 @@
 Package: pima
 Type: Package
 Title: Post-selection Inference in Multiverse Analysis
-Version: 1.2.0
+Version: 1.2.1
 Date: 2022-09-15
 Author: Livio Finos, Paolo Girardi, Filippo Gambarota, Anna Vesely, Giulia Calignano, Massimiliano Pastore, Gianmarco Altoè
 Maintainer: Filippo Gambarota <filippo.gambarota@unipd.it>
