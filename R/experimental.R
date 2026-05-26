@@ -7,6 +7,7 @@
 #' @param data the dataset for the model
 #'
 #' @return a list
+#' @export
 #' @examples
 #' create_multi(~ Sepal.Length + Petal.Width + Species, 
 #'              focal = "Sepal.Length", 
@@ -22,31 +23,19 @@ create_multi <- function(formula,
                          subset = NULL,
                          fit.fun = NULL,
                          fit.fun.args = NULL){
-
-  # formula <- Sepal.Length ~ Sepal.Width + Petal.Length * Species
-  # data <- iris
-  # focal <- c("Petal.Length * Species")
-  # nfuns <- c("log")
-  # cfuns <- NULL
-  # transf.focal <- FALSE
-  # fit.fun <- NULL
-  # fit.fun.args <- NULL
   
   # some checks
   
   if(!is.null(focal)) focal_ff <- as.formula(paste("~", focal))
   
-  if(has_ints(focal_ff) & !has_ints(formula)){
+  if(.has_ints(focal_ff) & !.has_ints(formula)){
     stop("the focal predictor contains an interaction while the formula don't!")
   }
   
-  if(!is.null(subset)){
-    if(length(unique(sapply(subset, length))) != 1){
-      stop("all vectors in subset need to be of the same length!")
-    }
-    datal <- lapply(subset, function(s) data[s, ])
-  } else{
-    subset <- rep(TRUE, nrow(data))
+  subset <- c(list("all" = rep(TRUE, nrow(data))), subset)
+  
+  if(length(unique(sapply(subset, length))) != 1){
+    stop("all vectors in subset need to be of the same length!")
   }
   
   xs <- formula.tools::rhs.vars(formula)
@@ -133,8 +122,8 @@ create_multi <- function(formula,
   dup <- sapply(forms, function(x) length(unique(names(x))) != length(names(x)))
   forms <- forms[!dup]
   
-  if(has_ints(focal_ff)){
-    focal_int_vars <- get_ints_vars(focal_ff)
+  if(.has_ints(focal_ff)){
+    focal_int_vars <- .get_ints_vars(focal_ff)
     
     form_as_int_vars <- apply(sapply(focal_int_vars, function(x) grepl(x, forms)), 1, all)
     forms <- forms[form_as_int_vars]
@@ -142,7 +131,7 @@ create_multi <- function(formula,
     for(i in 1:length(forms)){
       ff <- forms[[i]]
       ff <- c(ff, paste(ff[focal_int_vars], collapse = " * "))
-      forms[[i]] <- expand_ints(ff)
+      forms[[i]] <- .expand_ints(ff)
     }
   } else{
     has_focal <- matrix(NA, nrow = length(forms), ncol = length(focal))
@@ -159,23 +148,27 @@ create_multi <- function(formula,
   forms_call <- lapply(forms, paste, collapse = " + ")
   forms_call <- paste(y, "~", forms_call)
   out <- list(variables = X, calls = unlist(forms_call), subset = subset)
+  conds <- expand.grid(calls = out$calls, subset = names(out$subset), stringsAsFactors = FALSE)
   
   if(!is.null(fit.fun)){
-    
-    mods <- vector(mode = "list", length = length(out$calls))
-    
+    mods <- vector(mode = "list", length = nrow(conds))
     for(i in 1:length(mods)){
-      mm <-  do.call(fit.fun, c(list(formula = as.formula(out$calls[i]), data = data), fit.fun.args))
-      mm$call$formula <- as.formula(out$calls[i])
+      datas <- data[subset[[conds$subset[i]]], , drop = FALSE]
+      mm <-  do.call(fit.fun, c(list(formula = as.formula(conds$calls[i]), 
+                                     data = datas),
+                                fit.fun.args))
+      mm$call$formula <- as.formula(conds$calls[i])
       mods[[i]] <- mm
     }
-    
     out$mods <- mods
   }
+  
+  out$scenarios <- conds
   
   return(out)
 }
 
+#' @export
 .fac2char <- function(x){
   isfactor <- sapply(x, is.factor)
   x <- lapply(x, function(c) if(is.factor(c)) as.character(c) else c)
@@ -186,24 +179,28 @@ create_multi <- function(formula,
   as.integer(factor(x))
 }
 
+#' @export
 .make_call <- function(x, FUN){
   deparse(call(FUN, as.name(x)))
 }
 
-get_ints_vars <- function(formula){
-  vv <- expand_ints(formula)
-  vv <- vv[sapply(vv, has_ints)]
+#' @export
+.get_ints_vars <- function(formula){
+  vv <- .expand_ints(formula)
+  vv <- vv[sapply(vv, .has_ints)]
   unlist(strsplit(vv, ":"))
 }
 
-expand_ints <- function(formula) {
+#' @export
+.expand_ints <- function(formula) {
   if (inherits(formula, "formula")) {
     formula <- as.character(formula)
   }
   labels(terms(reformulate(formula)))
 }
 
-has_ints <- function(formula, x = NULL){
+#' @export
+.has_ints <- function(formula, x = NULL){
   if(!is.character(formula)){
     labels <- attr(terms(formula), "term.labels")
   } else{

@@ -70,14 +70,14 @@ summary(res)
 
 # Global p-values: overall, by model and by coefficient
 summary(global_tests(res))
-summary(global_tests(res, by = "Model"))
-summary(global_tests(res, by = "Coeff"))
+summary(global_tests(res, by = "model"))
+summary(global_tests(res, by = "coefficient"))
 
 # Global tests for each factor
 summary(global_tests(res, by = "individual", comb_factors = TRUE))
 
 # These tests can be aggregated as before (e.g., by coefficient)
-summary(global_tests(res, by = "Coeff", comb_factors = TRUE))
+summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
 }
 \references{
 Girardi, Vesely, Lakens, Altoè, Pastore, Calcagnì, Finos (2024). Post-selection Inference in Multiverse Analysis (PIMA): An Inferential Framework Based on the Sign Flipping Score Test. Psychometrika, doi: 10.1007/s11336-024-09973-6.

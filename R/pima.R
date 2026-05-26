@@ -76,14 +76,14 @@
 #' 
 #' # Global p-values: overall, by model and by coefficient
 #' summary(global_tests(res))
-#' summary(global_tests(res, by = "Model"))
-#' summary(global_tests(res, by = "Coeff"))
+#' summary(global_tests(res, by = "model"))
+#' summary(global_tests(res, by = "coefficient"))
 #' 
 #' # Global tests for each factor
 #' summary(global_tests(res, by = "individual", comb_factors = TRUE))
 #' 
 #' # These tests can be aggregated as before (e.g., by coefficient)
-#' summary(global_tests(res, by = "Coeff", comb_factors = TRUE))
+#' summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
 #' 
 #' # Lower 95%-confidence bound for the TDP
 #' # require(sumSome)
@@ -114,7 +114,7 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   out <- do.call(jointest::join_flipscores, join_flipscores_args)
   
   # get response variable
-  ys <- sapply(mods, .get_response_var)
+  ys <- sapply(out$mods, .get_response_var)
   out$summary_table$response <- ys[out$summary_table$model]
   out$summary_table <- out$summary_table[, c("model", ".assign", "response", "coefficient", "estimate", "score", "se", "z", "pcor", "p")]
   
