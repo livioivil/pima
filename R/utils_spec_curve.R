@@ -34,7 +34,10 @@
   
   if(p.adjusted) {
     if(x$p.adjust.method == "none"){
-      data$p_for_plot <- jointest:::maxT.light(x$Tspace, exp(seq(-8, 0, 0.5)))
+      stop(
+        "adjusted p-values are not available. Re-run pima() without method = 'none' or set p.adjusted = FALSE.",
+        call. = FALSE
+      )
     } else{
       data$p_for_plot <- data[[p.values]]
     }

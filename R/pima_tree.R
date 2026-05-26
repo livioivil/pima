@@ -6,21 +6,27 @@
 #' @param p.values A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the p-values from the `summary_table`.
 #' @param method used in function `rpart::rpart` if `method="class"` it will classify significant p-values at level `alpha`
 #' @param alpha used only when `method="class"`
-#' @param control is `rpart.control(minsplit = 3)` by default.
-#' @return A plot of the classification tree using `rpart.plot()`.
+#' @param control control options passed to \code{\link[rpart]{rpart.control}}.
+#' If \code{NULL}, \code{rpart.control(minsplit = 3)} is used.
+#' @param ... additional arguments passed to \code{\link[rpart]{rpart}}.
+#' @return Invisibly returns the fitted \code{rpart} object.
 #'
 #' @examples
 #' # Example usage (assuming `res` is a pre-computed result object)
-#' # pvalue_tree(res, p.values = "raw")
+#' # pima_tree(res, p.values = "raw")
 #' @export
 pima_tree <- function(
   res,
   p.values = "adjusted",
   method = "class",
   alpha = 0.05,
-  control = rpart::rpart.control(minsplit = 3),
+  control = NULL,
   ...
 ) {
+  if (is.null(control)) {
+    control <- rpart::rpart.control(minsplit = 3)
+  }
+
   # Extract data
   # data_ori <- res$mods[[1]]$data
   # cmb <- names(res$mods)  # in altri modi: unique(res$summary_table$Model) ??
@@ -44,9 +50,12 @@ pima_tree <- function(
     p ~ .,
     data = comb_wide,
     method = method,
-    control = control
+    control = control,
+    ...
   )
   rpart::printcp(tree_model)
 
-  rpart.plot::rpart.plot(tree_model)
+  plot(tree_model)
+  text(tree_model, use.n = TRUE)
+  invisible(tree_model)
 }

@@ -9,7 +9,7 @@ pima_tree(
   p.values = "adjusted",
   method = "class",
   alpha = 0.05,
-  control = rpart::rpart.control(minsplit = 3),
+  control = NULL,
   ...
 )
 }
@@ -22,15 +22,18 @@ pima_tree(
 
 \item{alpha}{used only when `method="class"`}
 
-\item{control}{is `rpart.control(minsplit = 3)` by default.}
+\item{control}{control options passed to \code{\link[rpart]{rpart.control}}.
+If \code{NULL}, \code{rpart.control(minsplit = 3)} is used.}
+
+\item{...}{additional arguments passed to \code{\link[rpart]{rpart}}.}
 }
 \value{
-A plot of the classification tree using `rpart.plot()`.
+Invisibly returns the fitted \code{rpart} object.
 }
 \description{
 This function builds a classification tree based on raw or adjusted p-values using the results of a regression model.
 }
 \examples{
 # Example usage (assuming `res` is a pre-computed result object)
-# pvalue_tree(res, p.values = "raw")
+# pima_tree(res, p.values = "raw")
 }

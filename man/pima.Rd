@@ -18,7 +18,7 @@ If \code{NULL}, all coefficients are tested.}
 
 \item{method}{correction method among \code{maxT}, \code{minP} and \code{none}. Can be abbreviated.}
 
-\item{...}{further parameters of \code{\link[join_flipscores]{join_flipscores}}.}
+\item{...}{further parameters of \code{\link[jointest]{join_flipscores}}.}
 }
 \value{
 Returns an object of class \code{pima}, containing:

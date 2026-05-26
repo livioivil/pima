@@ -9,14 +9,14 @@
 \alias{plot.pima}
 \title{Methods for pima objects}
 \usage{
-\method{print}{pima}(object, n = 4)
+\method{print}{pima}(x, n = 4, ...)
 
 \method{summary}{pima}(object, digits = NULL, ...)
 
-\method{as}{pima}(object, names_obj = NULL, ...)
+as.pima(object, names_obj = NULL, ...)
 
 \method{plot}{pima}(
-  object,
+  x,
   focal = NULL,
   xvar = NULL,
   p.adjusted = TRUE,
@@ -33,11 +33,15 @@
 )
 }
 \arguments{
+\item{x}{an object of class \code{pima}.}
+
+\item{n}{number of rows to print from the beginning and end of the scenario table.}
+
+\item{...}{additional arguments to be passed}
+
 \item{object}{an object of class \code{pima}.}
 
 \item{digits}{number of digits when rounding. Default to `NULL` thus no rounding.}
-
-\item{...}{additional arguments to be passed}
 
 \item{names_obj}{a vector of names, its length must be equal to the length of \code{object}}
 
@@ -64,8 +68,6 @@
 \item{facet}{a formula for facetting the plot, passed to \code{\link[ggplot2]{facet_grid}}.}
 
 \item{which.response}{a character vector specifying a subset of response variables to be plotted.}
-
-\item{p.adjust}{logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default).}
 }
 \description{
 Methods for \code{pima} objects.

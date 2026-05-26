@@ -1,6 +1,5 @@
 #' Global tests in multiverse analysis
 #' @description Tests global null hypotheses for weak control of the Family-Wise Error Rate, considering one or more parameters within a multiverse of models.
-#' @usage global_tests(obj, by = NULL, comb_funct = "maxT", comb_factors = FALSE, comb_factors_funct = "Mahalanobis")
 #' @param obj a \code{jointest} object, e.g., produced by \code{\link{pima}}.
 #' @param by mode of combination (\code{NULL}, \code{Coeff}, \code{Model}, \code{individual}).
 #' If \code{NULL} (default), a single global null hypothesis is tested.
@@ -84,4 +83,3 @@ global_tests <- function(obj,
   
   return(obj)
 }
-

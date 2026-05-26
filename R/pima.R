@@ -12,7 +12,7 @@
 #' If \code{NULL}, all coefficients are tested.
 #' @param n_flips number of sign flips.
 #' @param method correction method among \code{maxT}, \code{minP} and \code{none}. Can be abbreviated.
-#' @param ... further parameters of \code{\link[join_flipscores]{join_flipscores}}.
+#' @param ... further parameters of \code{\link[jointest]{join_flipscores}}.
 #' @details The procedure builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
 #' For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 #' for the null hypothesis that the coefficient is null against a two-sided alternative.

@@ -11,19 +11,20 @@ NULL
 
 #' print.pima print method for a pima object.
 #' @rdname pima-method
-#' @param object an object of class \code{pima}.
+#' @param x an object of class \code{pima}.
+#' @param n number of rows to print from the beginning and end of the scenario table.
 #' @param ... additional arguments to be passed
 #' @method print pima
 #' @docType methods
 #' @export
-print.pima <- function(object, n = 4) {
-  nr <- nrow(object$info)
+print.pima <- function(x, n = 4, ...) {
+  nr <- nrow(x$info)
   msg <- sprintf("== Multiverse analysis with %s scenarios ==", nr)
   cat("\n")
   cat(msg)
   cat("\n\n")
-  rownames(object$info) <- NULL
-  .trim(object$info, n = n)
+  rownames(x$info) <- NULL
+  .trim(x$info, n = n)
   cat("\n")
 }
 
@@ -58,7 +59,6 @@ summary.pima <- function(object, digits = NULL, ...) {
 #' @param object an object of class \code{pima}.
 #' @param names_obj a vector of names, its length must be equal to the length of \code{object}
 #' @param ... additional arguments to be passed
-#' @method as pima
 #' @docType methods
 #' @export
 
@@ -81,7 +81,6 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' @param focal a character vector indicating which coefficients to plot. When > 1 coefficient is provided (or NULL) and `xvar` is not provided the `Part. Cor` column is used instead of the `Estimate`.
 # TODO check the focal documentation
 #' @param xvar character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".
-#' @param p.adjust logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default).
 #' @param p.transf can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.
 #' @param alpha a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.
 #' @param xlab character vector indicating the x-axis label. Default to `xvar`
@@ -98,7 +97,7 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' @export
 
 plot.pima <- function(
-  object,
+  x,
   focal = NULL,
   xvar = NULL,
   p.adjusted = TRUE,
@@ -113,6 +112,7 @@ plot.pima <- function(
   which.response = NULL,
   ...
 ) {
+  object <- x
   # TODO what about adding a way to transform the p value using custom formula? Also adding critical value (p = 0.05) when using a transformation.
 
   # avoid conflicting with base plot(x = ) argument
@@ -123,10 +123,11 @@ plot.pima <- function(
   nspec <- nrow(object$info)
 
   if (!is.null(which.response)) {
-    object$summary_table <- subset(
-      object$summary_table,
-      response %in% which.response
-    )
+    object$summary_table <- object$summary_table[
+      object$summary_table$response %in% which.response,
+      ,
+      drop = FALSE
+    ]
   }
 
   is_multi_y <- length(unique(object$summary_table$response)) > 1
@@ -141,7 +142,7 @@ plot.pima <- function(
     is.null(focal) &&
       length(object$tested_coeffs) > 1 &&
       is.null(xvar) &&
-      is.null(facet.coef)
+      is.null(facet)
   ) {
     xvar <- "pcor"
     warning(
@@ -170,9 +171,9 @@ plot.pima <- function(
 
   if (!is.null(focal)) {
     if (regex) {
-      D <- subset(D, grepl(paste0(focal, collapse = "|"), coefficient))
+      D <- D[grepl(paste0(focal, collapse = "|"), D$coefficient), , drop = FALSE]
     } else {
-      D <- subset(D, coefficient %in% focal)
+      D <- D[D$coefficient %in% focal, , drop = FALSE]
     }
   }
 
@@ -257,7 +258,7 @@ plot.pima <- function(
     )
   ) +
     ggplot2::geom_point(
-      ggplot2::aes(shape = is_signif),
+      ggplot2::aes(shape = .data[["is_signif"]]),
       size = 2,
       show.legend = TRUE
     ) +
@@ -290,7 +291,7 @@ plot.pima <- function(
   }
 
   if (is.null(facet) && !is_multi_y) {
-    facet <- response ~ .
+    facet <- stats::as.formula("response ~ .")
   }
   p <- p + ggplot2::facet_grid(facet, scales = facet.scales)
   p

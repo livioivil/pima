@@ -122,11 +122,19 @@ spec_curve <- function(
   xs <- attributes(x$info)$xs
 
   if (!is.null(focal)) {
-    x$summary_table <- subset(x$summary_table, coefficient %in% focal)
+    x$summary_table <- x$summary_table[
+      x$summary_table$coefficient %in% focal,
+      ,
+      drop = FALSE
+    ]
   }
 
   if (!is.null(which.response)) {
-    x$summary_table <- subset(x$summary_table, response %in% which.response)
+    x$summary_table <- x$summary_table[
+      x$summary_table$response %in% which.response,
+      ,
+      drop = FALSE
+    ]
   }
 
   spec_data <- .get_spec_curve_data(x, yvar, p.adjusted, p.values, alpha)
@@ -137,11 +145,15 @@ spec_curve <- function(
     sprintf('atop(bold("%s"), "")', spec_data$dbottom$var)
   )
 
-  if (!redundant) {
+  if (redundant) {
     # remove redundant variables from the plot
     redundant <- apply(x$info[, xs], 2, function(x) length(unique(x)) == 1)
     redundant <- names(redundant)[redundant]
-    spec_data$dbottom <- subset(spec_data$dbottom, var != redundant)
+    spec_data$dbottom <- spec_data$dbottom[
+      !spec_data$dbottom$var %in% redundant,
+      ,
+      drop = FALSE
+    ]
   }
 
   # plotting elements
@@ -153,7 +165,11 @@ spec_curve <- function(
   # check which response variables we have to plot
 
   if (!is.null(yname)) {
-    spec_data$dtop <- subset(spec_data$dtop, response %in% yname)
+    spec_data$dtop <- spec_data$dtop[
+      spec_data$dtop$response %in% yname,
+      ,
+      drop = FALSE
+    ]
   }
 
   is_multi_y <- length(unique(x$summary_table$response)) > 1
@@ -170,10 +186,13 @@ spec_curve <- function(
 
   top <- ggplot2::ggplot(
     data = spec_data$dtop,
-    ggplot2::aes(x = .id_spec, y = .data[[yvar]])
+    ggplot2::aes(x = .data[[".id_spec"]], y = .data[[yvar]])
   ) +
     ggplot2::geom_point(
-      ggplot2::aes(color = .coefficient_y, shape = is_signif),
+      ggplot2::aes(
+        color = .data[[".coefficient_y"]],
+        shape = .data[["is_signif"]]
+      ),
       show.legend = TRUE
     ) +
     top.theme() +
@@ -206,28 +225,31 @@ spec_curve <- function(
   if (yvar == "estimate" & conf.int) {
     top <- top +
       ggplot2::geom_segment(ggplot2::aes(
-        x = .id_spec,
-        xend = .id_spec,
-        y = est.ci.lb,
-        yend = est.ci.ub
+        x = .data[[".id_spec"]],
+        xend = .data[[".id_spec"]],
+        y = .data[["est.ci.lb"]],
+        yend = .data[["est.ci.ub"]]
       ))
   }
 
   if (facet.y) {
     top <- top +
-      ggplot2::facet_grid(response ~ .)
+      ggplot2::facet_grid(stats::as.formula("response ~ ."))
   }
 
   bottom <- ggplot2::ggplot(
     spec_data$dbottom,
-    ggplot2::aes(x = .id_spec, y = var.spec)
+    ggplot2::aes(x = .data[[".id_spec"]], y = .data[["var.spec"]])
   ) +
     ggplot2::facet_grid(
-      var_txt ~ .,
+      stats::as.formula("var_txt ~ ."),
       scales = "free_y",
       labeller = ggplot2::label_parsed
     ) +
-    ggplot2::geom_point(ggplot2::aes(shape = is_signif), show.legend = TRUE) +
+    ggplot2::geom_point(
+      ggplot2::aes(shape = .data[["is_signif"]]),
+      show.legend = TRUE
+    ) +
     bottom.theme() +
     ggplot2::theme(
       axis.title.y = ggplot2::element_blank(),
@@ -243,6 +265,5 @@ spec_curve <- function(
       labels = paste0(c("p >  ", "p <= "), alpha)
     )
 
-  patchwork:::`/.ggplot`(top, bottom) +
-    patchwork::plot_layout(heights = tbr)
+  patchwork::wrap_plots(top, bottom, ncol = 1, heights = tbr)
 }

@@ -4,7 +4,13 @@
 \alias{global_tests}
 \title{Global tests in multiverse analysis}
 \usage{
-global_tests(obj, by = NULL, comb_funct = "maxT", comb_factors = FALSE, comb_factors_funct = "Mahalanobis")
+global_tests(
+  obj,
+  by = NULL,
+  comb_funct = "maxT",
+  comb_factors = FALSE,
+  comb_factors_funct = "Mahalanobis"
+)
 }
 \arguments{
 \item{obj}{a \code{jointest} object, e.g., produced by \code{\link{pima}}.}
