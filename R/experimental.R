@@ -156,7 +156,10 @@ create_multi <- function(formula,
   forms_call <- lapply(forms, paste, collapse = " + ")
   forms_call <- paste(y, "~", forms_call)
   out <- list(variables = X, calls = unlist(forms_call), subset = subset)
-  conds <- expand.grid(calls = out$calls, subset = names(out$subset), stringsAsFactors = FALSE)
+  conds <- expand.grid(calls = out$calls, 
+                       subset = names(out$subset), 
+                       stringsAsFactors = FALSE)
+  conds$model <- paste0("model", 1:nrow(conds))
   
   if(!is.null(fit.fun)){
     mods <- vector(mode = "list", length = nrow(conds))
