@@ -52,7 +52,7 @@ spec_curve <- function(
   which.response = NULL
 ) {
   # # default parameters for debugging
-  #
+  # 
   # focal = NULL
   # yvar = NULL
   # p.adjusted = NULL
@@ -120,6 +120,8 @@ spec_curve <- function(
   }
 
   xs <- attributes(x$info)$xs
+  extra <- attributes(x$info)$extra
+  xs <- c(xs, extra)
 
   if (!is.null(focal)) {
     x$summary_table <- x$summary_table[
@@ -145,7 +147,7 @@ spec_curve <- function(
     sprintf('atop(bold("%s"), "")', spec_data$dbottom$var)
   )
 
-  if (redundant) {
+  if (!redundant) {
     # remove redundant variables from the plot
     redundant <- apply(x$info[, xs], 2, function(x) length(unique(x)) == 1)
     redundant <- names(redundant)[redundant]
