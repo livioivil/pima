@@ -92,7 +92,7 @@
 #' # pimaAnalysis(res, by = "Coeff", alpha = 0.4)
 #' @export
 
-pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...) {
+pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), extra = NULL, ...) {
   
   mods_are_glm <- sapply(mods, function(x) inherits(x, "glm"))
 
@@ -116,7 +116,6 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   # get response variable
   ys <- sapply(out$mods, .get_response_var)
   out$summary_table$response <- ys[out$summary_table$model]
-  out$summary_table <- out$summary_table[, c("model", ".assign", "response", "coefficient", "estimate", "score", "se", "z", "pcor", "p")]
   
   old_class <- class(out)
   
@@ -134,10 +133,17 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   join_flipscores_args <- .get_fn_args(jointest::join_flipscores, 
                                        new.args = join_flipscores_args, 
                                        exclude = c("...", "mods"))
-  out$info <- .get_info_models(out$mods)
+  info <- .get_info_models(out$mods, extra)
+  out$info <- info$info
   out$tested_coeffs <- tested_coeffs
   out <- c(out, join_flipscores_args)
   out$p.adjust.method <- method
+  out$extra <- info$extra
+  
+  # add extra to summary table
+  out$summary_table <- merge(out$summary_table, info$extra, by = "model")
+  #out$summary_table <- out$summary_table[, c("model", ".assign", "response", "coefficient", names(info$extra), "estimate", "score", "se", "z", "pcor", "p")]
+  
   class(out) <- unique(c("pima", old_class))
   
   return(out)
