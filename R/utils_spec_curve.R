@@ -11,6 +11,9 @@
   spec_data <- .get_conf_int(x, spec_data, p.values, alpha, p.adjusted)
   
   xs <- attributes(x$info)$xs
+  extra <- attributes(x$info)$extra
+  
+  xs <- c(xs, extra)
   
   spec_data_bottom <- reshape(spec_data,
                               varying = xs,
