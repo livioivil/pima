@@ -68,7 +68,8 @@ global_tests <- function(obj,
                          comb_factors_funct = "Mahalanobis"){
   
   if (!is.null(by)) {
-    by <- match.arg(by, choices = c("coefficient", "model", "individual"))
+    by_choices <- c("coefficient", "model", "individual", attr(obj$info, "extra"))
+    by <- match.arg(by, choices = by_choices)
   }
   
   if(comb_factors){
