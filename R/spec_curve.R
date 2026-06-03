@@ -67,6 +67,7 @@ spec_curve <- function(
   # bottom.theme = NULL
   # redundant = TRUE
   # conf.int = FALSE
+  # which.response = NULL
 
   stopifnot(inherits(x, "pima"))
 
