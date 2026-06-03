@@ -98,6 +98,7 @@ as.pima <- function(object, names_obj = NULL, ...) {
 
 plot.pima <- function(
   x,
+  by = "coefficient",
   focal = NULL,
   xvar = NULL,
   p.adjusted = TRUE,
@@ -112,6 +113,19 @@ plot.pima <- function(
   which.response = NULL,
   ...
 ) {
+  # focal = NULL
+  # xvar = NULL
+  # p.adjusted = TRUE
+  # p.transf = "z"
+  # alpha = 0.05
+  # xlab = NULL
+  # ylab = NULL
+  # regex = FALSE
+  # shapes = NULL
+  # facet.scales = NULL
+  # facet = NULL
+  # which.response = NULL
+  
   object <- x
   # TODO what about adding a way to transform the p value using custom formula? Also adding critical value (p = 0.05) when using a transformation.
 
@@ -181,8 +195,6 @@ plot.pima <- function(
   xvar <- match.arg(xvar, choices = colnames(D), several.ok = FALSE)
   p.values <- match.arg(p.values, choices = colnames(D), several.ok = FALSE)
 
-  group <- ".coefficient_y"
-
   # transform the p value
   D$p.transf <- transf_p(D[[p.values]], method = p.transf)
 
@@ -247,14 +259,30 @@ plot.pima <- function(
   if (is.null(ylab)) {
     ylab <- sprintf("%s (%s)", p.values, p.transf.txt)
   }
+  
+  group_for_names <- by
+  if("coefficient" %in% by) {
+    group <- ifelse(by == "coefficient", ".coefficient_y", by)
+  } else{
+    group_vars <- attr(object$info, "extra")
+    group <- match.arg(by, group_vars, several.ok = TRUE)
+  }
+  
+  if (length(group) > 1) {
+    D[[".group"]] <- interaction(D[, group], drop = TRUE, sep = " | ")
+    group_lab <- paste(group_for_names, collapse = " | ")
+  } else {
+    D[[".group"]] <- D[[group]]
+    group_lab <- group_for_names
+  }
 
   p <- ggplot2::ggplot(
     D,
     ggplot2::aes(
       x = .data[[xvar]],
       y = .data[["p.transf"]],
-      group = .data[[group]],
-      color = .data[[group]]
+      group = .data[[".group"]],
+      color = .data[[".group"]]
     )
   ) +
     ggplot2::geom_point(
@@ -267,7 +295,7 @@ plot.pima <- function(
     ggplot2::labs(
       x = xlab,
       y = ylab,
-      color = "coefficient"
+      color = group_lab
     )
 
   if (!(alpha %in% c(0, 1))) {
