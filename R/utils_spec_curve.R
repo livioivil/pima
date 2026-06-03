@@ -4,7 +4,13 @@
                                  p.values,
                                  include.p.raw = FALSE,
                                  alpha = 0.05){
-  spec_data <- merge(x$summary_table, x$info, by = "model")
+  
+  spec_data <- merge(
+    x$summary_table,
+    x$info[, c("model", setdiff(names(x$info), names(x$summary_table))), drop = FALSE],
+    by = "model"
+  )
+  
   spec_data <- spec_data[order(spec_data[[yvar]]), ]
   spec_data$.id_spec <- 1:nrow(spec_data)
 
