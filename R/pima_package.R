@@ -2,7 +2,6 @@
 #' @description Runs resampling-based tests jointly to allow for multiple testing in multiverse analysis.
 #' As main feature, it applies the PIMA procedure, a general and flexible framework based on the sign-flip score test
 #' that provides control of the Family-Wise Error Rate (FWER) and confidence bounds for True Discovery Proportions (TDPs).
-#' @import flipscores
 #' @importFrom graphics plot text
 #' @importFrom rlang .data
 #' @importFrom stats as.formula formula getCall median qnorm quantile reformulate reshape terms update
