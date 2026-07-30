@@ -92,7 +92,7 @@
 #' # pimaAnalysis(res, by = "Coeff", alpha = 0.4)
 #' @export
 
-pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), extra = NULL, ...) {
+pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), tail = 0, extra = NULL, ...) {
   
   mods_are_glm <- sapply(mods, function(x) inherits(x, "glm"))
 
@@ -106,17 +106,17 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   extra_args <- list(...)
   
-  join_flipscores_args <- c(
-    list(mods = mods, tested_coeffs = tested_coeffs, n_flips = n_flips), 
+  flipscores_args <- c(
+    list(formula = mods, tested_coeffs = tested_coeffs, n_flips = n_flips), 
     extra_args
   )
   
-  out <- do.call(jointest::join_flipscores, join_flipscores_args)
+  out <- do.call(flipscores::flipscores, flipscores_args)
   
-  # get response variable
-  ys <- sapply(out$mods, .get_response_var)
-  out$summary_table$response <- ys[out$summary_table$model]
-  
+  # TODO mods should be already in flipscores, temporary creating it, very fragile
+  out$summary_table <- cbind(model = sub("^(mod[0-9]+).*", "\\1", rownames(out$summary_table)), 
+        out$summary_table)
+
   old_class <- class(out)
   
   # TODO check if removing res$call is problematic
@@ -124,16 +124,16 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   if(method != "none"){
     # TODO is tail something to put as parameter?
-    out <- jointest::p.adjust(out, method = method, tail = 0)
+    out <- flipscores::p.adjust(object = out, tail = tail, method = method)
   }
   
   # get all the arguments of jointest::join_flipscores to be
   # used in other functions
   
-  join_flipscores_args <- .get_fn_args(jointest::join_flipscores, 
-                                       new.args = join_flipscores_args, 
+  join_flipscores_args <- .get_fn_args(flipscores::flipscores, 
+                                       new.args = flipscores_args, 
                                        exclude = c("...", "mods"))
-  info <- .get_info_models(out$mods, extra)
+  info <- .get_info_models(out$objects, extra)
   out$info <- info$info
   out$tested_coeffs <- tested_coeffs
   out <- c(out, join_flipscores_args)
