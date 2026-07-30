@@ -12,7 +12,7 @@
 #' If \code{NULL}, all coefficients are tested.
 #' @param n_flips number of sign flips.
 #' @param method correction method among \code{maxT}, \code{minP} and \code{none}. Can be abbreviated.
-#' @param ... further parameters of \code{\link[join_flipscores]{join_flipscores}}.
+#' @param ... further parameters of \code{\link[jointest]{join_flipscores}}.
 #' @details The procedure builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
 #' For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 #' for the null hypothesis that the coefficient is null against a two-sided alternative.
@@ -76,14 +76,14 @@
 #' 
 #' # Global p-values: overall, by model and by coefficient
 #' summary(global_tests(res))
-#' summary(global_tests(res, by = "Model"))
-#' summary(global_tests(res, by = "Coeff"))
+#' summary(global_tests(res, by = "model"))
+#' summary(global_tests(res, by = "coefficient"))
 #' 
 #' # Global tests for each factor
 #' summary(global_tests(res, by = "individual", comb_factors = TRUE))
 #' 
 #' # These tests can be aggregated as before (e.g., by coefficient)
-#' summary(global_tests(res, by = "Coeff", comb_factors = TRUE))
+#' summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
 #' 
 #' # Lower 95%-confidence bound for the TDP
 #' # require(sumSome)
@@ -92,7 +92,7 @@
 #' # pimaAnalysis(res, by = "Coeff", alpha = 0.4)
 #' @export
 
-pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...) {
+pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), tail = 0, extra = NULL, ...) {
   
   mods_are_glm <- sapply(mods, function(x) inherits(x, "glm"))
 
@@ -106,13 +106,17 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   extra_args <- list(...)
   
-  join_flipscores_args <- c(
-    list(mods = mods, tested_coeffs = tested_coeffs, n_flips = n_flips), 
+  flipscores_args <- c(
+    list(formula = mods, tested_coeffs = tested_coeffs, n_flips = n_flips), 
     extra_args
   )
   
-  out <- do.call(jointest::join_flipscores, join_flipscores_args)
+  out <- do.call(flipscores::flipscores, flipscores_args)
   
+  # TODO mods should be already in flipscores, temporary creating it, very fragile
+  out$summary_table <- cbind(model = sub("^(mod[0-9]+).*", "\\1", rownames(out$summary_table)), 
+        out$summary_table)
+
   old_class <- class(out)
   
   # TODO check if removing res$call is problematic
@@ -120,19 +124,26 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   if(method != "none"){
     # TODO is tail something to put as parameter?
-    out <- jointest::p.adjust(out, method = method, tail = 0)
+    out <- flipscores::p.adjust(object = out, tail = tail, method = method)
   }
   
   # get all the arguments of jointest::join_flipscores to be
   # used in other functions
   
-  join_flipscores_args <- .get_fn_args(jointest::join_flipscores, 
-                                       new.args = join_flipscores_args, 
+  join_flipscores_args <- .get_fn_args(flipscores::flipscores, 
+                                       new.args = flipscores_args, 
                                        exclude = c("...", "mods"))
-  out$info <- .get_info_models(out$mods)
+  info <- .get_info_models(out$objects, extra)
+  out$info <- info$info
   out$tested_coeffs <- tested_coeffs
   out <- c(out, join_flipscores_args)
   out$p.adjust.method <- method
+  out$extra <- info$extra
+  
+  # add extra to summary table
+  out$summary_table <- merge(out$summary_table, info$extra, by = "model")
+  #out$summary_table <- out$summary_table[, c("model", ".assign", "response", "coefficient", names(info$extra), "estimate", "score", "se", "z", "pcor", "p")]
+  
   class(out) <- unique(c("pima", old_class))
   
   return(out)

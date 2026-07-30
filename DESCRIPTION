@@ -1,22 +1,25 @@
 Package: pima
 Type: Package
 Title: Post-selection Inference in Multiverse Analysis
-Version: 1.2.0
+Version: 1.2.1
 Date: 2022-09-15
 Author: Livio Finos, Paolo Girardi, Filippo Gambarota, Anna Vesely, Giulia Calignano, Massimiliano Pastore, Gianmarco Altoè
 Maintainer: Filippo Gambarota <filippo.gambarota@unipd.it>
 Description: Runs resampling-based tests jointly to allow for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate and True Discovery Proportions. As main feature, it applies the PIMA procedure, a general and flexible framework based on the sign-flip score test. Details can be found in Girardi et al. (2024) <doi:10.1007/s11336-024-09973-6>.
 License: GPL (>= 2)
+Depends:
+    R (>= 3.5.0)
 Imports:
+    formula.tools,
+    ggplot2,
     flipscores,
-    methods,
-    flip 
-RoxygenNote: 7.3.2
+    patchwork,
+    rlang,
+    rpart
+Remotes:
+    livioivil/flipscores
 Encoding: UTF-8
 Language: en-US
 BugReports: https://github.com/livioivil/pima/issues
 URL: https://livioivil.github.io/pima
-Suggests: 
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0

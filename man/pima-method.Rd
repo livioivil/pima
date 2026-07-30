@@ -9,14 +9,15 @@
 \alias{plot.pima}
 \title{Methods for pima objects}
 \usage{
-\method{print}{pima}(object, n = 4)
+\method{print}{pima}(x, n = 4, ...)
 
 \method{summary}{pima}(object, digits = NULL, ...)
 
-\method{as}{pima}(object, names_obj = NULL, ...)
+as.pima(object, names_obj = NULL, ...)
 
 \method{plot}{pima}(
-  object,
+  x,
+  by = "coefficient",
   focal = NULL,
   xvar = NULL,
   p.adjusted = TRUE,
@@ -26,23 +27,30 @@
   ylab = NULL,
   regex = FALSE,
   shapes = NULL,
-  facet = FALSE,
   facet.scales = NULL,
+  facet = NULL,
+  which.response = NULL,
   ...
 )
 }
 \arguments{
+\item{x}{an object of class \code{pima}.}
+
+\item{n}{number of rows to print from the beginning and end of the scenario table.}
+
+\item{...}{additional arguments to be passed}
+
 \item{object}{an object of class \code{pima}.}
 
 \item{digits}{number of digits when rounding. Default to `NULL` thus no rounding.}
-
-\item{...}{additional arguments to be passed}
 
 \item{names_obj}{a vector of names, its length must be equal to the length of \code{object}}
 
 \item{focal}{a character vector indicating which coefficients to plot. When > 1 coefficient is provided (or NULL) and `xvar` is not provided the `Part. Cor` column is used instead of the `Estimate`.}
 
 \item{xvar}{character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".}
+
+\item{p.adjusted}{logical indicating whether to plot adjusted p-values (\code{TRUE}, default) or raw p-values (\code{FALSE}).}
 
 \item{p.transf}{can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.}
 
@@ -52,7 +60,15 @@
 
 \item{ylab}{character vector indicating the y-axis label. Default to `p` or `p.adjust.<method>` where method is `object$p.adjust.method`.}
 
-\item{p.adjust}{logical indicating whether plotting raw (`FALSE`) or adjusted p.values (`TRUE`, default).}
+\item{regex}{logical. If \code{TRUE}, the \code{focal} argument is treated as a regular expression to match coefficient names. Default is \code{FALSE}.}
+
+\item{shapes}{a numeric vector of length 2 specifying the ggplot2 shapes to use for non-significant and significant points, respectively. Default is \code{c(4, 19)}.}
+
+\item{facet.scales}{character string indicating if scales should be \code{"fixed"}, \code{"free"}, \code{"free_x"}, or \code{"free_y"}. Default is \code{"free_x"}.}
+
+\item{facet}{a formula for facetting the plot, passed to \code{\link[ggplot2]{facet_grid}}.}
+
+\item{which.response}{a character vector specifying a subset of response variables to be plotted.}
 }
 \description{
 Methods for \code{pima} objects.

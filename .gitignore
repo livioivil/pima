@@ -11,3 +11,7 @@ inst/doc
 docs
 local
 .DS_Store
+debug/
+/.quarto/
+**/*.quarto_ipynb
+..Rcheck/

@@ -2,12 +2,13 @@
 % Please edit documentation in R/spec_curve.R
 \name{spec_curve}
 \alias{spec_curve}
-\title{A character vector with the title for the overall plot (applied to the top plot internally).}
+\title{Specification Curve Analysis}
 \usage{
 spec_curve(
   x,
   focal = NULL,
   yvar = NULL,
+  yname = NULL,
   p.adjusted = NULL,
   alpha = 0.05,
   tbr = c(0.4, 0.6),
@@ -19,43 +20,58 @@ spec_curve(
   top.theme = NULL,
   bottom.theme = NULL,
   redundant = TRUE,
-  conf.int = FALSE
+  conf.int = FALSE,
+  facet.y = FALSE,
+  which.response = NULL
 )
 }
 \arguments{
-\item{x}{an object of class `pima`, usually the result of the `pima()` function.}
+\item{x}{An object of class `pima`, usually the result of the `pima()` function.}
 
-\item{yvar}{character indicating the column of the `x$summary_table` object to be used in the y axes of the top part of the specification curve (usually the estimated parameter). Default to `"Estimate"`.}
+\item{focal}{A character vector of focal coefficients to filter. If `NULL`, defaults to all tested coefficients in `x`.}
 
-\item{alpha}{A numeric value specifying the significance level for the confidence intervals. Default is 0.05.}
+\item{yvar}{Character indicating the column of the `x$summary_table` object to be used in the y-axis of the top plot (usually the estimated parameter). Defaults to `"estimate"`.}
 
-\item{tbr}{A numeric vector of two elements indicating the proportion of space assigned to the top and bottom part of the plot.}
+\item{yname}{Character indicating the name of the response variable to be plotted if the `pima` object contains more than one variable. If `NULL` (the default), all response variables are plotted.}
 
-\item{colors}{A character vector of two elements with the colors for the point representing non-significant and significant p-values.}
+\item{p.adjusted}{Logical indicating whether to use adjusted p-values for determining significance. Defaults to `TRUE` if an adjustment method was specified in the `pima` object.}
 
-\item{xlab}{a character vector for the x axis title. Default to "Specification"}
+\item{alpha}{A numeric value specifying the significance level for the confidence intervals and color-coding. Default is 0.05.}
 
-\item{ylab}{a character vector for the y axis title of the top plot. Default to `yvar`.}
+\item{tbr}{A numeric vector of two elements indicating the vertical space ratio assigned to the top and bottom plots (e.g., `c(0.4, 0.6)`).}
 
-\item{top.theme}{a function with a `ggplot2` compatible theme for the top plot. Default to ggplot2::theme_minimal()`}
+\item{colors}{A character vector of two elements specifying the colors for non-significant and significant results.}
 
-\item{bottom.theme}{a function with a `ggplot2` compatible theme for the bottom plot Default to `ggplot2::theme_minimal()`}
+\item{shapes}{A numeric vector of two elements specifying the shapes for non-significant and significant results. Default to `c(4, 19)`.}
 
-\item{p.values}{character indicating the column of the `x$summary_table` object with the p values. Default to `""p.adj.maxT"` (maxT corrected p values).}
+\item{title}{A character string for the overall plot title.}
 
-\item{A}{character vector of two elements with the shapes representing non-significant and significant p-values. Default to simple points.}
+\item{xlab}{A character string for the x-axis title. Default to "Specification".}
+
+\item{ylab}{A character string for the y-axis title of the top plot. Default to the value of `yvar`.}
+
+\item{top.theme}{A function returning a `ggplot2` theme for the top plot. Default to `ggplot2::theme_minimal()`.}
+
+\item{bottom.theme}{A function returning a `ggplot2` theme for the bottom plot. Default to `ggplot2::theme_minimal()`.}
+
+\item{redundant}{Logical. If `TRUE`, removes variables that do not vary across specifications from the bottom plot.}
+
+\item{conf.int}{Logical. If `TRUE`, includes confidence intervals around estimated coefficients. (Ignored if `yvar` is not `"estimate"`).}
+
+\item{facet.y}{Logical. If `TRUE`, creates separate facets for each response variable in the top plot. Default is `FALSE`.}
+
+\item{which.response}{A character vector specifying which response variables to include in the plot.}
 }
 \value{
-A plot displaying the specification curve with confidence intervals and p-values, as well as a legend showing the variable combinations used in each specification. The output object is a [`patchwork`] object thus a collection of `ggplot2` objects. The underlying datasets can be accessed using `@data` for each plot.
+A [`patchwork`] object consisting of two aligned `ggplot2` plots. The top plot shows estimates/p-values, and the bottom plot shows the specification grid.
 }
 \description{
-Specification Curve Analysis
-}
-\details{
-This function performs a specification curve analysis based on the results of a set of regression models. It visualizes the coefficient estimates with confidence intervals, p-values, and highlights significant specifications.
+This function performs a specification curve analysis based on the results of a set of regression models.
+It visualizes the coefficient estimates with confidence intervals, p-values, and highlights
+significant specifications.
 }
 \examples{
-# Example usage (assuming `res` is a pre-computed result object):
-# spec_curve(res, alpha = 0.05)
+# Example usage (assuming `res` is a pre-computed pima object):
+# spec_curve(res, alpha = 0.05, conf.int = TRUE)
 
 }

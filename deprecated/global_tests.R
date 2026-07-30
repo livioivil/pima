@@ -1,6 +1,5 @@
 #' Global tests in multiverse analysis
 #' @description Tests global null hypotheses for weak control of the Family-Wise Error Rate, considering one or more parameters within a multiverse of models.
-#' @usage global_tests(obj, by = NULL, comb_funct = "maxT", comb_factors = FALSE, comb_factors_funct = "Mahalanobis")
 #' @param obj a \code{jointest} object, e.g., produced by \code{\link{pima}}.
 #' @param by mode of combination (\code{NULL}, \code{Coeff}, \code{Model}, \code{individual}).
 #' If \code{NULL} (default), a single global null hypothesis is tested.
@@ -52,14 +51,14 @@
 #' 
 #' # Global p-values: overall, by model and by coefficient
 #' summary(global_tests(res))
-#' summary(global_tests(res, by = "Model"))
-#' summary(global_tests(res, by = "Coeff"))
+#' summary(global_tests(res, by = "model"))
+#' summary(global_tests(res, by = "coefficient"))
 #' 
 #' # Global tests for each factor
 #' summary(global_tests(res, by = "individual", comb_factors = TRUE))
 #' 
 #' # These tests can be aggregated as before (e.g., by coefficient)
-#' summary(global_tests(res, by = "Coeff", comb_factors = TRUE))
+#' summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
 #' @export
 
 global_tests <- function(obj, 
@@ -69,7 +68,8 @@ global_tests <- function(obj,
                          comb_factors_funct = "Mahalanobis"){
   
   if (!is.null(by)) {
-    by <- match.arg(by, choices = c("coefficient", "model", "individual"))
+    by_choices <- c("coefficient", "model", "individual", attr(obj$info, "extra"))
+    by <- match.arg(by, choices = by_choices)
   }
   
   if(comb_factors){
@@ -79,9 +79,8 @@ global_tests <- function(obj,
   }
   
   if(is.null(by) || by != "individual"){
-    obj <- jointest::combine(obj, comb_funct = comb_funct, by = by)
+    obj <- jointest::combine_tests(obj, comb_funct = comb_funct, by = by)
   }
   
   return(obj)
 }
-

@@ -4,13 +4,22 @@
                                  p.values,
                                  include.p.raw = FALSE,
                                  alpha = 0.05){
-  spec_data <- merge(x$summary_table, x$info, by = "model")
+  
+  spec_data <- merge(
+    x$summary_table,
+    x$info[, c("model", setdiff(names(x$info), names(x$summary_table))), drop = FALSE],
+    by = "model"
+  )
+  
   spec_data <- spec_data[order(spec_data[[yvar]]), ]
   spec_data$.id_spec <- 1:nrow(spec_data)
 
   spec_data <- .get_conf_int(x, spec_data, p.values, alpha, p.adjusted)
   
   xs <- attributes(x$info)$xs
+  extra <- attributes(x$info)$extra
+  
+  xs <- c(xs, extra)
   
   spec_data_bottom <- reshape(spec_data,
                               varying = xs,
@@ -34,7 +43,10 @@
   
   if(p.adjusted) {
     if(x$p.adjust.method == "none"){
-      data$p_for_plot <- jointest:::maxT.light(x$Tspace, exp(seq(-8, 0, 0.5)))
+      stop(
+        "adjusted p-values are not available. Re-run pima() without method = 'none' or set p.adjusted = FALSE.",
+        call. = FALSE
+      )
     } else{
       data$p_for_plot <- data[[p.values]]
     }

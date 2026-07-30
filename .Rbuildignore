@@ -5,3 +5,12 @@
 ^_quarto$
 ^_pkgdown\.yml$
 ^pkgdown$
+^debug$
+^\.github$
+^_vignettes$
+^deprecated$
+^local$
+^README\.Rmd$
+^zzz\.R$
+^\.agents$
+^\.codex$

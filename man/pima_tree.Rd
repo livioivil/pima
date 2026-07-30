@@ -4,7 +4,14 @@
 \alias{pima_tree}
 \title{Classification Tree with Adjusted p-values}
 \usage{
-pima_tree(res, p.values = "adjusted", method = "class", alpha = 0.05, ...)
+pima_tree(
+  res,
+  p.values = "adjusted",
+  method = "class",
+  alpha = 0.05,
+  control = NULL,
+  ...
+)
 }
 \arguments{
 \item{res}{A list object with a specific structure containing regression model results. It should contain `mods`, a list of models, and `summary_table`, a data frame with the summary of results, including estimates and p-values.}
@@ -15,15 +22,18 @@ pima_tree(res, p.values = "adjusted", method = "class", alpha = 0.05, ...)
 
 \item{alpha}{used only when `method="class"`}
 
-\item{...}{any other parameter of `rpart::rpart`.}
+\item{control}{control options passed to \code{\link[rpart]{rpart.control}}.
+If \code{NULL}, \code{rpart.control(minsplit = 3)} is used.}
+
+\item{...}{additional arguments passed to \code{\link[rpart]{rpart}}.}
 }
 \value{
-A plot of the classification tree using `rpart.plot()`.
+Invisibly returns the fitted \code{rpart} object.
 }
 \description{
 This function builds a classification tree based on raw or adjusted p-values using the results of a regression model.
 }
 \examples{
 # Example usage (assuming `res` is a pre-computed result object)
-# pvalue_tree(res, p.values = "raw")
+# pima_tree(res, p.values = "raw")
 }

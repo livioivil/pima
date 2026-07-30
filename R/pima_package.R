@@ -3,10 +3,10 @@
 #' As main feature, it applies the PIMA procedure, a general and flexible framework based on the sign-flip score test
 #' that provides control of the Family-Wise Error Rate (FWER) and confidence bounds for True Discovery Proportions (TDPs).
 #' @import flipscores
-#' @importFrom stats median
-#' @importFrom stats qnorm
-#' @importFrom stats quantile
-#' @importFrom stats update
+#' @importFrom graphics plot text
+#' @importFrom rlang .data
+#' @importFrom stats as.formula formula getCall median qnorm quantile reformulate reshape terms update
+#' @importFrom utils combn head stack tail
 # @importFrom car Anova
 # @importFrom MASS glm.nb
 # @importFrom plyr laply

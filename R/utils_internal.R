@@ -75,11 +75,14 @@
   }
 }
 
-.get_info_models <- function(mods) {
+.get_info_models <- function(mods, extra = NULL) {
   info <- data.frame(
     model = names(mods),
-    formula = sapply(mods, .get_formula)
+    formula = sapply(mods, .get_formula),
+    family = sapply(mods, .get_family),
+    link = sapply(mods, .get_link)
   )
+  
   # extract the predictors expanding interactions and sorting them alphabetically
   XS <- lapply(mods, function(x) .get_x_name(x))
 
@@ -127,7 +130,7 @@
 
   colnames(XS) <- gsub("value\\.", "", colnames(XS))
 
-  info <- cbind(info, XS)
+  info <- merge(info, XS, by = "model")
 
   # if ("npreg" %in% colnames(info)) {
   #   info$npreg[is.na(info$npreg)] = info$`npreg^2`[is.na(info$npreg)]
@@ -137,9 +140,21 @@
   if (names(info[, 3, drop = FALSE]) == "model") {
     info = info[, -3]
   }
-
+  
+  if(!is.null(extra)){
+    extra_names <- names(extra)[names(extra) != "model"]
+  } else{
+    extra_names <- NULL
+  }
+  
+  extra_names <- c(extra_names, "family", "link")
+  if(!is.null(extra)){
+    info <- merge(info, extra, by = "model")
+  }
+  extra <- info[, c("model", extra_names)]
+  attr(info, "extra") <- extra_names
   attr(info, "xs") <- unique(XSL$var)
-  info
+  list(extra = extra, info = info)
 }
 
 .get_formula <- function(x) {
@@ -197,31 +212,39 @@
 clapply <- function(x, class, FUN, ...) {
   stopifnot(inherits(x, c("list", "data.frame")))
   res <- lapply(x, function(cc) {
-    if(inherits(cc, class)){
+    if (inherits(cc, class)) {
       FUN(cc, ...)
-    } else{
+    } else {
       cc
     }
   })
-  if(inherits(x, "data.frame")){
+  if (inherits(x, "data.frame")) {
     res <- data.frame(res)
   }
   res
 }
 
 # TODO check if better using a different approach
-as.glm <- function(x){
-  if(inherits(x, "lm")){
+as.glm <- function(x) {
+  if (inherits(x, "lm")) {
     call <- getCall(x)
     call_as_list <- as.list(call)
     # lm to glm
     call_as_list[[1]] <- quote(glm)
     eval(as.call(call_as_list), envir = environment(formula(x)))
-  } else{
+  } else {
     x
   }
 }
 
+.get_response_var <- function(x) {
+  as.character(x$formula[[2]])
+}
 
+.get_family <- function(x){
+  x$family$family
+}
 
-
+.get_link <- function(x){
+  x$family$link
+}

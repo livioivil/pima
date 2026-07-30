@@ -20,7 +20,6 @@ knitr::opts_chunk$set(
 #library(pima)
 devtools::load_all()
 library(jointest)
-library(flipscores)
 library(pima)
 # results reporting
 library(gtsummary)

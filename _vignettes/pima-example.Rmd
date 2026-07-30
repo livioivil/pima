@@ -84,8 +84,6 @@ opts_chunk$set(echo=FALSE,
 ######################
 #### core functions (to be dropped when the pima package is ready)
 library(jointest)
-library(flipscores)
-
 library(pima)
 data("pimads")
 pimads=na.omit(pimads)
