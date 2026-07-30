@@ -14,3 +14,4 @@ local
 debug/
 /.quarto/
 **/*.quarto_ipynb
+..Rcheck/
