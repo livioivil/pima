@@ -220,7 +220,8 @@ spec_curve <- function(
   if (!is.null(colors)) {
     top <- top + ggplot2::scale_color_manual(values = colors)
   }
-
+  
+  # TODO the conf.int argument is not working and used check within flipscores:::confint.flipscores()
   if (yvar != "estimate" & conf.int) {
     warning("confidence interval can be calculated only for the coefficients!")
   }
