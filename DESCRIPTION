@@ -12,13 +12,11 @@ Depends:
 Imports:
     formula.tools,
     ggplot2,
-    jointest,
     flipscores,
     patchwork,
     rlang,
     rpart
 Remotes:
-    livioivil/jointest,
     livioivil/flipscores
 Encoding: UTF-8
 Language: en-US
