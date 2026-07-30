@@ -114,8 +114,7 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   out <- do.call(flipscores::flipscores, flipscores_args)
   
   # TODO mods should be already in flipscores, temporary creating it, very fragile
-  out$summary_table <- cbind(model = sub("^(mod[0-9]+).*", "\\1", rownames(out$summary_table)), 
-        out$summary_table)
+  out$summary_table <- cbind(model = sub("^(mod[0-9]+).*", "\\1", rownames(out$summary_table)), out$summary_table)
 
   old_class <- class(out)
   
