@@ -17,6 +17,7 @@ as.pima(object, names_obj = NULL, ...)
 
 \method{plot}{pima}(
   x,
+  by = "coefficient",
   focal = NULL,
   xvar = NULL,
   p.adjusted = TRUE,
