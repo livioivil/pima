@@ -47,13 +47,6 @@ summary.pima <- function(object, digits = NULL, ...) {
   }
 }
 
-.get_summary_table_from_flipscores <- function(object) {
-  tab = as.data.frame(summary(object)$coefficients)
-  tab = tab[!is.na(tab[, "score"]), ]
-  colnames(tab)[ncol(tab)] = "p"
-  tab = cbind(coefficient = rownames(tab), tab)
-}
-
 #' as.pima method for a pima object.
 #' @rdname pima-method
 #' @param object an object of class \code{pima}.
@@ -63,8 +56,7 @@ summary.pima <- function(object, digits = NULL, ...) {
 #' @export
 
 as.pima <- function(object, names_obj = NULL, ...) {
-  # TODO: calcolare summary_table in ogni elemento di object. se flipscores usa
-  #     .get_summary_table_from_flipscores()
+  # TODO: calcolare summary_table in ogni elemento di object.
   if (!is.null(names_obj)) {
     names(object) = names_obj
   }
