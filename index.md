@@ -24,6 +24,7 @@ install_github("livioivil/pima")
 ## A (minimal) example
 
 ``` r
+
 n=20
 set.seed(123)
 D=data.frame(X=rnorm(n),Z1=rnorm(n),Z2=rnorm(n))
@@ -46,12 +47,14 @@ summary(res)
 ```
 
 ``` r
+
 summary(combine(res))
 #>     Model Coeff Stat nMods        S          p
 #> 1 Overall     X maxT     4 19.78375 0.00739852
 ```
 
 ``` r
+
 res=pima:::p.adjust.pima(res)
 summary(res)
 #>   Model Coeff  Estimate    Score Std. Error  z value Part. Cor          p

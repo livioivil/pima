@@ -6,7 +6,14 @@ p-values using the results of a regression model.
 ## Usage
 
 ``` r
-pima_tree(res, p.values = "adjusted", method = "class", alpha = 0.05, ...)
+pima_tree(
+  res,
+  p.values = "adjusted",
+  method = "class",
+  alpha = 0.05,
+  control = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -33,17 +40,24 @@ pima_tree(res, p.values = "adjusted", method = "class", alpha = 0.05, ...)
 
   used only when \`method="class"\`
 
+- control:
+
+  control options passed to
+  [`rpart.control`](https://rdrr.io/pkg/rpart/man/rpart.control.html).
+  If `NULL`, `rpart.control(minsplit = 3)` is used.
+
 - ...:
 
-  any other parameter of \`rpart::rpart\`.
+  additional arguments passed to
+  [`rpart`](https://rdrr.io/pkg/rpart/man/rpart.html).
 
 ## Value
 
-A plot of the classification tree using \`rpart.plot()\`.
+Invisibly returns the fitted `rpart` object.
 
 ## Examples
 
 ``` r
 # Example usage (assuming `res` is a pre-computed result object)
-# pvalue_tree(res, p.values = "raw")
+# pima_tree(res, p.values = "raw")
 ```

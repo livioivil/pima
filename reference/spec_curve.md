@@ -1,6 +1,9 @@
-# A character vector with the title for the overall plot (applied to the top plot internally).
+# Specification Curve Analysis
 
-Specification Curve Analysis
+This function performs a specification curve analysis based on the
+results of a set of regression models. It visualizes the coefficient
+estimates with confidence intervals, p-values, and highlights
+significant specifications.
 
 ## Usage
 
@@ -9,6 +12,7 @@ spec_curve(
   x,
   focal = NULL,
   yvar = NULL,
+  yname = NULL,
   p.adjusted = NULL,
   alpha = 0.05,
   tbr = c(0.4, 0.6),
@@ -20,7 +24,9 @@ spec_curve(
   top.theme = NULL,
   bottom.theme = NULL,
   redundant = TRUE,
-  conf.int = FALSE
+  conf.int = FALSE,
+  facet.y = FALSE,
+  which.response = NULL
 )
 ```
 
@@ -28,78 +34,104 @@ spec_curve(
 
 - x:
 
-  an object of class \`pima\`, usually the result of the \`pima()\`
+  An object of class \`pima\`, usually the result of the \`pima()\`
   function.
+
+- focal:
+
+  A character vector of focal coefficients to filter. If \`NULL\`,
+  defaults to all tested coefficients in \`x\`.
 
 - yvar:
 
-  character indicating the column of the \`x\$summary_table\` object to
-  be used in the y axes of the top part of the specification curve
-  (usually the estimated parameter). Default to \`"Estimate"\`.
+  Character indicating the column of the \`x\$summary_table\` object to
+  be used in the y-axis of the top plot (usually the estimated
+  parameter). Defaults to \`"estimate"\`.
+
+- yname:
+
+  Character indicating the name of the response variable to be plotted
+  if the \`pima\` object contains more than one variable. If \`NULL\`
+  (the default), all response variables are plotted.
+
+- p.adjusted:
+
+  Logical indicating whether to use adjusted p-values for determining
+  significance. Defaults to \`TRUE\` if an adjustment method was
+  specified in the \`pima\` object.
 
 - alpha:
 
   A numeric value specifying the significance level for the confidence
-  intervals. Default is 0.05.
+  intervals and color-coding. Default is 0.05.
 
 - tbr:
 
-  A numeric vector of two elements indicating the proportion of space
-  assigned to the top and bottom part of the plot.
+  A numeric vector of two elements indicating the vertical space ratio
+  assigned to the top and bottom plots (e.g., \`c(0.4, 0.6)\`).
 
 - colors:
 
-  A character vector of two elements with the colors for the point
-  representing non-significant and significant p-values.
+  A character vector of two elements specifying the colors for
+  non-significant and significant results.
+
+- shapes:
+
+  A numeric vector of two elements specifying the shapes for
+  non-significant and significant results. Default to \`c(4, 19)\`.
+
+- title:
+
+  A character string for the overall plot title.
 
 - xlab:
 
-  a character vector for the x axis title. Default to "Specification"
+  A character string for the x-axis title. Default to "Specification".
 
 - ylab:
 
-  a character vector for the y axis title of the top plot. Default to
-  \`yvar\`.
+  A character string for the y-axis title of the top plot. Default to
+  the value of \`yvar\`.
 
 - top.theme:
 
-  a function with a \`ggplot2\` compatible theme for the top plot.
-  Default to ggplot2::theme_minimal()\`
+  A function returning a \`ggplot2\` theme for the top plot. Default to
+  \`ggplot2::theme_minimal()\`.
 
 - bottom.theme:
 
-  a function with a \`ggplot2\` compatible theme for the bottom plot
-  Default to \`ggplot2::theme_minimal()\`
+  A function returning a \`ggplot2\` theme for the bottom plot. Default
+  to \`ggplot2::theme_minimal()\`.
 
-- p.values:
+- redundant:
 
-  character indicating the column of the \`x\$summary_table\` object
-  with the p values. Default to \`""p.adj.maxT"\` (maxT corrected p
-  values).
+  Logical. If \`TRUE\`, removes variables that do not vary across
+  specifications from the bottom plot.
 
-- A:
+- conf.int:
 
-  character vector of two elements with the shapes representing
-  non-significant and significant p-values. Default to simple points.
+  Logical. If \`TRUE\`, includes confidence intervals around estimated
+  coefficients. (Ignored if \`yvar\` is not \`"estimate"\`).
+
+- facet.y:
+
+  Logical. If \`TRUE\`, creates separate facets for each response
+  variable in the top plot. Default is \`FALSE\`.
+
+- which.response:
+
+  A character vector specifying which response variables to include in
+  the plot.
 
 ## Value
 
-A plot displaying the specification curve with confidence intervals and
-p-values, as well as a legend showing the variable combinations used in
-each specification. The output object is a \[\`patchwork\`\] object thus
-a collection of \`ggplot2\` objects. The underlying datasets can be
-accessed using \`@data\` for each plot.
-
-## Details
-
-This function performs a specification curve analysis based on the
-results of a set of regression models. It visualizes the coefficient
-estimates with confidence intervals, p-values, and highlights
-significant specifications.
+A \[\`patchwork\`\] object consisting of two aligned \`ggplot2\` plots.
+The top plot shows estimates/p-values, and the bottom plot shows the
+specification grid.
 
 ## Examples
 
 ``` r
-# Example usage (assuming `res` is a pre-computed result object):
-# spec_curve(res, alpha = 0.05)
+# Example usage (assuming `res` is a pre-computed pima object):
+# spec_curve(res, alpha = 0.05, conf.int = TRUE)
 ```

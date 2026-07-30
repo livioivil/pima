@@ -7,17 +7,17 @@ manipulate relevant information from a `pima` object.
 
 ``` r
 # S3 method for class 'pima'
-print(object, n = 4)
+print(x, n = 4, ...)
 
 # S3 method for class 'pima'
 summary(object, digits = NULL, ...)
 
-# S3 method for class 'pima'
-as(object, names_obj = NULL, ...)
+as.pima(object, names_obj = NULL, ...)
 
 # S3 method for class 'pima'
 plot(
-  object,
+  x,
+  by = "coefficient",
   focal = NULL,
   xvar = NULL,
   p.adjusted = TRUE,
@@ -27,13 +27,27 @@ plot(
   ylab = NULL,
   regex = FALSE,
   shapes = NULL,
-  facet = FALSE,
   facet.scales = NULL,
+  facet = NULL,
+  which.response = NULL,
   ...
 )
 ```
 
 ## Arguments
+
+- x:
+
+  an object of class `pima`.
+
+- n:
+
+  number of rows to print from the beginning and end of the scenario
+  table.
+
+- ...:
+
+  additional arguments to be passed
 
 - object:
 
@@ -42,10 +56,6 @@ plot(
 - digits:
 
   number of digits when rounding. Default to \`NULL\` thus no rounding.
-
-- ...:
-
-  additional arguments to be passed
 
 - names_obj:
 
@@ -61,6 +71,11 @@ plot(
 
   character indicating the column of the \`object\$summary_table\` to be
   plotted on the x axis. Default to "Estimate".
+
+- p.adjusted:
+
+  logical indicating whether to plot adjusted p-values (`TRUE`, default)
+  or raw p-values (`FALSE`).
 
 - p.transf:
 
@@ -81,7 +96,28 @@ plot(
   character vector indicating the y-axis label. Default to \`p\` or
   \`p.adjust.\<method\>\` where method is \`object\$p.adjust.method\`.
 
-- p.adjust:
+- regex:
 
-  logical indicating whether plotting raw (\`FALSE\`) or adjusted
-  p.values (\`TRUE\`, default).
+  logical. If `TRUE`, the `focal` argument is treated as a regular
+  expression to match coefficient names. Default is `FALSE`.
+
+- shapes:
+
+  a numeric vector of length 2 specifying the ggplot2 shapes to use for
+  non-significant and significant points, respectively. Default is
+  `c(4, 19)`.
+
+- facet.scales:
+
+  character string indicating if scales should be `"fixed"`, `"free"`,
+  `"free_x"`, or `"free_y"`. Default is `"free_x"`.
+
+- facet:
+
+  a formula for facetting the plot, passed to
+  [`facet_grid`](https://ggplot2.tidyverse.org/reference/facet_grid.html).
+
+- which.response:
+
+  a character vector specifying a subset of response variables to be
+  plotted.

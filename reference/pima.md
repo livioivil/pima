@@ -20,7 +20,7 @@ pima(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "non
 - mods:
 
   list of objects that can be evaluated by
-  [`flipscores`](https://rdrr.io/pkg/flipscores/man/flipscores.html),
+  [`flipscores`](https://livioivil.github.io/flipscores/reference/flipscores.html),
   usually model objects produced by `glm` or `flipscores`.
 
 - tested_coeffs:
@@ -86,8 +86,8 @@ considered models:
 Further parameters include:
 
 - `score_type`: type of score that is computed (see
-  [`flipscores`](https://rdrr.io/pkg/flipscores/man/flipscores.html) for
-  more datails). The default `"standardized"` provides almost exact
+  [`flipscores`](https://livioivil.github.io/flipscores/reference/flipscores.html)
+  for more datails). The default `"standardized"` provides almost exact
   control of the error for any sample size.
 
 - `statistics`: test statistics computed by the procedure. Currently,
@@ -137,25 +137,25 @@ mods <- list(mod1 = mod1, mod2 = mod2, mod3 = mod3, mod4 = mod4)
 
 # Test selected coefficients (raw and adjusted p-values)
 res <- pima(mods, tested_coeffs = c("X1","X2","X3B","X3C"))
-#> Error in loadNamespace(x): there is no package called ‘jointest’
+#> Error in model.frame.default(formula = Y ~ X1 + X2 + X3 + Z1 + Z2, data = function (expr,     name) .External(C_doD, expr, name), drop.unused.levels = TRUE): 'data' must be a data.frame, environment, or list
 summary(res)
 #> Error: object 'res' not found
 
 # Global p-values: overall, by model and by coefficient
 summary(global_tests(res))
-#> Error in loadNamespace(x): there is no package called ‘jointest’
-summary(global_tests(res, by = "Model"))
-#> Error in match.arg(by, choices = c("coefficient", "model", "individual")): 'arg' should be one of “coefficient”, “model”, “individual”
-summary(global_tests(res, by = "Coeff"))
-#> Error in match.arg(by, choices = c("coefficient", "model", "individual")): 'arg' should be one of “coefficient”, “model”, “individual”
+#> Error in global_tests(res): could not find function "global_tests"
+summary(global_tests(res, by = "model"))
+#> Error in global_tests(res, by = "model"): could not find function "global_tests"
+summary(global_tests(res, by = "coefficient"))
+#> Error in global_tests(res, by = "coefficient"): could not find function "global_tests"
 
 # Global tests for each factor
 summary(global_tests(res, by = "individual", comb_factors = TRUE))
-#> Error in loadNamespace(x): there is no package called ‘jointest’
+#> Error in global_tests(res, by = "individual", comb_factors = TRUE): could not find function "global_tests"
 
 # These tests can be aggregated as before (e.g., by coefficient)
-summary(global_tests(res, by = "Coeff", comb_factors = TRUE))
-#> Error in match.arg(by, choices = c("coefficient", "model", "individual")): 'arg' should be one of “coefficient”, “model”, “individual”
+summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
+#> Error in global_tests(res, by = "coefficient", comb_factors = TRUE): could not find function "global_tests"
 
 # Lower 95%-confidence bound for the TDP
 # require(sumSome)

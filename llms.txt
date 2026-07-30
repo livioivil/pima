@@ -24,6 +24,7 @@ install_github("livioivil/pima")
 ## A (minimal) example
 
 ``` r
+
 n=20
 set.seed(123)
 D=data.frame(X=rnorm(n),Z1=rnorm(n),Z2=rnorm(n))
@@ -46,12 +47,14 @@ summary(res)
 ```
 
 ``` r
+
 summary(combine(res))
 #>     Model Coeff Stat nMods        S          p
 #> 1 Overall     X maxT     4 19.78375 0.00739852
 ```
 
 ``` r
+
 res=pima:::p.adjust.pima(res)
 summary(res)
 #>   Model Coeff  Estimate    Score Std. Error  z value Part. Cor          p
@@ -97,11 +100,11 @@ example) on [github](https://github.com/livioivil/pima/issues).
 
 - [`create_multi()`](https://livioivil.github.io/pima/reference/create_multi.md)
   : Create the scenarios for the multiverse
-- [`global_tests()`](https://livioivil.github.io/pima/reference/global_tests.md)
-  : Global tests in multiverse analysis
+- [`hurricane`](https://livioivil.github.io/pima/reference/hurricane.md)
+  : Hurricane names and damage data
 - [`print(`*`<pima>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
   [`summary(`*`<pima>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
-  [`as(`*`<pima>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
+  [`as.pima()`](https://livioivil.github.io/pima/reference/pima-method.md)
   [`plot(`*`<pima>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
   : Methods for pima objects
 - [`pima-package`](https://livioivil.github.io/pima/reference/pima-package.md)
@@ -110,9 +113,10 @@ example) on [github](https://github.com/livioivil/pima/issues).
   Post-selection Inference in Multiverse Analysis
 - [`pima_tree()`](https://livioivil.github.io/pima/reference/pima_tree.md)
   : Classification Tree with Adjusted p-values
+- [`pimads`](https://livioivil.github.io/pima/reference/pimads.md) :
+  Pima Indians diabetes data
 - [`spec_curve()`](https://livioivil.github.io/pima/reference/spec_curve.md)
-  : A character vector with the title for the overall plot (applied to
-  the top plot internally).
+  : Specification Curve Analysis
 - [`transf_p()`](https://livioivil.github.io/pima/reference/transf_p.md)
   : Transforming p-values
 
