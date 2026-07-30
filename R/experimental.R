@@ -62,25 +62,29 @@ create_multi <- function(formula,
   xx <- stack(xx)
   xx <- .fac2char(xx)
   
-  if(length(xs_num) != 0){
-    if(!is.list(nfuns)){
-      if(!is.null(nfuns)){
-        nfuns <- rep(list(nfuns), length(xs_num))
-        names(nfuns) <- xs_num
-        nfuns <- stack(nfuns)
-      }
+  if(length(xs_num) != 0 && !is.null(nfuns)) {
+    
+    if(!is.list(nfuns)) {
+      nfuns <- rep(list(nfuns), length(xs_num))
+      names(nfuns) <- xs_num
     }
+    
+    nfuns <- stack(nfuns)
+    nfuns <- .fac2char(nfuns)
+    
     xx <- rbind(xx, nfuns)
   }
   
-  if(length(xs_chr) != 0){
-    if(!is.list(cfuns)){
-      if(!is.null(cfuns)){
-        cfuns <- rep(list(cfuns), length(xs_chr))
-        names(cfuns) <- xs_chr
-        cfuns <- stack(cfuns)
-      }
+  if(length(xs_chr) != 0 && !is.null(cfuns)) {
+    
+    if(!is.list(cfuns)) {
+      cfuns <- rep(list(cfuns), length(xs_chr))
+      names(cfuns) <- xs_chr
     }
+    
+    cfuns <- stack(cfuns)
+    cfuns <- .fac2char(cfuns)
+    
     xx <- rbind(xx, cfuns)
   }
   
