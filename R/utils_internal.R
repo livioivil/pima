@@ -177,3 +177,8 @@ as.glm <- function(x) {
 .get_link <- function(x){
   x$family$link
 }
+
+.rpos <- function(x, p) {
+  r <- range(x, na.rm = TRUE)
+  r[1L] + diff(r) * p
+}
