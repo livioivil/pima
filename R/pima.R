@@ -112,7 +112,6 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   )
   
   out <- do.call(flipscores::flipscores, flipscores_args)
-
   old_class <- class(out)
   
   # TODO check if removing res$call is problematic
