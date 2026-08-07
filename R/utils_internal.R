@@ -68,16 +68,16 @@
 
   info <- merge(info, XS, by = "model")
 
-  # if ("npreg" %in% colnames(info)) {
-  #   info$npreg[is.na(info$npreg)] = info$`npreg^2`[is.na(info$npreg)]
-  #   info$`npreg^2` = NULL
-  # }
-
   if (names(info[, 3, drop = FALSE]) == "model") {
     info = info[, -3]
   }
   
   if(!is.null(extra)){
+    if(!"model" %in% names(extra)){
+      # TODO check this, probably flipscores change model order
+      extra$model <- info$model
+      warning("the extra data.frame does not have a `model` column (that is necessary) assigning the default ones that could be wrong!")
+    }
     extra_names <- names(extra)[names(extra) != "model"]
   } else{
     extra_names <- NULL
