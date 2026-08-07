@@ -31,9 +31,7 @@ create_multi <- function(formula,
                          subset = NULL,
                          fit.fun = NULL,
                          fit.fun.args = NULL){
-  
-  # some checks
-  
+
   if(!is.null(focal)) focal_ff <- as.formula(paste("~", focal))
   
   if(.has_ints(focal_ff) & !.has_ints(formula)){
