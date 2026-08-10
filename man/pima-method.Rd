@@ -7,6 +7,7 @@
 \alias{summary.pima}
 \alias{as.pima}
 \alias{plot.pima}
+\alias{print.pima.multi}
 \title{Methods for pima objects}
 \usage{
 \method{print}{pima}(x, n = 4, ...)
@@ -32,6 +33,8 @@ as.pima(object, names_obj = NULL, ...)
   which.response = NULL,
   ...
 )
+
+\method{print}{pima.multi}(x, ...)
 }
 \arguments{
 \item{x}{an object of class \code{pima}.}
@@ -40,7 +43,7 @@ as.pima(object, names_obj = NULL, ...)
 
 \item{...}{additional arguments to be passed}
 
-\item{object}{an object of class \code{pima}.}
+\item{object}{an object of class \code{pima.multi}.}
 
 \item{digits}{number of digits when rounding. Default to `NULL` thus no rounding.}
 
