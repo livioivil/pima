@@ -105,6 +105,18 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
     }
   }
   
+  # TODO experimental multiverse support
+  if(inherits(mods, "multiverse")){
+    multi <- .parse_multiverse_object(mods)
+    mods <- multi$models
+    new_extra <- multi$extra
+    if(!is.null(extra)){
+      extra <- cbind(extra, new_extra)
+    } else{
+      extra <- new_extra
+    }
+  }
+  
   mods_are_glm <- sapply(mods, function(x) inherits(x, "glm"))
 
   if(!all(mods_are_glm)){
