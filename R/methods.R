@@ -316,3 +316,50 @@ plot.pima <- function(
   p <- p + ggplot2::facet_grid(facet, scales = facet.scales)
   p
 }
+
+#' print.pima.multi
+#' @rdname pima-method
+#' @param object an object of class \code{pima.multi}.
+#' @method  print pima.multi
+#' @docType methods
+#' @export
+
+print.pima.multi <- function(x, ...) {
+  .header("Multiverse Object")
+  n_scen <- nrow(x$scenarios)
+  n_sub <- length(x$specification$subset)
+  n_sub <- if(n_sub == 1) 0 else 1
+  n_form <- nrow(x$formula_specs)
+  n_fit <- if(is.null(x$models)) 0 else length(x$models)
+  
+  .main(
+    "Formula:",
+    paste(deparse(x$specification$formula), collapse = "")
+  )
+  .space()
+  .main(
+    sprintf("Scenarios: n = %s", n_scen)
+  )
+  .main(
+    sprintf("  > Formulas: n = %s", n_form)
+  )
+  .main(
+    sprintf("  > Subsets: n = %s", n_sub)
+  )
+  .main(
+    sprintf("  > Models: n = %s", n_fit)
+  )
+  
+  if(n_fit != 0){
+    n_error <- sum(!x$scenarios$fit_ok)
+    .space()
+    .main(
+      "Models info"
+    )
+    .main(
+      sprintf("  > Errors: n = %s", n_error)
+    )
+  }
+  
+  invisible(x)
+}
