@@ -94,6 +94,17 @@
 
 pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), tail = 0, extra = NULL, ...) {
   
+  if(inherits(mods, "pima.multi")){
+    old <- mods
+    mods <- mods$models
+    new_extra <- old$scenarios[, c("model", "subset", "fit_spec")]
+    if(!is.null(extra)){
+      extra <- cbind(extra, new_extra)
+    } else{
+      extra <- new_extra
+    }
+  }
+  
   mods_are_glm <- sapply(mods, function(x) inherits(x, "glm"))
 
   if(!all(mods_are_glm)){
@@ -143,4 +154,83 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   class(out) <- unique(c("pima", old_class))
   
   return(out)
+}
+
+#' Subset a multiverse object
+#'
+#' Subsets a `pima.multi` object by selecting rows from its `scenarios`
+#' component. The corresponding fitted models are subset accordingly, preserving
+#' the one-to-one correspondence between `scenarios$model` and the names of
+#' `models`.
+#'
+#' @param x A `pima.multi` object.
+#' @param subset A logical expression evaluated within `x$scenarios`. The
+#'   expression must return one logical value for each scenario and cannot
+#'   contain missing values.
+#' @param ... Additional arguments. Currently unused.
+#'
+#' @details
+#' Only the `scenarios` and `models` components are subset. Components describing
+#' the original multiverse specification, such as `formula_specs` and
+#' `specification`, are left unchanged.
+#'
+#' Model identifiers are not renumbered after subsetting. This preserves the
+#' original correspondence between a scenario and its fitted model.
+#'
+#' @return A `pima.multi` object containing only the selected scenarios and,
+#'   when available, their corresponding fitted models.
+#'
+#' @export
+#'
+#' @examples
+#' # Keep only successfully fitted models
+#' successful <- subset(multi, fit_ok)
+#'
+#' # Inspect failed fits
+#' failed <- subset(multi, !fit_ok)
+#'
+#' # Keep scenarios using a particular fitting specification
+#' lm_models <- subset(multi, fit_spec == "lm")
+#'
+#' # Filter according to an analytical decision
+#' log_models <- subset(
+#'   multi,
+#'   spec_Sepal.Length == "log"
+#' )
+#'
+subset.pima.multi <- function(x, subset, ...) {
+  keep <- eval(
+    substitute(subset),
+    x$scenarios,
+    parent.frame()
+  )
+  
+  if (!is.logical(keep) || length(keep) != nrow(x$scenarios)) {
+    stop(
+      paste0(
+        "`subset` must evaluate to a logical vector with one value ",
+        "per scenario."
+      ),
+      call. = FALSE
+    )
+  }
+  
+  if (anyNA(keep)) {
+    stop(
+      "`subset` cannot contain missing values.",
+      call. = FALSE
+    )
+  }
+  
+  x$scenarios <- x$scenarios[
+    keep,
+    ,
+    drop = FALSE
+  ]
+  
+  if (!is.null(x$models)) {
+    x$models <- x$models[keep]
+  }
+  
+  x
 }
