@@ -32,6 +32,9 @@ plot(
   which.response = NULL,
   ...
 )
+
+# S3 method for class 'pima.multi'
+print(x, ...)
 ```
 
 ## Arguments
@@ -51,7 +54,7 @@ plot(
 
 - object:
 
-  an object of class `pima`.
+  an object of class `pima.multi`.
 
 - digits:
 

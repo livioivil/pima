@@ -2,14 +2,17 @@
 
 ## All functions
 
+- [`create_fit()`](https://livioivil.github.io/pima/reference/create_fit.md)
+  : Create a model-fitting specification
 - [`create_multi()`](https://livioivil.github.io/pima/reference/create_multi.md)
-  : Create the scenarios for the multiverse
+  : Create scenarios for a multiverse analysis
 - [`hurricane`](https://livioivil.github.io/pima/reference/hurricane.md)
   : Hurricane names and damage data
 - [`print(`*`<pima>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
   [`summary(`*`<pima>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
   [`as.pima()`](https://livioivil.github.io/pima/reference/pima-method.md)
   [`plot(`*`<pima>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
+  [`print(`*`<pima.multi>`*`)`](https://livioivil.github.io/pima/reference/pima-method.md)
   : Methods for pima objects
 - [`pima-package`](https://livioivil.github.io/pima/reference/pima-package.md)
   : Post-selection Inference in Multiverse Analysis
@@ -21,5 +24,7 @@
   Pima Indians diabetes data
 - [`spec_curve()`](https://livioivil.github.io/pima/reference/spec_curve.md)
   : Specification Curve Analysis
+- [`subset(`*`<pima.multi>`*`)`](https://livioivil.github.io/pima/reference/subset.pima.multi.md)
+  : Subset a multiverse object
 - [`transf_p()`](https://livioivil.github.io/pima/reference/transf_p.md)
   : Transforming p-values
