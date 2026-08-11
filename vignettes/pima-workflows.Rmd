@@ -1,0 +1,703 @@
+---
+title: "PIMA workflows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PIMA workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  cache = TRUE,
+  collapse = TRUE,
+  comment = "#>",
+  dev = "svg",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 5,
+  out.width = "100%",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{css, echo = FALSE}
+.main-container {
+  max-width: 1180px;
+}
+```
+
+```{r setup}
+library(pima)
+library(ggplot2)
+
+n_flips_vignette <- 1000
+
+spec_top_theme <- function() {
+  ggplot2::theme_bw(base_size = 10) +
+    ggplot2::theme(
+      legend.position = "bottom",
+      panel.grid.minor = ggplot2::element_blank(),
+      plot.title = ggplot2::element_text(size = 12)
+    )
+}
+
+spec_bottom_theme <- function() {
+  ggplot2::theme_bw(base_size = 8) +
+    ggplot2::theme(
+      axis.text.y = ggplot2::element_text(size = 7),
+      strip.text.y = ggplot2::element_text(size = 7, angle = 0),
+      panel.spacing.y = grid::unit(0.08, "lines")
+    )
+}
+```
+
+`pima` is designed for post-selection inference after a multiverse analysis:
+fit several plausible models, test one or more focal coefficients jointly, and
+then inspect how estimates and p-values behave across specifications.
+
+The examples use `n_flips = 1000` and knitr caching, which is enough for a
+stable workflow preview without making the vignette too slow. Use more flips
+when the numerical result matters.
+
+# A minimal multiverse as a list of fitted models
+
+The most direct input to `pima()` is a named list of fitted models. Here we use
+the package's Pima Indians diabetes data and test the coefficient for number of
+pregnancies across a few logistic regressions.
+
+```{r list-models}
+data("pimads")
+
+pima_data <- na.omit(pimads)
+pima_data$diabetes01 <- as.integer(pima_data$diabetes == "pos")
+
+mods <- list(
+  full = glm(
+    diabetes01 ~ npreg + glucose + pressure + bmi + age,
+    data = pima_data,
+    family = binomial()
+  ),
+  compact = glm(
+    diabetes01 ~ npreg + glucose + bmi,
+    data = pima_data,
+    family = binomial()
+  ),
+  sqrt_bmi = glm(
+    diabetes01 ~ npreg + glucose + sqrt(bmi) + age,
+    data = pima_data,
+    family = binomial()
+  ),
+  glucose_only = glm(
+    diabetes01 ~ npreg + glucose,
+    data = pima_data,
+    family = binomial()
+  )
+)
+
+manual_res <- pima(
+  mods,
+  tested_coeffs = "npreg",
+  n_flips = n_flips_vignette,
+  method = "maxT",
+  score_type = "standardized",
+  seed = 1
+)
+
+summary(manual_res, digits = 3)
+```
+
+The main arguments are:
+
+- `mods`: a list of model objects, usually `glm` objects.
+- `tested_coeffs`: coefficients to test. It can be a character vector common to
+  all models, or a list with one character vector per model.
+- `n_flips`: number of sign flips.
+- `method`: multiplicity adjustment, `"maxT"`, `"minP"`, or `"none"`.
+- `score_type`, `seed`, `output_models`, and other arguments are passed to
+  `flipscores::flipscores()`.
+
+If the same conceptual effect has different coefficient names across models,
+use a list for `tested_coeffs`.
+
+```{r coefficient-list}
+mods_mixed <- list(
+  linear = glm(
+    diabetes01 ~ npreg + glucose + bmi,
+    data = pima_data,
+    family = binomial()
+  ),
+  quadratic = glm(
+    diabetes01 ~ I(npreg^2) + glucose + bmi,
+    data = pima_data,
+    family = binomial()
+  )
+)
+
+mixed_res <- pima(
+  mods_mixed,
+  tested_coeffs = list(
+    linear = "npreg",
+    quadratic = "I(npreg^2)"
+  ),
+  n_flips = n_flips_vignette,
+  seed = 1
+)
+
+summary(mixed_res, digits = 3)
+```
+
+# Adding specification metadata
+
+When models are supplied manually, `pima()` tries to reconstruct the formula
+decisions from the fitted models. You can add your own scenario-level metadata
+with `extra`; this is useful for plotting or grouping by analytical decisions.
+
+```{r extra}
+extra <- data.frame(
+  model = names(mods),
+  adjustment = c("full", "compact", "sqrt_bmi", "minimal"),
+  includes_age = c(TRUE, FALSE, TRUE, FALSE)
+)
+
+manual_res <- pima(
+  mods,
+  tested_coeffs = "npreg",
+  n_flips = n_flips_vignette,
+  seed = 1,
+  extra = extra
+)
+
+manual_res
+```
+
+# Plotting a PIMA result
+
+`plot()` creates a volcano-style view: an estimate-like quantity on the x-axis
+and raw or adjusted p-values on the y-axis. The p-value transformation can be
+`"z"`, `"-log10"`, `"raw"`, or a custom function.
+
+```{r plot-basic, fig.width = 8, fig.height = 5}
+plot(
+  manual_res,
+  focal = "npreg",
+  xvar = "estimate",
+  p.adjusted = TRUE,
+  p.transf = "-log10"
+)
+```
+
+The same plot can be tuned with the arguments users usually need in practice:
+
+- `xvar`: any numeric column in `summary(res)`, for example `"estimate"`,
+  `"pcor"`, `"score"` or `"z"`;
+- `p.adjusted`: `TRUE` for adjusted p-values, `FALSE` for raw p-values;
+- `p.transf`: `"z"`, `"-log10"`, `"raw"` or a custom function;
+- `by`: grouping variable, including metadata supplied through `extra`;
+- `facet`, `facet.scales`, `shapes`, `alpha`, `xlab`, and `ylab`.
+
+```{r plot-by-extra, fig.width = 8, fig.height = 5}
+plot(
+  manual_res,
+  by = "adjustment",
+  xvar = "pcor",
+  p.adjusted = FALSE,
+  p.transf = "z",
+  alpha = 0.05,
+  shapes = c(1, 16),
+  xlab = "Partial correlation",
+  ylab = "Raw p-value, z scale"
+)
+```
+
+Regular expressions are handy when coefficient names are generated by
+transformations or factor contrasts.
+
+```{r plot-regex, fig.width = 8, fig.height = 5}
+plot(
+  mixed_res,
+  focal = "npreg",
+  regex = TRUE,
+  xvar = "estimate",
+  p.adjusted = FALSE,
+  p.transf = "raw",
+  alpha = 0.10,
+  facet.scales = "free"
+)
+```
+
+`volcano()` adds quantile reference lines and p-value cutoffs on top of the same
+plotting idea.
+
+```{r volcano, fig.width = 8, fig.height = 5}
+volcano(
+  manual_res,
+  focal = "npreg",
+  p.adjusted = FALSE,
+  p.cut = c(0.10, 0.05, 0.01),
+  q = c(0.10, 0.50, 0.90)
+)
+```
+
+# Specification curves
+
+`spec_curve()` combines two panels: the top panel shows the result for each
+specification, and the bottom panel shows the analytical decisions that generated
+that specification.
+
+```{r spec-curve-manual, fig.width = 10, fig.height = 7}
+spec_curve(
+  manual_res,
+  focal = "npreg",
+  yvar = "estimate",
+  p.adjusted = TRUE,
+  alpha = 0.05,
+  tbr = c(0.55, 0.45),
+  colors = c("grey45", "#0072B2"),
+  shapes = c(1, 16),
+  title = "Manual multiverse: coefficient estimates",
+  xlab = "Model specification",
+  ylab = "Log-odds estimate",
+  top.theme = spec_top_theme,
+  bottom.theme = spec_bottom_theme,
+  conf.int = TRUE,
+  redundant = FALSE
+)
+```
+
+If you test several coefficients or several responses, `spec_curve()` can facet
+the result.
+
+```{r multi-response, fig.width = 10, fig.height = 8}
+set.seed(123)
+n <- 30
+sim_data <- data.frame(
+  x = rnorm(n),
+  z1 = rnorm(n),
+  z2 = rnorm(n)
+)
+sim_data$y1 <- sim_data$x + sim_data$z1 + rnorm(n)
+sim_data$y2 <- sim_data$x + sim_data$z2 + rnorm(n)
+
+sim_mods <- list(
+  y1_linear = glm(y1 ~ x + z1 + z2, data = sim_data),
+  y1_poly = glm(y1 ~ x + poly(z1, 2) + z2, data = sim_data),
+  y2_linear = glm(y2 ~ x + z1 + z2, data = sim_data),
+  y2_poly = glm(y2 ~ x + z1 + poly(z2, 2), data = sim_data)
+)
+
+sim_res <- pima(
+  sim_mods,
+  tested_coeffs = "x",
+  n_flips = n_flips_vignette,
+  seed = 1
+)
+
+plot(sim_res, facet = response ~ ., p.adjusted = FALSE)
+
+spec_curve(
+  sim_res,
+  focal = "x",
+  p.adjusted = FALSE,
+  facet.y = TRUE,
+  tbr = c(0.60, 0.40),
+  which.response = c("y1", "y2"),
+  title = "Two responses, one focal coefficient",
+  top.theme = spec_top_theme,
+  bottom.theme = spec_bottom_theme,
+  redundant = FALSE
+)
+```
+
+# Creating a multiverse with `create_multi()`
+
+`create_multi()` builds the scenario grid for you. It crosses:
+
+- predictor inclusion and transformations;
+- optional row subsets;
+- optional fitting specifications.
+
+The right-hand side of `formula` must contain bare additive predictors. Put
+transformations in `nfuns` or `cfuns`, not directly inside the formula.
+
+```{r create-multi}
+multi <- create_multi(
+  diabetes01 ~ npreg + glucose + bmi + age,
+  data = pima_data,
+  focal = "npreg",
+  nfuns = list(
+    glucose = "sqrt",
+    bmi = "sqrt",
+    age = "sqrt"
+  ),
+  subset = list(
+    high_pressure = pima_data$pressure > median(pima_data$pressure)
+  ),
+  fit.specs = list(
+    logit = create_fit(
+      stats::glm,
+      family = stats::binomial()
+    ),
+    probit = create_fit(
+      stats::glm,
+      family = stats::binomial(link = "probit")
+    )
+  )
+)
+
+multi
+
+head(multi$scenarios)
+```
+
+The `spec_<variable>` columns record the analytical choice for each predictor:
+`"excluded"`, `"identity"`, or the transformation name.
+
+Models are fitted when `fit.specs` is supplied. Failed fits are kept as error
+objects and marked in `scenarios$fit_ok`, so it is usually convenient to subset
+before calling `pima()`.
+
+```{r create-multi-pima}
+multi_ok <- subset(multi, fit_ok)
+
+multi_res <- pima(
+  multi_ok,
+  tested_coeffs = "npreg",
+  n_flips = n_flips_vignette,
+  seed = 1
+)
+
+head(summary(multi_res, digits = 3))
+```
+
+The metadata from `create_multi()` is carried into the `pima` result. For a
+large grid, the scatter plot is useful as an overview.
+
+```{r create-multi-plots, fig.width = 9, fig.height = 5}
+plot(
+  multi_res,
+  by = c("subset", "fit_spec"),
+  xvar = "pcor",
+  p.adjusted = FALSE
+)
+```
+
+A full specification curve with more than one hundred scenarios is usually too
+dense for a vignette page. A good reporting pattern is to show the complete
+overview above and then draw focused curves for meaningful slices of the
+multiverse.
+
+```{r create-multi-focused, fig.width = 12, fig.height = 8}
+multi_logit_all <- subset(
+  multi_ok,
+  subset == "all" & fit_spec == "logit"
+)
+
+multi_logit_res <- pima(
+  multi_logit_all,
+  tested_coeffs = "npreg",
+  n_flips = n_flips_vignette,
+  seed = 1
+)
+
+spec_curve(
+  multi_logit_res,
+  focal = "npreg",
+  yvar = "pcor",
+  p.adjusted = FALSE,
+  alpha = 0.05,
+  tbr = c(0.62, 0.38),
+  colors = c("grey55", "#D55E00"),
+  shapes = c(1, 16),
+  title = "Focused specification curve: all rows, logit models",
+  ylab = "Partial correlation",
+  top.theme = spec_top_theme,
+  bottom.theme = spec_bottom_theme,
+  redundant = FALSE
+)
+```
+
+When you really want to inspect every scenario, export the complete curve as a
+standalone SVG/PDF instead of forcing it into the vignette body. The code below
+is not evaluated here because a 108-scenario curve is too dense for inline
+reading.
+
+```{r create-multi-full-spec-curve, eval = FALSE}
+full_curve <- spec_curve(
+  multi_res,
+  focal = "npreg",
+  yvar = "pcor",
+  p.adjusted = FALSE,
+  tbr = c(0.55, 0.45),
+  title = "Full specification curve",
+  top.theme = spec_top_theme,
+  bottom.theme = spec_bottom_theme,
+  redundant = FALSE
+)
+
+ggplot2::ggsave(
+  "multi-full-spec-curve.svg",
+  full_curve,
+  width = 16,
+  height = 10
+)
+```
+
+`transf.focal = TRUE` allows transformations of focal predictors too. This is
+useful when the focal effect itself can be parameterized in multiple ways.
+
+```{r transformed-focal}
+multi_focal <- create_multi(
+  diabetes01 ~ npreg + glucose + bmi,
+  data = pima_data,
+  focal = "npreg",
+  nfuns = list(
+    npreg = "sqrt",
+    glucose = "sqrt",
+    bmi = "sqrt"
+  ),
+  transf.focal = TRUE,
+  fit.specs = list(
+    logit = create_fit(
+      stats::glm,
+      family = stats::binomial()
+    )
+  )
+)
+
+head(multi_focal$formula_specs)
+```
+
+# Using the `multiverse` package
+
+`pima()` also has experimental support for objects from the `multiverse`
+package. The key convention is that each universe must create a fitted model
+called `fit`.
+
+This example uses the `hurricane` data shipped by `multiverse`, not the
+`hurricane` data shipped by `pima`.
+
+```{r multiverse-package, eval = requireNamespace("multiverse", quietly = TRUE)}
+library(multiverse)
+
+data("hurricane", package = "multiverse")
+
+hurricane_mv <- transform(
+  hurricane,
+  log_NDAM = log(NDAM + 1)
+)
+
+M <- multiverse()
+
+inside(M, {
+  fit <- glm(
+    alldeaths ~
+      MasFem +
+      branch(
+        pressure,
+        "original" ~ MinPressure_before,
+        "updated" ~ Minpressure_Updated_2014
+      ) +
+      branch(
+        damage,
+        "raw" ~ NDAM,
+        "logged" ~ log_NDAM
+      ),
+    data = hurricane_mv,
+    family = quasipoisson()
+  )
+})
+
+execute_multiverse(M)
+
+parameters(M)
+
+hurricane_res <- pima(
+  M,
+  tested_coeffs = "MasFem",
+  n_flips = n_flips_vignette,
+  seed = 1
+)
+
+summary(hurricane_res, digits = 3)
+```
+
+The branches declared in `multiverse::branch()` are stored as metadata and can
+be used for grouping and specification curves.
+
+```{r multiverse-package-plots, eval = requireNamespace("multiverse", quietly = TRUE), fig.width = 10, fig.height = 7}
+plot(
+  hurricane_res,
+  by = c("pressure", "damage"),
+  xvar = "estimate",
+  p.transf = "-log10",
+  p.adjusted = FALSE
+)
+
+spec_curve(
+  hurricane_res,
+  focal = "MasFem",
+  p.adjusted = FALSE,
+  tbr = c(0.60, 0.40),
+  colors = c("grey55", "#009E73"),
+  title = "Hurricane multiverse from the multiverse package",
+  top.theme = spec_top_theme,
+  bottom.theme = spec_bottom_theme,
+  redundant = FALSE
+)
+```
+
+# Adjusting and combining tests
+
+`pima()` applies multiplicity adjustment during the main call when
+`method = "maxT"` or `method = "minP"`. You can also compute raw p-values first
+with `method = "none"` and then call `p.adjust()` later.
+
+The next example uses a factor predictor, because it also lets us show
+`combine_contrasts()`.
+
+```{r adjustment-combinations-data}
+set.seed(123)
+n <- 40
+factor_data <- data.frame(
+  x = rnorm(n),
+  z1 = rnorm(n),
+  z2 = rnorm(n),
+  group = factor(sample(c("A", "B", "C"), n, replace = TRUE))
+)
+factor_data$y <- 0.5 * factor_data$x +
+  ifelse(factor_data$group == "C", 1.2, 0) +
+  factor_data$z1 +
+  rnorm(n)
+
+factor_mods <- list(
+  linear = glm(y ~ x + group + z1 + z2, data = factor_data),
+  poly_z1 = glm(y ~ x + group + poly(z1, 2) + z2, data = factor_data),
+  compact = glm(y ~ x + group + z1, data = factor_data)
+)
+
+raw_factor_res <- pima(
+  factor_mods,
+  tested_coeffs = c("x", "groupB", "groupC"),
+  n_flips = n_flips_vignette,
+  method = "none",
+  seed = 1
+)
+
+head(summary(raw_factor_res, digits = 3))
+```
+
+Because `raw_factor_res` was computed with `method = "none"`, it contains raw
+p-values only. The re-exported `p.adjust()` function adds adjusted p-values from
+the same joint resampling distribution.
+
+```{r p-adjust}
+maxT_factor_res <- p.adjust(
+  raw_factor_res,
+  method = "maxT"
+)
+
+minP_factor_res <- p.adjust(
+  raw_factor_res,
+  method = "minP"
+)
+
+head(summary(maxT_factor_res, digits = 3))
+head(summary(minP_factor_res, digits = 3))
+```
+
+`combine_tests()` answers global questions by combining test statistics. With no
+`by` argument, it asks whether at least one tested effect is present anywhere in
+the multiverse. With `by = "model"` or `by = "coefficient"`, it asks the same
+question within each model or coefficient.
+
+```{r combine-tests}
+summary(combine_tests(maxT_factor_res))
+
+summary(combine_tests(
+  maxT_factor_res,
+  by = "model"
+))
+
+summary(combine_tests(
+  maxT_factor_res,
+  by = "coefficient"
+))
+```
+
+You can also define custom groups with `by_list`. The list elements can contain
+test positions, or column names from `Tspace`, when you want groups that do not
+correspond to a single metadata column.
+
+```{r combine-tests-custom}
+custom_groups <- list(
+  focal_x = which(maxT_factor_res$summary_table$coefficient == "x"),
+  factor_group = which(maxT_factor_res$summary_table$coefficient != "x")
+)
+
+summary(combine_tests(
+  maxT_factor_res,
+  by_list = custom_groups
+))
+```
+
+`combine_contrasts()` combines the contrasts of factor variables into one global
+test for the factor. In this example `groupB` and `groupC` become a single
+`group` test within each model.
+
+```{r combine-contrasts}
+factor_global_res <- combine_contrasts(maxT_factor_res)
+
+summary(factor_global_res)
+
+summary(combine_tests(
+  factor_global_res,
+  by = "coefficient"
+))
+```
+
+# Variation of estimates
+
+`voe()` summarizes the variation of estimates and p-values across the
+multiverse. `voe_variance()` decomposes variation in a selected estimate-like
+column over the specification decisions recorded in the `pima` object.
+
+```{r voe}
+voe(
+  multi_res,
+  xvar = "pcor",
+  p.adjusted = FALSE
+)
+
+voe_variance(
+  multi_res,
+  estimate = "pcor"
+)$dec
+```
+
+# A tree over specification decisions
+
+`pima_tree()` fits an `rpart` tree using the scenario metadata as predictors.
+With `method = "class"`, the response is whether a p-value is below `alpha`.
+With `method = "anova"`, the response is the p-value itself.
+
+```{r pima-tree}
+pima_tree(
+  multi_res,
+  p.values = "raw",
+  method = "anova"
+)
+```
+
+# Practical checklist
+
+For a typical workflow:
+
+1. Define the universe of reasonable analytical choices.
+2. Fit it manually, with `create_multi()`, or with `multiverse`.
+3. Call `pima()` with the focal coefficients and a real number of flips.
+4. Inspect `summary()`, `plot()`, `spec_curve()`, and, when useful, `voe()` or
+   `pima_tree()`.
+5. Report the specification decisions and whether the conclusions depend on
+   those decisions.
