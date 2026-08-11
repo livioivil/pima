@@ -125,3 +125,9 @@ example) on [github](https://github.com/livioivil/pima/issues).
 - [`transf_p()`](https://livioivil.github.io/pima/reference/transf_p.md)
   : Transforming p-values
 
+# Articles
+
+### All vignettes
+
+- [PIMA
+  workflows](https://livioivil.github.io/pima/articles/pima-workflows.md):

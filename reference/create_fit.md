@@ -133,7 +133,7 @@ create_fit(stats::lm)
 #>         z$qr <- NULL
 #>     z
 #> }
-#> <bytecode: 0x55b24a3b01d0>
+#> <bytecode: 0x55b06fe11d58>
 #> <environment: namespace:stats>
 #> 
 #> $adapter
@@ -229,7 +229,7 @@ create_fit(
 #>         contrasts = attr(X, "contrasts"), xlevels = .getXlevels(mt, 
 #>             mf))), class = c(fit$class, c("glm", "lm")))
 #> }
-#> <bytecode: 0x55b24a4c5ba0>
+#> <bytecode: 0x55b06fc74140>
 #> <environment: namespace:stats>
 #> 
 #> $adapter
@@ -267,7 +267,7 @@ create_fit(
 #>     do.call(stats::lm, c(list(formula = formula, data = data), 
 #>         args))
 #> }
-#> <environment: 0x55b24a3899f0>
+#> <environment: 0x55b0701543a8>
 #> 
 #> $args
 #> $args$singular.ok

@@ -1,8 +1,9 @@
 pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
-articles: {}
-last_built: 2026-08-10T12:31Z
+articles:
+  pima-workflows: pima-workflows.html
+last_built: 2026-08-11T13:22Z
 urls:
   reference: https://livioivil.github.io/pima/reference
   article: https://livioivil.github.io/pima/articles
