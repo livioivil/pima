@@ -327,15 +327,24 @@ plot.pima <- function(
 print.pima.multi <- function(x, ...) {
   .header("Multiverse Object")
   n_scen <- nrow(x$scenarios)
-  n_sub <- length(x$specification$subset)
-  n_sub <- if(n_sub == 1) 0 else 1
+  combined <- !is.null(x$specification$components)
+  if (combined) {
+    n_sub <- sum(unique(x$scenarios[c(".source", "subset")])$subset != "all")
+  } else {
+    n_sub <- length(x$specification$subset)
+    n_sub <- if(n_sub == 1) 0 else 1
+  }
   n_form <- nrow(x$formula_specs)
   n_fit <- if(is.null(x$models)) 0 else length(x$models)
   
-  .main(
-    "Formula:",
-    paste(deparse(x$specification$formula), collapse = "")
-  )
+  if (combined) {
+    .main("Blocks:", length(unique(x$formula_specs$.source)))
+  } else {
+    .main(
+      "Formula:",
+      paste(deparse(x$specification$formula), collapse = "")
+    )
+  }
   .space()
   .main(
     sprintf("Scenarios: n = %s", n_scen)
