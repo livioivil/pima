@@ -140,6 +140,14 @@ spec_curve <- function(
     ]
   }
 
+  if (!is.null(yname)) {
+    x$summary_table <- x$summary_table[
+      x$summary_table$response %in% yname,
+      ,
+      drop = FALSE
+    ]
+  }
+
   spec_data <- .get_spec_curve_data(x, yvar, p.adjusted, p.values, alpha)
 
   spec_data$dbottom$var_txt <- ifelse(
@@ -165,16 +173,6 @@ spec_curve <- function(
     shapes <- c(4, 19)
   }
   shapes <- stats::setNames(shapes, c("0", "1"))
-
-  # check which response variables we have to plot
-
-  if (!is.null(yname)) {
-    spec_data$dtop <- spec_data$dtop[
-      spec_data$dtop$response %in% yname,
-      ,
-      drop = FALSE
-    ]
-  }
 
   is_multi_y <- length(unique(x$summary_table$response)) > 1
 
