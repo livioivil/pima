@@ -164,6 +164,7 @@ spec_curve <- function(
   if (is.null(shapes)) {
     shapes <- c(4, 19)
   }
+  shapes <- stats::setNames(shapes, c("0", "1"))
 
   # check which response variables we have to plot
 
@@ -211,6 +212,7 @@ spec_curve <- function(
       values = shapes,
       guide = "none",
       name = "p-value",
+      drop = FALSE,
       labels = paste0(c("p >  ", "p <= "), alpha)
     ) +
     ggplot2::labs(
