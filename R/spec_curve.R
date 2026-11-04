@@ -148,7 +148,9 @@ spec_curve <- function(
     ]
   }
 
-  spec_data <- .get_spec_curve_data(x, yvar, p.adjusted, p.values, alpha)
+  spec_data <- .get_spec_curve_data(
+    x, yvar, p.adjusted, p.values, alpha = alpha
+  )
 
   spec_data$dbottom$var_txt <- ifelse(
     spec_data$dbottom$var.spec %in% focal,
