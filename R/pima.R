@@ -97,7 +97,11 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   if(inherits(mods, "pima.multi")){
     old <- mods
     mods <- mods$models
-    new_extra <- old$scenarios[, c("model", "subset", "fit_spec")]
+    extra_columns <- c("model", "subset", "fit_spec")
+    if (".source" %in% names(old$scenarios)) {
+      extra_columns <- c(extra_columns, ".source")
+    }
+    new_extra <- old$scenarios[, extra_columns, drop = FALSE]
     if(!is.null(extra)){
       extra <- cbind(extra, new_extra)
     } else{
@@ -239,6 +243,7 @@ subset.pima.multi <- function(x, subset, ...) {
     ,
     drop = FALSE
   ]
+  x$k <- nrow(x$scenarios)
   
   if (!is.null(x$models)) {
     x$models <- x$models[keep]
