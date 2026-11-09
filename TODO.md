@@ -1,0 +1,1 @@
+- adding bibliography in the documentation with properly formatted citations
