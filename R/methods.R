@@ -73,11 +73,12 @@ as.pima <- function(object, names_obj = NULL, ...) {
 #' @param focal a character vector indicating which coefficients to plot. When > 1 coefficient is provided (or NULL) and `xvar` is not provided the `Part. Cor` column is used instead of the `Estimate`.
 # TODO check the focal documentation
 #' @param xvar character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".
+#' @param yvar character indicating the column of `object$summary_table` to be plotted on the y axis. Defaults to transformed p-values (`"p.transf"`).
 #' @param p.transf can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.
 #' @param alpha a value between 0 and 1. The plot will mark the p-values smaller than \code{alpha} (0.05 by default). If equal to 0 or 1 nothing will be marked.
 #' @param xlab character vector indicating the x-axis label. Default to `xvar`
-#' @param ylab character vector indicating the y-axis label. Default to `p` or `p.adjust.<method>` where method is `object$p.adjust.method`.
-#' @param p.adjusted logical indicating whether to plot adjusted p-values (\code{TRUE}, default) or raw p-values (\code{FALSE}).
+#' @param ylab character vector indicating the y-axis label. Defaults to the selected `yvar`, or to the p-value and transformation when `yvar` is `"p.transf"`.
+#' @param p.adjusted logical indicating whether adjusted p-values (\code{TRUE}, default) or raw p-values (\code{FALSE}) determine significance and, when `yvar` is `"p.transf"`, the plotted values.
 #' @param regex logical. If \code{TRUE}, the \code{focal} argument is treated as a regular expression to match coefficient names. Default is \code{FALSE}.
 #' @param shapes a numeric vector of length 2 specifying the ggplot2 shapes to use for non-significant and significant points, respectively. Default is \code{c(4, 19)}.
 #' @param facet.scales character string indicating if scales should be \code{"fixed"}, \code{"free"}, \code{"free_x"}, or \code{"free_y"}. Default is \code{"free_x"}.
@@ -93,6 +94,7 @@ plot.pima <- function(
   by = "coefficient",
   focal = NULL,
   xvar = NULL,
+  yvar = NULL,
   p.adjusted = TRUE,
   p.transf = "z",
   alpha = 0.05,
@@ -159,6 +161,7 @@ plot.pima <- function(
   if (is.null(xvar)) {
     xvar <- "pcor"
   }
+
   # TODO fix this in jointest
 
   if (object$p.adjust.method == "none" & p.adjusted) {
@@ -190,33 +193,9 @@ plot.pima <- function(
   # transform the p value
   D$p.transf <- transf_p(D[[p.values]], method = p.transf)
 
-  # RIRR and RP indices
-
-  IRR <- exp(object$summary_table$estimate)
-  RIRR <- as.numeric(quantile(IRR, c(0.99)) / quantile(IRR, c(0.01)))
-
-  # Relative pvalues
-  RP_raw <- as.numeric(diff(
-    -log10(quantile(object$summary_table$p, c(0.99, 0.01)))
-  ))
-
-  RP_adjusted <- as.numeric(diff(
-    -log10(quantile(object$summary_table$p.adj, c(0.99, 0.01)))
-  ))
-
   if (object$p.adjust.method == "none" || !p.adjusted) {
     D$is_signif = (D$p <= alpha)
     title = "(Raw) p-values"
-
-    # TODO how to use thr RIIR and RP indexes?
-
-    indices <- paste(
-      "RIRR=",
-      round(RIRR, 3),
-      "\nRP=",
-      round(RP_raw, 3),
-      sep = ""
-    )
   } else {
     # adj
     title = sprintf(
@@ -226,14 +205,6 @@ plot.pima <- function(
     )
     adj_id = grep("p.adj", colnames(D))[1]
     D$is_signif = (D[, adj_id] <= alpha)
-
-    indices <- paste(
-      "RIRR=",
-      round(RIRR, 3),
-      "\nRP=",
-      round(RP_adjusted, 3),
-      sep = ""
-    )
   }
 
   D$is_signif <- ifelse(D$is_signif, 1, 0)
@@ -246,10 +217,18 @@ plot.pima <- function(
     shapes <- c(4, 19)
   }
 
-  p.transf.txt <- if (is.function(p.transf)) "custom" else p.transf
+  if (is.null(yvar)) {
+    yvar <- "p.transf"
+  }
+  yvar <- match.arg(yvar, choices = colnames(D), several.ok = FALSE)
 
   if (is.null(ylab)) {
-    ylab <- sprintf("%s (%s)", p.values, p.transf.txt)
+    if (yvar == "p.transf") {
+      p.transf.txt <- if (is.function(p.transf)) "custom" else p.transf
+      ylab <- sprintf("%s (%s)", p.values, p.transf.txt)
+    } else {
+      ylab <- yvar
+    }
   }
   
   group_for_names <- by
@@ -272,7 +251,7 @@ plot.pima <- function(
     D,
     ggplot2::aes(
       x = .data[[xvar]],
-      y = .data[["p.transf"]],
+      y = .data[[yvar]],
       group = .data[[".group"]],
       color = .data[[".group"]]
     )

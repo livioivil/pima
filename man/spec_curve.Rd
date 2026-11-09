@@ -22,7 +22,8 @@ spec_curve(
   redundant = TRUE,
   conf.int = FALSE,
   facet.y = FALSE,
-  which.response = NULL
+  which.response = NULL,
+  which.plot = "both"
 )
 }
 \arguments{

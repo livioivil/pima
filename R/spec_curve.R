@@ -49,7 +49,8 @@ spec_curve <- function(
   redundant = TRUE,
   conf.int = FALSE,
   facet.y = FALSE,
-  which.response = NULL
+  which.response = NULL,
+  which.plot = "both"
 ) {
   # # default parameters for debugging
   # 
@@ -270,6 +271,12 @@ spec_curve <- function(
       drop = FALSE,
       labels = paste0(c("p >  ", "p <= "), alpha)
     )
-
-  patchwork::wrap_plots(top, bottom, ncol = 1, heights = tbr)
+  which.plot <- match.arg(which.plot, choices = c("top", "bottom", "both"))
+  if(which.plot == "both"){
+    patchwork::wrap_plots(top, bottom, ncol = 1, heights = tbr)
+  } else if(which.plot == "top"){
+    top
+  } else{
+    bottom
+  }
 }

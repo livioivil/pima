@@ -21,6 +21,7 @@ as.pima(object, names_obj = NULL, ...)
   by = "coefficient",
   focal = NULL,
   xvar = NULL,
+  yvar = NULL,
   p.adjusted = TRUE,
   p.transf = "z",
   alpha = 0.05,
@@ -53,7 +54,9 @@ as.pima(object, names_obj = NULL, ...)
 
 \item{xvar}{character indicating the column of the `object$summary_table` to be plotted on the x axis. Default to "Estimate".}
 
-\item{p.adjusted}{logical indicating whether to plot adjusted p-values (\code{TRUE}, default) or raw p-values (\code{FALSE}).}
+\item{yvar}{character indicating the column of `object$summary_table` to be plotted on the y axis. Defaults to transformed p-values (`"p.transf"`).}
+
+\item{p.adjusted}{logical indicating whether adjusted p-values (\code{TRUE}, default) or raw p-values (\code{FALSE}) determine significance and, when `yvar` is `"p.transf"`, the plotted values.}
 
 \item{p.transf}{can be a character vector indicating the transformation to use (see [transf_p()]) or a custom function.}
 
@@ -61,7 +64,7 @@ as.pima(object, names_obj = NULL, ...)
 
 \item{xlab}{character vector indicating the x-axis label. Default to `xvar`}
 
-\item{ylab}{character vector indicating the y-axis label. Default to `p` or `p.adjust.<method>` where method is `object$p.adjust.method`.}
+\item{ylab}{character vector indicating the y-axis label. Defaults to the selected `yvar`, or to the p-value and transformation when `yvar` is `"p.transf"`.}
 
 \item{regex}{logical. If \code{TRUE}, the \code{focal} argument is treated as a regular expression to match coefficient names. Default is \code{FALSE}.}
 
