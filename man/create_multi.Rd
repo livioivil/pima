@@ -10,6 +10,7 @@ create_multi(
   focal = NULL,
   nfuns = NULL,
   cfuns = NULL,
+  y.funs = "identity",
   transf.focal = FALSE,
   subset = NULL,
   fit.specs = NULL
@@ -37,6 +38,15 @@ a character vector of function names to apply to every numeric predictor
 as character strings and are applied to one predictor at a time.}
 
 \item{cfuns}{Same as `nfuns`, but for non-numeric predictors.}
+
+\item{y.funs}{Character vector of transformations for the response
+(e.g. `c("log", "sqrt")`). Defaults to `"identity"`, i.e. the response as
+written in `formula`, which is always included. Each transformation is
+treated as a different response: every predictor specification is crossed
+with every transformed response, and the `y.fun` column of `scenarios`
+records the transformation used (`NA` for one-sided formulas).
+Transformations other than `"identity"` require a two-sided formula with a
+bare response.}
 
 \item{transf.focal}{Logical indicating whether transformations should also
 be considered for focal predictors. It can have length 1 or the same

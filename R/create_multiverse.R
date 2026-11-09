@@ -57,6 +57,40 @@
 }
 
 
+.check_response <- function(formula, y.funs) {
+  if (is.list(y.funs)) {
+    stop("`y.funs` must be a character vector.", call. = FALSE)
+  }
+
+  # "identity" is always included, so it does not require a bare response.
+  y.funs <- setdiff(y.funs, "identity")
+
+  if (length(y.funs) == 0L) {
+    return(character(0))
+  }
+
+  if (length(formula) == 2L) {
+    stop("`y.funs` requires a two-sided formula.", call. = FALSE)
+  }
+
+  lhs <- formula[[2L]]
+
+  if (!is.symbol(lhs)) {
+    stop(
+      paste0(
+        "`y.funs` requires a bare response on the left-hand side of ",
+        "`formula`. Supply transformations of the response through `y.funs`."
+      ),
+      call. = FALSE
+    )
+  }
+
+  yname <- as.character(lhs)
+
+  .normalize_funs(y.funs, yname, "y.funs")[[yname]]
+}
+
+
 .check_focal <- function(focal, predictors, transf.focal) {
   if (is.null(focal)) {
     focal <- character(0)
@@ -560,7 +594,8 @@
 .make_formula_grid <- function(formula,
                                predictor_specs,
                                focal,
-                               terms_object) {
+                               terms_object,
+                               y_funs = character(0)) {
   predictors <- unique(predictor_specs$x)
   decision_names <- paste0("spec_", predictors)
   
@@ -629,23 +664,52 @@
     rhs <- paste("0 +", rhs)
   }
   
+  # Each transformation of the response defines a different response, so
+  # every right-hand side is crossed with every left-hand side.
   if (length(formula) == 2L) {
-    calls <- paste("~", rhs)
+    y_fun <- NA_character_
+    lhs <- NA_character_
   } else {
-    lhs <- paste(
-      deparse(
-        formula[[2L]],
-        width.cutoff = 500L,
-        backtick = TRUE
-      ),
-      collapse = ""
+    y_fun <- unique(c("identity", y_funs))
+    lhs <- vapply(
+      y_fun,
+      function(fun) {
+        if (fun == "identity") {
+          paste(
+            deparse(
+              formula[[2L]],
+              width.cutoff = 500L,
+              backtick = TRUE
+            ),
+            collapse = ""
+          )
+        } else {
+          .make_call(as.character(formula[[2L]]), fun)
+        }
+      },
+      character(1)
     )
-    calls <- paste(lhs, "~", rhs)
   }
   
+  grid <- expand.grid(
+    rhs_row = seq_along(rhs),
+    lhs_row = seq_along(lhs),
+    KEEP.OUT.ATTRS = FALSE
+  )
+
+  calls <- ifelse(
+    is.na(lhs[grid$lhs_row]),
+    paste("~", rhs[grid$rhs_row]),
+    paste(lhs[grid$lhs_row], "~", rhs[grid$rhs_row])
+  )
+
+  decisions <- decisions[grid$rhs_row, , drop = FALSE]
+  rownames(decisions) <- NULL
+
   data.frame(
-    formula_id = paste0("formula", seq_len(nrow(decisions))),
+    formula_id = paste0("formula", seq_along(calls)),
     calls = unname(calls),
+    y.fun = unname(y_fun[grid$lhs_row]),
     decisions,
     check.names = FALSE,
     stringsAsFactors = FALSE
@@ -789,6 +853,14 @@
 #'   (e.g. `list(x = "log", z = c("log", "sqrt"))`). Functions are supplied
 #'   as character strings and are applied to one predictor at a time.
 #' @param cfuns Same as `nfuns`, but for non-numeric predictors.
+#' @param y.funs Character vector of transformations for the response
+#'   (e.g. `c("log", "sqrt")`). Defaults to `"identity"`, i.e. the response as
+#'   written in `formula`, which is always included. Each transformation is
+#'   treated as a different response: every predictor specification is crossed
+#'   with every transformed response, and the `y.fun` column of `scenarios`
+#'   records the transformation used (`NA` for one-sided formulas).
+#'   Transformations other than `"identity"` require a two-sided formula with a
+#'   bare response.
 #' @param transf.focal Logical indicating whether transformations should also
 #'   be considered for focal predictors. It can have length 1 or the same
 #'   length as `focal`.
@@ -885,10 +957,12 @@ create_multi <- function(formula,
                          focal = NULL,
                          nfuns = NULL,
                          cfuns = NULL,
+                         y.funs = "identity",
                          transf.focal = FALSE,
                          subset = NULL,
                          fit.specs = NULL) {
   formula_info <- .check_formula(formula, data)
+  y_funs <- .check_response(formula, y.funs)
   
   focal_info <- .check_focal(
     focal = focal,
@@ -912,7 +986,8 @@ create_multi <- function(formula,
     formula = formula,
     predictor_specs = variables,
     focal = focal_info$focal,
-    terms_object = formula_info$terms
+    terms_object = formula_info$terms,
+    y_funs = y_funs
   )
   
   scenarios <- .make_scenarios(
@@ -955,6 +1030,7 @@ create_multi <- function(formula,
       focal = focal_info$focal,
       nfuns = nfuns,
       cfuns = cfuns,
+      y.funs = y_funs,
       transf.focal = focal_info$transf.focal,
       subset = subset,
       fit.specs = fit.specs,
