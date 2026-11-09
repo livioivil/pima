@@ -92,7 +92,7 @@
 #' # pimaAnalysis(res, by = "Coeff", alpha = 0.4)
 #' @export
 
-pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), tail = 0, extra = NULL, ...) {
+pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), tail = 0, extra = NULL, id = NULL, parametric = FALSE, ...) {
   
   if(inherits(mods, "pima.multi")){
     old <- mods
@@ -100,6 +100,9 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
     extra_columns <- c("model", "subset", "fit_spec")
     if (".source" %in% names(old$scenarios)) {
       extra_columns <- c(extra_columns, ".source")
+    }
+    if ("y.fun" %in% names(old$scenarios)) {
+      extra_columns <- c(extra_columns, "y.fun")
     }
     new_extra <- old$scenarios[, extra_columns, drop = FALSE]
     if(!is.null(extra)){
@@ -129,6 +132,13 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
     mods <- lapply(mods, as.glm)
   }
   
+  # TODO temporary testing the parametric pima
+  if(parametric){
+    warning("Current implementation of parametric pima based on multcomp::mmm() is experimental! The output is not compatible with other methods.")
+    res <- pima.mmm(mods, tested_coeffs = tested_coeffs)
+    return(res)
+  }
+
   method <- match.arg(method, c("maxT", "minP", "none"))
   
   extra_args <- list(...)
@@ -156,6 +166,11 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
                                        new.args = flipscores_args, 
                                        exclude = c("...", "mods"))
   
+  # flipscores labels the response with all.vars(), so log(y) and y would
+  # share the same label: use the deparsed left-hand side instead.
+  responses <- .get_response_name(out$objects)
+  out$summary_table$response <- unname(responses[out$summary_table$model])
+
   info <- .get_info_models(out$objects, extra)
   out$info <- info$info
   out$tested_coeffs <- tested_coeffs
@@ -165,10 +180,20 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   
   # add extra to summary table
   out$summary_table <- merge(out$summary_table, info$extra, by = "model")
-  #out$summary_table <- out$summary_table[, c("model", ".assign", "response", "coefficient", names(info$extra), "estimate", "score", "se", "z", "pcor", "p")]
+
+  # get wald statistics
+  wald_l <- lapply(seq_along(mods), function(i) {
+    d <- .get_glm_summary(mods[[i]])
+    d$model <- names(mods[i])
+    d
+  })
+
+  wald_l <- do.call(rbind, wald_l)
+  out$summary_table <- merge(out$summary_table,
+        wald_l[, c("model", "coefficient", "wald.p")],
+        by = c("model", "coefficient"))
   
   class(out) <- unique(c("pima", old_class))
-  
   return(out)
 }
 

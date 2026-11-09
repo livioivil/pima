@@ -15,7 +15,8 @@ Imports:
     flipscores,
     patchwork,
     rlang,
-    rpart
+    rpart,
+    sandwich
 Remotes:
     livioivil/flipscores
 Encoding: UTF-8
@@ -25,6 +26,7 @@ URL: https://livioivil.github.io/pima
 Config/roxygen2/version: 8.0.0
 Suggests: 
     knitr,
+    multcomp,
     multiverse,
     rmarkdown
 VignetteBuilder: knitr
