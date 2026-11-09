@@ -66,12 +66,6 @@
   split(d, list(d$response, d$coefficient), drop = TRUE, sep = " ~ ")
 }
 
-.bind_rows <- function(l) {
-  out <- do.call(rbind, l)
-  rownames(out) <- NULL
-  out
-}
-
 # Index (in the original vector) of the specification closest to the q-th quantile
 .qpos <- function(x, q) {
   which.min(abs(x - stats::quantile(x, q, na.rm = TRUE)))
@@ -275,6 +269,13 @@ voe <- function(
   .check_q(q)
   pv <- .p_col(x, p.adjusted)
   d <- .voe_data(x, focal, which.response, xvar)
+
+  # check p distribution
+  if(.similar_p(d[[pv]])){
+    warning(
+      "The p values based on flipscores are extremely similar! Plots and VOE descriptives could be hard to read!"
+    )
+  }
   
   res <- lapply(.voe_groups(d), function(g) {
     .check_scale(g, xvar, type)

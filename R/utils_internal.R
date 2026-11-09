@@ -100,6 +100,20 @@
   Reduce(paste, deparse(x$formula))
 }
 
+.get_response_name <- function(mods) {
+  vapply(
+    mods,
+    function(x) {
+      f <- stats::formula(x)
+      if (length(f) < 3L) {
+        return(NA_character_)
+      }
+      paste(deparse(f[[2L]], width.cutoff = 500L, backtick = TRUE), collapse = "")
+    },
+    character(1)
+  )
+}
+
 .get_x_name  <- function(x) {
   c(ifelse(attr(x$terms, which = "intercept"),"(Intercept)",NULL), 
     attr(x$terms, which = "term.labels"))
@@ -177,4 +191,27 @@ as.glm <- function(x) {
 .rpos <- function(x, p) {
   r <- range(x, na.rm = TRUE)
   r[1L] + diff(r) * p
+}
+
+.get_glm_summary <- function(x){
+  ss <- data.frame(summary(x)$coefficients)
+  ss$coefficient <- rownames(ss)
+  rownames(ss) <- NULL
+  names(ss) <- c("estimate", "se", "wald.t", "wald.p", "coefficient")
+  ss[, c("coefficient", "estimate", "se", "wald.t", "wald.p")]
+}
+
+.similar_p <- function(x, k = 1, tol = sqrt(.Machine$double.eps)) {
+  stopifnot(k >= 1)
+  diff(range(x, na.rm = TRUE)) <= log10(k) + tol
+}
+
+.bind_rows <- function(x, id = NULL) {
+  if (!is.null(id)) {
+    x <- Map(function(df, nm) cbind(stats::setNames(data.frame(nm), id), df),
+             x, names(x))
+  }
+  out <- do.call(rbind, x)
+  rownames(out) <- NULL
+  out
 }
