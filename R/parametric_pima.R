@@ -36,9 +36,9 @@ estfun.padded <- function(x, ...) {
 #' @export
 pima.mmm <- function(x, id = NULL, tested_coeffs = NULL){
   if(is.null(id)){
-    x <- do.call(mmm, x)
+    x <- do.call(multcomp::mmm, x)
   } else{
-    x <- do.call(mmm, .pad_models(x, id = id))
+    x <- do.call(multcomp::mmm, .pad_models(x, id = id))
   }
 
   all_coefs <- sapply(x, function(x) names(stats::coef(x)))
