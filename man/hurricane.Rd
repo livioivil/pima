@@ -23,8 +23,7 @@ A data frame with 94 rows and 13 variables:
 }
 }
 \source{
-Original analysis from Jung et al. (2014),
-\url{https://www.pnas.org/content/111/24/8782}.
+Original analysis from \insertCite{jung2014female;textual}{pima}.
 }
 \usage{
 data(hurricane)
@@ -32,5 +31,8 @@ data(hurricane)
 \description{
 A data set used to study the association between hurricane name femininity
 and hurricane fatalities.
+}
+\references{
+\insertAllCited{}
 }
 \keyword{datasets}

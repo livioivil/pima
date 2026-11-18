@@ -123,13 +123,13 @@ sides of the null and both significant (Vinatier et al. 2024).
 }
 }
 \references{
-Patel, Burford, Ioannidis (2015). J Clin Epidemiol, 68(9), 1046-1058.
+\insertRef{patel2015assessment}{pima}
 
-Klau et al. (2021). Int J Epidemiol, 50(1), 266-278.
+\insertRef{klau2021examining}{pima}
 
-Tierney et al. (2021). PLoS Biol, 19(9), e3001398.
+\insertRef{tierney2021leveraging}{pima}
 
-Vinatier et al. (2024). BMJ Evid Based Med, 29(5), 324-332.
+\insertRef{vinatier2024vibration}{pima}
 
-Vinatier et al. (2025). BMJ Evid Based Med, 30(1), 61-65.
+\insertRef{vinatier2025what}{pima}
 }

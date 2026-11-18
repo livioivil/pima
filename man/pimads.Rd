@@ -25,9 +25,6 @@ A data set of diabetes outcomes and clinical predictors for women from the
 Pima Indian population.
 }
 \references{
-Smith, J. W., Everhart, J. E., Dickson, W. C., Knowler, W. C.,
-and Johannes, R. S. (1988). Using the ADAP learning algorithm to forecast
-the onset of diabetes mellitus. In Proceedings of the Symposium on Computer
-Applications in Medical Care.
+\insertRef{smith1988adap}{pima}
 }
 \keyword{datasets}

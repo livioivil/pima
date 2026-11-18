@@ -15,6 +15,7 @@ Imports:
     flipscores,
     patchwork,
     rlang,
+    Rdpack,
     rpart,
     sandwich
 Remotes:
@@ -24,6 +25,7 @@ Language: en-US
 BugReports: https://github.com/livioivil/pima/issues
 URL: https://livioivil.github.io/pima
 Roxygen: list(markdown = TRUE)
+RdMacros: Rdpack
 Config/roxygen2/version: 8.0.0
 Suggests: 
     knitr,

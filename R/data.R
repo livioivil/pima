@@ -19,8 +19,9 @@
 #'   \item{wind}{Highest wind speed.}
 #'   \item{ndam15}{Damage amount normalized to 2015.}
 #' }
-#' @source Original analysis from Jung et al. (2014),
-#' \url{https://www.pnas.org/content/111/24/8782}.
+#' @source Original analysis from \insertCite{jung2014female;textual}{pima}.
+#' @references
+#' \insertAllCited{}
 "hurricane"
 
 #' Pima Indians diabetes data
@@ -40,8 +41,5 @@
 #'   \item{diabetes}{Diabetes diagnosis, with levels `neg` and `pos`.}
 #' }
 #' @references
-#' Smith, J. W., Everhart, J. E., Dickson, W. C., Knowler, W. C.,
-#' and Johannes, R. S. (1988). Using the ADAP learning algorithm to forecast
-#' the onset of diabetes mellitus. In Proceedings of the Symposium on Computer
-#' Applications in Medical Care.
+#' \insertRef{smith1988adap}{pima}
 "pimads"
