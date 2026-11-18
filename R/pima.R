@@ -30,8 +30,9 @@
 #'   after subsetting or removing missing values); repeated values define
 #'   clusters. If `NULL` (default), the scores are aligned by row names.
 #' @param parametric if `TRUE`, uses the experimental parametric backend based
-#'   on [multcomp::mmm()] instead of the sign-flip score test. Its output is
-#'   not compatible with the other functions of the package.
+#'   on [multcomp::mmm()] instead of the sign-flip score test (see
+#'   [pima.mmm()]). Its output is not compatible with the other functions of
+#'   the package.
 #' @param ... further parameters of [flipscores::flipscores()].
 #' @details The procedure builds on the sign-flip score test implemented in [flipscores::flipscores()].
 #' For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
@@ -161,7 +162,7 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   # TODO temporary testing the parametric pima
   if(parametric){
     warning("Current implementation of parametric pima based on multcomp::mmm() is experimental! The output is not compatible with other methods.")
-    res <- pima.mmm(mods, tested_coeffs = tested_coeffs)
+    res <- pima.mmm(mods, id = id, tested_coeffs = tested_coeffs)
     return(res)
   }
 

@@ -50,8 +50,9 @@ after subsetting or removing missing values); repeated values define
 clusters. If \code{NULL} (default), the scores are aligned by row names.}
 
 \item{parametric}{if \code{TRUE}, uses the experimental parametric backend based
-on \code{\link[multcomp:mmm]{multcomp::mmm()}} instead of the sign-flip score test. Its output is
-not compatible with the other functions of the package.}
+on \code{\link[multcomp:mmm]{multcomp::mmm()}} instead of the sign-flip score test (see
+\code{\link[=pima.mmm]{pima.mmm()}}). Its output is not compatible with the other functions of
+the package.}
 
 \item{...}{further parameters of \code{\link[flipscores:flipscores]{flipscores::flipscores()}}.}
 }
