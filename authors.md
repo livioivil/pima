@@ -2,7 +2,19 @@
 
 ## Authors
 
-- **Filippo Gambarota**. Maintainer.
+- **Livio Finos**. Author.
+
+- **Paolo Girardi**. Author.
+
+- **Filippo Gambarota**. Author, maintainer.
+
+- **Anna Vesely**. Author.
+
+- **Giulia Calignano**. Author.
+
+- **Massimiliano Pastore**. Author.
+
+- **Gianmarco Altoè**. Author.
 
 ## Citation
 

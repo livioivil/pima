@@ -76,23 +76,25 @@ mods <- list(
 manual_res <- pima(
   mods,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
   method = "maxT",
-  score_type = "standardized",
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(
+    n_flips = n_flips_vignette,
+    score_type = "standardized"
+  )
 )
 
 summary(manual_res, digits = 3)
-#>          model   response coefficient estimate   score     se     z  pcor     p
-#> 1      compact diabetes01       npreg    0.168 159.150 31.103 5.117 0.226 0.001
-#> 2         full diabetes01       npreg    0.114  64.253 23.866 2.692 0.119 0.014
-#> 3 glucose_only diabetes01       npreg    0.151 152.211 31.762 4.792 0.208 0.001
-#> 4     sqrt_bmi diabetes01       npreg    0.113  64.283 23.988 2.680 0.119 0.014
-#>   p.adj   family  link
-#> 1 0.001 binomial logit
-#> 2 0.014 binomial logit
-#> 3 0.001 binomial logit
-#> 4 0.014 binomial logit
+#>          model coefficient   response estimate   score     se     z  pcor     p
+#> 1      compact       npreg diabetes01    0.168 159.150 31.103 5.117 0.226 0.001
+#> 2         full       npreg diabetes01    0.114  64.253 23.866 2.692 0.119 0.014
+#> 3 glucose_only       npreg diabetes01    0.151 152.211 31.762 4.792 0.208 0.001
+#> 4     sqrt_bmi       npreg diabetes01    0.113  64.283 23.988 2.680 0.119 0.014
+#>   p.adj   family  link wald.p
+#> 1 0.001 binomial logit  0.000
+#> 2 0.014 binomial logit  0.008
+#> 3 0.001 binomial logit  0.000
+#> 4 0.014 binomial logit  0.008
 ```
 
 The main arguments are:
@@ -100,11 +102,18 @@ The main arguments are:
 - `mods`: a list of model objects, usually `glm` objects.
 - `tested_coeffs`: coefficients to test. It can be a character vector
   common to all models, or a list with one character vector per model.
-- `n_flips`: number of sign flips.
-- `method`: multiplicity adjustment, `"maxT"`, `"minP"`, or `"none"`.
-- `score_type`, `seed`, `output_models`, and other arguments are passed
-  to
-  [`flipscores::flipscores()`](https://livioivil.github.io/flipscores/reference/flipscores.html).
+- `method`: multiplicity adjustment of the engine: `"maxT"` (default),
+  `"minP"`, or `"none"` with flipscores; the types of
+  [`multcomp::adjusted()`](https://rdrr.io/pkg/multcomp/man/methods.html)
+  (`"single-step"`, `"free"`, `"Westfall"`, `"holm"`, …) with multcomp.
+- `engine`: the test, `"flipscores"` (default) or `"multcomp"`. Its own
+  arguments are set with
+  [`pima_flipscores()`](https://livioivil.github.io/pima/reference/pima_flipscores.md)
+  (`n_flips`, `score_type` and the other arguments of
+  [`flipscores::flipscores()`](https://livioivil.github.io/flipscores/reference/flipscores.html))
+  or
+  [`pima_multcomp()`](https://livioivil.github.io/pima/reference/pima_flipscores.md).
+- `seed`: seed of the random numbers, for reproducible results.
 
 If the same conceptual effect has different coefficient names across
 models, use a list for `tested_coeffs`.
@@ -130,17 +139,17 @@ mixed_res <- pima(
     linear = "npreg",
     quadratic = "I(npreg^2)"
   ),
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 summary(mixed_res, digits = 3)
-#>       model   response coefficient estimate    score      se     z  pcor     p
-#> 1    linear diabetes01       npreg    0.168  159.150  31.103 5.117 0.226 0.001
-#> 2 quadratic diabetes01  I(npreg^2)    0.015 1807.835 366.472 4.933 0.218 0.001
-#>   p.adj   family  link
-#> 1 0.001 binomial logit
-#> 2 0.001 binomial logit
+#>       model coefficient   response estimate    score      se     z  pcor     p
+#> 1    linear       npreg diabetes01    0.168  159.150  31.103 5.117 0.226 0.001
+#> 2 quadratic  I(npreg^2) diabetes01    0.015 1807.835 366.472 4.933 0.218 0.001
+#>   p.adj   family  link wald.p
+#> 1 0.001 binomial logit      0
+#> 2 0.001 binomial logit      0
 ```
 
 ## Adding specification metadata
@@ -162,9 +171,9 @@ extra <- data.frame(
 manual_res <- pima(
   mods,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
+  extra = extra,
   seed = 1,
-  extra = extra
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 manual_res
@@ -176,11 +185,11 @@ manual_res
 #> 2         full diabetes01 ~ npreg + glucose + pressure + bmi + age binomial
 #> 3 glucose_only                        diabetes01 ~ npreg + glucose binomial
 #> 4     sqrt_bmi      diabetes01 ~ npreg + glucose + sqrt(bmi) + age binomial
-#>    link   Intercept npreg glucose pressure       bmi  age adjustment
-#> 1 logit (Intercept) npreg glucose     <NA>       bmi <NA>    compact
-#> 2 logit (Intercept) npreg glucose pressure       bmi  age       full
-#> 3 logit (Intercept) npreg glucose     <NA>      <NA> <NA>    minimal
-#> 4 logit (Intercept) npreg glucose     <NA> sqrt(bmi)  age   sqrt_bmi
+#>    link   Intercept npreg glucose pressure       bmi      age adjustment
+#> 1 logit (Intercept) npreg glucose excluded       bmi excluded    compact
+#> 2 logit (Intercept) npreg glucose pressure       bmi      age       full
+#> 3 logit (Intercept) npreg glucose excluded  excluded excluded    minimal
+#> 4 logit (Intercept) npreg glucose excluded sqrt(bmi)      age   sqrt_bmi
 #>   includes_age
 #> 1        FALSE
 #> 2         TRUE
@@ -254,8 +263,9 @@ plot(
 
 ![](pima-workflows_files/figure-html/plot-regex-1.png)
 
-`volcano()` adds quantile reference lines and p-value cutoffs on top of
-the same plotting idea.
+[`volcano()`](https://livioivil.github.io/pima/reference/volcano.md)
+adds quantile reference lines and p-value cutoffs on top of the same
+plotting idea.
 
 ``` r
 
@@ -326,8 +336,8 @@ sim_mods <- list(
 sim_res <- pima(
   sim_mods,
   tested_coeffs = "x",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 plot(sim_res, facet = response ~ ., p.adjusted = FALSE)
@@ -342,7 +352,7 @@ spec_curve(
   sim_res,
   focal = "x",
   p.adjusted = FALSE,
-  facet.y = TRUE,
+  facet = response ~ .,
   tbr = c(0.60, 0.40),
   which.response = c("y1", "y2"),
   title = "Two responses, one focal coefficient",
@@ -408,20 +418,27 @@ multi
 #>   > Errors: n = 0
 
 head(multi$scenarios)
-#>    model formula_id                                    calls spec_npreg
-#> 1 model1   formula1                       diabetes01 ~ npreg   identity
-#> 2 model2   formula2             diabetes01 ~ npreg + glucose   identity
-#> 3 model3   formula3       diabetes01 ~ npreg + sqrt(glucose)   identity
-#> 4 model4   formula4                 diabetes01 ~ npreg + bmi   identity
-#> 5 model5   formula5       diabetes01 ~ npreg + glucose + bmi   identity
-#> 6 model6   formula6 diabetes01 ~ npreg + sqrt(glucose) + bmi   identity
-#>   spec_glucose spec_bmi spec_age subset fit_spec fit_ok fit_error
-#> 1     excluded excluded excluded    all    logit   TRUE      <NA>
-#> 2     identity excluded excluded    all    logit   TRUE      <NA>
-#> 3         sqrt excluded excluded    all    logit   TRUE      <NA>
-#> 4     excluded identity excluded    all    logit   TRUE      <NA>
-#> 5     identity identity excluded    all    logit   TRUE      <NA>
-#> 6         sqrt identity excluded    all    logit   TRUE      <NA>
+#>    model formula_id                                    calls    y.fun
+#> 1 model1   formula1                       diabetes01 ~ npreg identity
+#> 2 model2   formula2             diabetes01 ~ npreg + glucose identity
+#> 3 model3   formula3       diabetes01 ~ npreg + sqrt(glucose) identity
+#> 4 model4   formula4                 diabetes01 ~ npreg + bmi identity
+#> 5 model5   formula5       diabetes01 ~ npreg + glucose + bmi identity
+#> 6 model6   formula6 diabetes01 ~ npreg + sqrt(glucose) + bmi identity
+#>   spec_npreg spec_glucose spec_bmi spec_age subset fit_spec nx ny fit_ok
+#> 1   identity     excluded excluded excluded    all    logit  1  1   TRUE
+#> 2   identity     identity excluded excluded    all    logit  2  1   TRUE
+#> 3   identity         sqrt excluded excluded    all    logit  2  1   TRUE
+#> 4   identity     excluded identity excluded    all    logit  2  1   TRUE
+#> 5   identity     identity identity excluded    all    logit  3  1   TRUE
+#> 6   identity         sqrt identity excluded    all    logit  3  1   TRUE
+#>   fit_error
+#> 1      <NA>
+#> 2      <NA>
+#> 3      <NA>
+#> 4      <NA>
+#> 5      <NA>
+#> 6      <NA>
 ```
 
 The `spec_<variable>` columns record the analytical choice for each
@@ -439,25 +456,25 @@ multi_ok <- subset(multi, fit_ok)
 multi_res <- pima(
   multi_ok,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 head(summary(multi_res, digits = 3))
-#>      model   response coefficient estimate   score     se     z  pcor     p
-#> 1   model1 diabetes01       npreg    0.159 209.506 35.961 5.826 0.253 0.001
-#> 2  model10 diabetes01       npreg    0.056  42.387 27.485 1.542 0.067 0.149
-#> 3 model100 diabetes01       npreg    0.043  50.964 34.045 1.497 0.098 0.146
-#> 4 model101 diabetes01       npreg    0.068  73.101 31.958 2.287 0.149 0.041
-#> 5 model102 diabetes01       npreg    0.067  72.481 31.978 2.267 0.148 0.041
-#> 6 model103 diabetes01       npreg    0.061  69.035 33.177 2.081 0.137 0.052
-#>   p.adj        subset fit_spec   family   link
-#> 1 0.001           all    logit binomial  logit
-#> 2 0.300           all    logit binomial  logit
-#> 3 0.300 high_pressure   probit binomial probit
-#> 4 0.200 high_pressure   probit binomial probit
-#> 5 0.200 high_pressure   probit binomial probit
-#> 6 0.200 high_pressure   probit binomial probit
+#>      model coefficient   response estimate   score     se     z  pcor     p
+#> 1   model1       npreg diabetes01    0.159 209.506 35.961 5.826 0.253 0.001
+#> 2  model10       npreg diabetes01    0.056  42.387 27.485 1.542 0.067 0.149
+#> 3 model100       npreg diabetes01    0.043  50.964 34.045 1.497 0.098 0.146
+#> 4 model101       npreg diabetes01    0.068  73.101 31.958 2.287 0.149 0.041
+#> 5 model102       npreg diabetes01    0.067  72.481 31.978 2.267 0.148 0.041
+#> 6 model103       npreg diabetes01    0.061  69.035 33.177 2.081 0.137 0.052
+#>   p.adj        subset fit_spec    y.fun   family   link wald.p
+#> 1 0.001           all    logit identity binomial  logit  0.000
+#> 2 0.300           all    logit identity binomial  logit  0.124
+#> 3 0.300 high_pressure   probit identity binomial probit  0.144
+#> 4 0.200 high_pressure   probit identity binomial probit  0.031
+#> 5 0.200 high_pressure   probit identity binomial probit  0.033
+#> 6 0.200 high_pressure   probit identity binomial probit  0.046
 ```
 
 The metadata from
@@ -492,8 +509,8 @@ multi_logit_all <- subset(
 multi_logit_res <- pima(
   multi_logit_all,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 spec_curve(
@@ -567,20 +584,20 @@ multi_focal <- create_multi(
 )
 
 head(multi_focal$formula_specs)
-#>   formula_id                                    calls spec_npreg spec_glucose
-#> 1   formula1                       diabetes01 ~ npreg   identity     excluded
-#> 2   formula2                 diabetes01 ~ sqrt(npreg)       sqrt     excluded
-#> 3   formula3             diabetes01 ~ npreg + glucose   identity     identity
-#> 4   formula4       diabetes01 ~ sqrt(npreg) + glucose       sqrt     identity
-#> 5   formula5       diabetes01 ~ npreg + sqrt(glucose)   identity         sqrt
-#> 6   formula6 diabetes01 ~ sqrt(npreg) + sqrt(glucose)       sqrt         sqrt
-#>   spec_bmi
-#> 1 excluded
-#> 2 excluded
-#> 3 excluded
-#> 4 excluded
-#> 5 excluded
-#> 6 excluded
+#>   formula_id                                    calls    y.fun spec_npreg
+#> 1   formula1                       diabetes01 ~ npreg identity   identity
+#> 2   formula2                 diabetes01 ~ sqrt(npreg) identity       sqrt
+#> 3   formula3             diabetes01 ~ npreg + glucose identity   identity
+#> 4   formula4       diabetes01 ~ sqrt(npreg) + glucose identity       sqrt
+#> 5   formula5       diabetes01 ~ npreg + sqrt(glucose) identity   identity
+#> 6   formula6 diabetes01 ~ sqrt(npreg) + sqrt(glucose) identity       sqrt
+#>   spec_glucose spec_bmi
+#> 1     excluded excluded
+#> 2     excluded excluded
+#> 3     identity excluded
+#> 4     identity excluded
+#> 5         sqrt excluded
+#> 6         sqrt excluded
 ```
 
 ## Using the `multiverse` package
@@ -646,21 +663,21 @@ parameters(M)
 hurricane_res <- pima(
   M,
   tested_coeffs = "MasFem",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 summary(hurricane_res, digits = 3)
-#>   model  response coefficient estimate    score       se     z  pcor     p
-#> 1  mod1 alldeaths      MasFem    0.145 3106.494 1672.095 1.858 0.195 0.107
-#> 2  mod2 alldeaths      MasFem    0.211 4889.632 1918.654 2.548 0.267 0.059
-#> 3  mod3 alldeaths      MasFem    0.141 2963.215 1653.939 1.792 0.188 0.142
-#> 4  mod4 alldeaths      MasFem    0.204 4518.155 1850.998 2.441 0.256 0.079
-#>   p.adj pressure damage       family link
-#> 1 0.200 original    raw quasipoisson  log
-#> 2 0.069 original logged quasipoisson  log
-#> 3 0.200  updated    raw quasipoisson  log
-#> 4 0.081  updated logged quasipoisson  log
+#>   model coefficient  response estimate    score       se     z  pcor     p
+#> 1  mod1      MasFem alldeaths    0.145 3106.494 1672.095 1.858 0.195 0.107
+#> 2  mod2      MasFem alldeaths    0.211 4889.632 1918.654 2.548 0.267 0.059
+#> 3  mod3      MasFem alldeaths    0.141 2963.215 1653.939 1.792 0.188 0.142
+#> 4  mod4      MasFem alldeaths    0.204 4518.155 1850.998 2.441 0.256 0.079
+#>   p.adj pressure damage       family link wald.p
+#> 1 0.200 original    raw quasipoisson  log  0.045
+#> 2 0.069 original logged quasipoisson  log  0.006
+#> 3 0.200  updated    raw quasipoisson  log  0.055
+#> 4 0.081  updated logged quasipoisson  log  0.009
 ```
 
 The branches declared in
@@ -733,26 +750,26 @@ factor_mods <- list(
 raw_factor_res <- pima(
   factor_mods,
   tested_coeffs = c("x", "groupB", "groupC"),
-  n_flips = n_flips_vignette,
   method = "none",
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 head(summary(raw_factor_res, digits = 3))
-#>     model response coefficient estimate  score    se      z   pcor     p
-#> 1 compact        y           x    0.409 12.810 7.039  1.820  0.303 0.072
-#> 2 compact        y      groupB   -0.676 -4.563 3.207 -1.423 -0.237 0.171
-#> 3 compact        y      groupC    0.916  6.017 3.232  1.862  0.310 0.102
-#> 4  linear        y           x    0.410 12.812 7.138  1.795  0.303 0.080
-#> 5  linear        y      groupB   -0.680 -4.454 3.202 -1.391 -0.235 0.171
-#> 6  linear        y      groupC    0.916  6.014 3.278  1.835  0.310 0.106
-#>     family     link
-#> 1 gaussian identity
-#> 2 gaussian identity
-#> 3 gaussian identity
-#> 4 gaussian identity
-#> 5 gaussian identity
-#> 6 gaussian identity
+#>     model coefficient response estimate  score    se      z   pcor     p
+#> 1 compact      groupB        y   -0.676 -4.563 3.207 -1.423 -0.237 0.171
+#> 2 compact      groupC        y    0.916  6.017 3.232  1.862  0.310 0.102
+#> 3 compact           x        y    0.409 12.810 7.039  1.820  0.303 0.072
+#> 4  linear      groupB        y   -0.680 -4.454 3.202 -1.391 -0.235 0.171
+#> 5  linear      groupC        y    0.916  6.014 3.278  1.835  0.310 0.106
+#> 6  linear           x        y    0.410 12.812 7.138  1.795  0.303 0.080
+#>     family     link wald.p
+#> 1 gaussian identity  0.158
+#> 2 gaussian identity  0.062
+#> 3 gaussian identity  0.068
+#> 4 gaussian identity  0.167
+#> 5 gaussian identity  0.066
+#> 6 gaussian identity  0.072
 ```
 
 Because `raw_factor_res` was computed with `method = "none"`, it
@@ -772,35 +789,35 @@ minP_factor_res <- p.adjust(
 )
 
 head(summary(maxT_factor_res, digits = 3))
-#>     model response coefficient estimate  score    se      z   pcor     p
-#> 1 compact        y           x    0.409 12.810 7.039  1.820  0.303 0.072
-#> 2 compact        y      groupB   -0.676 -4.563 3.207 -1.423 -0.237 0.171
-#> 3 compact        y      groupC    0.916  6.017 3.232  1.862  0.310 0.102
-#> 4  linear        y           x    0.410 12.812 7.138  1.795  0.303 0.080
-#> 5  linear        y      groupB   -0.680 -4.454 3.202 -1.391 -0.235 0.171
-#> 6  linear        y      groupC    0.916  6.014 3.278  1.835  0.310 0.106
-#>     family     link p.adj
-#> 1 gaussian identity   0.3
-#> 2 gaussian identity   0.4
-#> 3 gaussian identity   0.3
-#> 4 gaussian identity   0.4
-#> 5 gaussian identity   0.4
-#> 6 gaussian identity   0.4
+#>     model coefficient response estimate  score    se      z   pcor     p
+#> 1 compact      groupB        y   -0.676 -4.563 3.207 -1.423 -0.237 0.171
+#> 2 compact      groupC        y    0.916  6.017 3.232  1.862  0.310 0.102
+#> 3 compact           x        y    0.409 12.810 7.039  1.820  0.303 0.072
+#> 4  linear      groupB        y   -0.680 -4.454 3.202 -1.391 -0.235 0.171
+#> 5  linear      groupC        y    0.916  6.014 3.278  1.835  0.310 0.106
+#> 6  linear           x        y    0.410 12.812 7.138  1.795  0.303 0.080
+#>     family     link wald.p p.adj
+#> 1 gaussian identity  0.158   0.3
+#> 2 gaussian identity  0.062   0.4
+#> 3 gaussian identity  0.068   0.3
+#> 4 gaussian identity  0.167   0.4
+#> 5 gaussian identity  0.066   0.4
+#> 6 gaussian identity  0.072   0.4
 head(summary(minP_factor_res, digits = 3))
-#>     model response coefficient estimate  score    se      z   pcor     p
-#> 1 compact        y           x    0.409 12.810 7.039  1.820  0.303 0.072
-#> 2 compact        y      groupB   -0.676 -4.563 3.207 -1.423 -0.237 0.171
-#> 3 compact        y      groupC    0.916  6.017 3.232  1.862  0.310 0.102
-#> 4  linear        y           x    0.410 12.812 7.138  1.795  0.303 0.080
-#> 5  linear        y      groupB   -0.680 -4.454 3.202 -1.391 -0.235 0.171
-#> 6  linear        y      groupC    0.916  6.014 3.278  1.835  0.310 0.106
-#>     family     link p.adj
-#> 1 gaussian identity   0.4
-#> 2 gaussian identity   0.5
-#> 3 gaussian identity   0.4
-#> 4 gaussian identity   0.5
-#> 5 gaussian identity   0.5
-#> 6 gaussian identity   0.5
+#>     model coefficient response estimate  score    se      z   pcor     p
+#> 1 compact      groupB        y   -0.676 -4.563 3.207 -1.423 -0.237 0.171
+#> 2 compact      groupC        y    0.916  6.017 3.232  1.862  0.310 0.102
+#> 3 compact           x        y    0.409 12.810 7.039  1.820  0.303 0.072
+#> 4  linear      groupB        y   -0.680 -4.454 3.202 -1.391 -0.235 0.171
+#> 5  linear      groupC        y    0.916  6.014 3.278  1.835  0.310 0.106
+#> 6  linear           x        y    0.410 12.812 7.138  1.795  0.303 0.080
+#>     family     link wald.p p.adj
+#> 1 gaussian identity  0.158   0.4
+#> 2 gaussian identity  0.062   0.5
+#> 3 gaussian identity  0.068   0.4
+#> 4 gaussian identity  0.167   0.5
+#> 5 gaussian identity  0.066   0.5
+#> 6 gaussian identity  0.072   0.5
 ```
 
 [`combine_tests()`](https://livioivil.github.io/flipscores/reference/combine_tests.html)
@@ -829,9 +846,9 @@ summary(combine_tests(
   by = "coefficient"
 ))
 #>    model coefficient stat ntests     S     p
-#> 1      x           x maxT      3 1.820 0.108
-#> 2 groupB      groupB maxT      3 1.460 0.209
-#> 3 groupC      groupC maxT      3 1.862 0.128
+#> 1 groupB      groupB maxT      3 1.820 0.108
+#> 2 groupC      groupC maxT      3 1.460 0.209
+#> 3      x           x maxT      3 1.862 0.128
 ```
 
 You can also define custom groups with `by_list`. The list elements can
@@ -850,8 +867,8 @@ summary(combine_tests(
   by_list = custom_groups
 ))
 #>          model coefficient stat ntests     S     p
-#> 1      focal_x           x maxT      3 1.820 0.108
-#> 2 factor_group        many maxT      6 1.862 0.199
+#> 1      focal_x           x maxT      3 1.862 0.128
+#> 2 factor_group        many maxT      6 1.820 0.202
 ```
 
 [`combine_contrasts()`](https://livioivil.github.io/flipscores/reference/combine_tests.html)
@@ -865,28 +882,29 @@ factor_global_res <- combine_contrasts(maxT_factor_res)
 
 summary(factor_global_res)
 #>       model coefficient        stat ntests       S     p
-#> 1 compact.1           x Mahalanobis      1 0.05596 0.080
-#> 2 compact.2       group Mahalanobis      2 8.00911 0.010
-#> 3  linear.1           x Mahalanobis      1 0.03816 0.244
-#> 4  linear.2       group Mahalanobis      2 6.31829 0.035
-#> 5 poly_z1.1           x Mahalanobis      1 0.05690 0.072
-#> 6 poly_z1.2       group Mahalanobis      2 8.27876 0.008
+#> 1 compact.2       group Mahalanobis      2 4.38289 0.115
+#> 2 compact.1           x Mahalanobis      1 0.05283 0.106
+#> 3  linear.2       group Mahalanobis      2 3.19351 0.205
+#> 4  linear.1           x Mahalanobis      1 0.04070 0.197
+#> 5 poly_z1.2       group Mahalanobis      2 4.49149 0.106
+#> 6 poly_z1.1           x Mahalanobis      1 0.05332 0.102
 
 summary(combine_tests(
   factor_global_res,
   by = "coefficient"
 ))
-#>   model coefficient stat ntests      S     p
-#> 1     x           x maxT      3 0.0569 0.109
-#> 2 group       group maxT      3 8.2788 0.014
+#>   model coefficient stat ntests       S     p
+#> 1 group       group maxT      3 4.49149 0.166
+#> 2     x           x maxT      3 0.05332 0.147
 ```
 
 ## Variation of estimates
 
-`voe()` summarizes the variation of estimates and p-values across the
-multiverse. `voe_variance()` decomposes variation in a selected
-estimate-like column over the specification decisions recorded in the
-`pima` object.
+[`voe()`](https://livioivil.github.io/pima/reference/voe.md) summarizes
+the variation of estimates and p-values across the multiverse.
+[`voe_variance()`](https://livioivil.github.io/pima/reference/voe_variance.md)
+decomposes variation in a selected estimate-like column over the
+specification decisions recorded in the `pima` object.
 
 ``` r
 
@@ -895,49 +913,27 @@ voe(
   xvar = "pcor",
   p.adjusted = FALSE
 )
-#> $x
-#>         1%        50%        99% 
-#> 0.04878427 0.16499093 0.27012554 
+#> Vibration of effects (xvar = pcor, type = additive, p-values = p, alpha = 0.05)
 #> 
-#> $p
-#>        1%       50%       99% 
-#> 0.5509425 1.7695511 3.0000000 
-#> 
-#> $xn
-#> [1] "pcor"
-#> 
-#> $x_voe
-#> [1] 0.2213413
-#> 
-#> $p_voe
-#> [1] 2.449058
-#> 
-#> $janus
-#> [1] FALSE
-#> 
-#> $null
-#> [1] 0
-#> 
-#> $type
-#> [1] "additive"
-#> 
-#> $p.transf
-#> [1] "-log10"
-#> 
-#> $p.adjusted
-#> [1] FALSE
-#> 
-#> $alpha
-#> [1] 0.05
+#>    response coefficient n_spec x_voe p_voe J_range J_pct J_ext J_sig J_frac
+#>  diabetes01       npreg    108 0.221  2.45   FALSE FALSE FALSE FALSE      1
 
 voe_variance(
   multi_res,
   estimate = "pcor"
 )$dec
-#>      term          r2u        pr2u
-#> 1 glucose  0.011229936  0.16340211
-#> 2     bmi -0.003059219 -0.04451342
-#> 3     age  0.068689167  0.99946736
+#>     response coefficient     term    source         r2u        pr2u
+#> 1 diabetes01       npreg  glucose predictor 0.020891177 0.022439983
+#> 2 diabetes01       npreg      bmi predictor 0.031191913 0.033504384
+#> 3 diabetes01       npreg      age predictor 0.749237120 0.804783215
+#> 4 diabetes01       npreg   subset     other 0.128568917 0.138100614
+#> 5 diabetes01       npreg fit_spec     other 0.001090926 0.001171804
+#>   r2u_inclusion r2u_transformation
+#> 1    0.02086406       2.711314e-05
+#> 2    0.03118186       1.005254e-05
+#> 3    0.73658957       1.264755e-02
+#> 4            NA                 NA
+#> 5            NA                 NA
 ```
 
 ## A tree over specification decisions
@@ -960,20 +956,22 @@ pima_tree(
 #>     control = control)
 #> 
 #> Variables actually used in tree construction:
-#> [1] age     bmi     glucose link    subset 
+#> [1] age     bmi     glucose subset 
 #> 
 #> Root node error: 0.28346/108 = 0.0026246
 #> 
 #> n= 108 
 #> 
-#>         CP nsplit rel error  xerror    xstd
-#> 1 0.278603      0  1.000000 1.02424 0.36090
-#> 2 0.108938      1  0.721397 0.98940 0.35914
-#> 3 0.027338      5  0.285646 0.90327 0.32905
-#> 4 0.025501      8  0.203631 0.91440 0.32914
-#> 5 0.022360     12  0.101625 0.92036 0.32906
-#> 6 0.017599     13  0.079265 0.92723 0.32916
-#> 7 0.010000     14  0.061666 1.00022 0.36997
+#>         CP nsplit rel error   xerror     xstd
+#> 1 0.239745      0  1.000000 1.024245 0.360904
+#> 2 0.176249      2  0.520510 0.786042 0.262196
+#> 3 0.080972      3  0.344261 0.576655 0.169578
+#> 4 0.067446      4  0.263289 0.502373 0.127375
+#> 5 0.049962      6  0.128397 0.395562 0.119808
+#> 6 0.027341      7  0.078436 0.171662 0.045214
+#> 7 0.018669      8  0.051095 0.117190 0.027314
+#> 8 0.012913      9  0.032425 0.049723 0.010814
+#> 9 0.010000     10  0.019512 0.044845 0.009150
 ```
 
 ![](pima-workflows_files/figure-html/pima-tree-1.png)
@@ -991,7 +989,8 @@ For a typical workflow:
 4.  Inspect [`summary()`](https://rdrr.io/r/base/summary.html),
     [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
     [`spec_curve()`](https://livioivil.github.io/pima/reference/spec_curve.md),
-    and, when useful, `voe()` or
+    and, when useful,
+    [`voe()`](https://livioivil.github.io/pima/reference/voe.md) or
     [`pima_tree()`](https://livioivil.github.io/pima/reference/pima_tree.md).
 5.  Report the specification decisions and whether the conclusions
     depend on those decisions.

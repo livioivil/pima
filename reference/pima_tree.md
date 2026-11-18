@@ -20,40 +20,48 @@ pima_tree(
 
 - res:
 
-  A list object with a specific structure containing regression model
-  results. It should contain \`mods\`, a list of models, and
-  \`summary_table\`, a data frame with the summary of results, including
-  estimates and p-values.
+  An object of class `pima`, as returned by
+  [`pima()`](https://livioivil.github.io/pima/reference/pima.md). Other
+  objects (lists of models, `pima.multi` objects, specification tables)
+  are not supported.
 
 - p.values:
 
   A char string indicating which type of p-values to use. Options are
-  \`"raw"\` or \`"adjusted"\` (default). When \`"raw"\`, the function
-  uses the p-values from the \`summary_table\`.
+  `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the
+  p-values from the `summary_table`.
 
 - method:
 
-  used in function \`rpart::rpart\` if \`method="class"\` it will
-  classify significant p-values at level \`alpha\`
+  used in [`rpart::rpart()`](https://rdrr.io/pkg/rpart/man/rpart.html):
+  if `method="class"` it will classify significant p-values at level
+  `alpha`
 
 - alpha:
 
-  used only when \`method="class"\`
+  used only when `method="class"`
 
 - control:
 
   control options passed to
-  [`rpart.control`](https://rdrr.io/pkg/rpart/man/rpart.control.html).
+  [`rpart::rpart.control()`](https://rdrr.io/pkg/rpart/man/rpart.control.html).
   If `NULL`, `rpart.control(minsplit = 3)` is used.
 
 - ...:
 
   additional arguments passed to
-  [`rpart`](https://rdrr.io/pkg/rpart/man/rpart.html).
+  [`rpart::rpart()`](https://rdrr.io/pkg/rpart/man/rpart.html).
 
 ## Value
 
 Invisibly returns the fitted `rpart` object.
+
+## See also
+
+Other PIMA inference:
+[`pima()`](https://livioivil.github.io/pima/reference/pima.md),
+[`pima-method`](https://livioivil.github.io/pima/reference/pima-method.md),
+[`pima_flipscores()`](https://livioivil.github.io/pima/reference/pima_flipscores.md)
 
 ## Examples
 

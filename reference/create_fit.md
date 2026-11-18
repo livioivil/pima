@@ -1,9 +1,8 @@
 # Create a model-fitting specification
 
-\`create_fit()\` defines how a model should be fitted within a
-multiverse. Standard model-fitting functions are supplied through
-\`fun\`; functions with non-standard interfaces can be supported through
-\`adapter\`.
+`create_fit()` defines how a model should be fitted within a multiverse.
+Standard model-fitting functions are supplied through `fun`; functions
+with non-standard interfaces can be supported through `adapter`.
 
 ## Usage
 
@@ -15,46 +14,53 @@ create_fit(fun = NULL, ..., adapter = NULL)
 
 - fun:
 
-  Optional model-fitting function that explicitly accepts \`formula\`
-  and \`data\`, such as \`stats::lm\`, \`stats::glm\`, \`MASS::glm.nb\`,
-  or \`lme4::lmer\`. Supply either \`fun\` or \`adapter\`, but not both.
+  Optional model-fitting function that explicitly accepts `formula` and
+  `data`, such as [`stats::lm`](https://rdrr.io/r/stats/lm.html),
+  [`stats::glm`](https://rdrr.io/r/stats/glm.html),
+  [`MASS::glm.nb`](https://rdrr.io/pkg/MASS/man/glm.nb.html), or
+  `lme4::lmer`. Supply either `fun` or `adapter`, but not both.
 
 - ...:
 
   Additional named arguments for the fitting specification. With a
-  standard \`fun\`, these arguments are passed directly to the fitting
-  function. With an \`adapter\`, they are collected into the \`args\`
-  list passed to the adapter.
+  standard `fun`, these arguments are passed directly to the fitting
+  function. With an `adapter`, they are collected into the `args` list
+  passed to the adapter.
 
 - adapter:
 
   Optional function for fitting models that do not use the standard
-  \`formula\` and \`data\` interface. An adapter must explicitly accept
-  arguments named \`formula\`, \`data\`, and \`args\`, where \`args\` is
-  the named list created from \`...\`. Because \`adapter\` follows
-  \`...\`, it must be supplied by name.
+  `formula` and `data` interface. An adapter must explicitly accept
+  arguments named `formula`, `data`, and `args`, where `args` is the
+  named list created from `...`. Because `adapter` follows `...`, it
+  must be supplied by name.
 
 ## Value
 
-An object of class \`"pima.fitspec"\` containing the fitting function or
+An object of class `"pima.fitspec"` containing the fitting function or
 adapter and its additional arguments. The object is intended for use in
-the \`fit.specs\` argument of \[create_multi()\].
+the `fit.specs` argument of
+[`create_multi()`](https://livioivil.github.io/pima/reference/create_multi.md).
 
 ## Details
 
-Additional arguments must be named. \`formula\` and \`data\` are
-reserved because they are supplied by \[create_multi()\] for each
-scenario.
+Additional arguments must be named. `formula` and `data` are reserved
+because they are supplied by
+[`create_multi()`](https://livioivil.github.io/pima/reference/create_multi.md)
+for each scenario.
 
-For a standard fitting function, arguments in \`...\` that are not
+For a standard fitting function, arguments in `...` that are not
 explicitly listed in the function formals generate a warning when the
-function accepts \`...\`, because they may be forwarded to another
-method. If the function does not accept \`...\`, unknown arguments
-generate an error.
+function accepts `...`, because they may be forwarded to another method.
+If the function does not accept `...`, unknown arguments generate an
+error.
 
 ## See also
 
-\[create_multi()\]
+Other multiverse construction:
+[`c.pima.multi()`](https://livioivil.github.io/pima/reference/c.pima.multi.md),
+[`create_multi()`](https://livioivil.github.io/pima/reference/create_multi.md),
+[`subset.pima.multi()`](https://livioivil.github.io/pima/reference/subset.pima.multi.md)
 
 ## Examples
 
@@ -133,7 +139,7 @@ create_fit(stats::lm)
 #>         z$qr <- NULL
 #>     z
 #> }
-#> <bytecode: 0x55b06fe11d58>
+#> <bytecode: 0x603dca2f98c8>
 #> <environment: namespace:stats>
 #> 
 #> $adapter
@@ -229,7 +235,7 @@ create_fit(
 #>         contrasts = attr(X, "contrasts"), xlevels = .getXlevels(mt, 
 #>             mf))), class = c(fit$class, c("glm", "lm")))
 #> }
-#> <bytecode: 0x55b06fc74140>
+#> <bytecode: 0x603dcb1ec198>
 #> <environment: namespace:stats>
 #> 
 #> $adapter
@@ -267,7 +273,7 @@ create_fit(
 #>     do.call(stats::lm, c(list(formula = formula, data = data), 
 #>         args))
 #> }
-#> <environment: 0x55b0701543a8>
+#> <environment: 0x603dcb28d478>
 #> 
 #> $args
 #> $args$singular.ok

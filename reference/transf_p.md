@@ -23,6 +23,21 @@ transf_p(p, method = "raw")
 
 the transformed p-values
 
+## Details
+
+`"-log10"` returns \\-\log\_{10} p\\. `"z"` returns the absolute normal
+quantile corresponding to a two-sided p-value, \$\$z =
+\Phi^{-1}\left(1 - \frac{p}{2}\right),\$\$ where \\\Phi\\ is the
+standard normal distribution function.
+
+## See also
+
+Other specification tables and plots:
+[`spec_curve()`](https://livioivil.github.io/pima/reference/spec_curve.md),
+[`spec_scatter()`](https://livioivil.github.io/pima/reference/spec_scatter.md),
+[`spec_table()`](https://livioivil.github.io/pima/reference/spec_table.md),
+[`volcano()`](https://livioivil.github.io/pima/reference/volcano.md)
+
 ## Examples
 
 ``` r

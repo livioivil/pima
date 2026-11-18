@@ -3,6 +3,10 @@
 Methods for `pima` objects. The following are methods to extract and
 manipulate relevant information from a `pima` object.
 
+Scatter plot of the specifications: calls
+[`spec_scatter()`](https://livioivil.github.io/pima/reference/spec_scatter.md)
+on the `pima` object.
+
 ## Usage
 
 ``` r
@@ -12,22 +16,21 @@ print(x, n = 4, ...)
 # S3 method for class 'pima'
 summary(object, digits = NULL, ...)
 
-as.pima(object, names_obj = NULL, ...)
-
 # S3 method for class 'pima'
 plot(
   x,
   by = "coefficient",
   focal = NULL,
-  xvar = NULL,
-  p.adjusted = TRUE,
+  xvar = "pcor",
+  yvar = NULL,
+  p.adjusted = NULL,
   p.transf = "z",
   alpha = 0.05,
   xlab = NULL,
   ylab = NULL,
   regex = FALSE,
   shapes = NULL,
-  facet.scales = NULL,
+  facet.scales = "free_x",
   facet = NULL,
   which.response = NULL,
   ...
@@ -50,7 +53,9 @@ print(x, ...)
 
 - ...:
 
-  additional arguments to be passed
+  further arguments passed to
+  [`spec_scatter()`](https://livioivil.github.io/pima/reference/spec_scatter.md)
+  (e.g. `focal.var`, `p`, `title`).
 
 - object:
 
@@ -58,69 +63,57 @@ print(x, ...)
 
 - digits:
 
-  number of digits when rounding. Default to \`NULL\` thus no rounding.
+  number of digits when rounding. Default to `NULL` thus no rounding.
 
-- names_obj:
+- by, focal, xvar, yvar, p.adjusted, p.transf, alpha, xlab, ylab,
+  shapes, facet, facet.scales, which.response:
 
-  a vector of names, its length must be equal to the length of `object`
-
-- focal:
-
-  a character vector indicating which coefficients to plot. When \> 1
-  coefficient is provided (or NULL) and \`xvar\` is not provided the
-  \`Part. Cor\` column is used instead of the \`Estimate\`.
-
-- xvar:
-
-  character indicating the column of the \`object\$summary_table\` to be
-  plotted on the x axis. Default to "Estimate".
-
-- p.adjusted:
-
-  logical indicating whether to plot adjusted p-values (`TRUE`, default)
-  or raw p-values (`FALSE`).
-
-- p.transf:
-
-  can be a character vector indicating the transformation to use (see
-  \[transf_p()\]) or a custom function.
-
-- alpha:
-
-  a value between 0 and 1. The plot will mark the p-values smaller than
-  `alpha` (0.05 by default). If equal to 0 or 1 nothing will be marked.
-
-- xlab:
-
-  character vector indicating the x-axis label. Default to \`xvar\`
-
-- ylab:
-
-  character vector indicating the y-axis label. Default to \`p\` or
-  \`p.adjust.\<method\>\` where method is \`object\$p.adjust.method\`.
+  see
+  [`spec_scatter()`](https://livioivil.github.io/pima/reference/spec_scatter.md).
 
 - regex:
 
-  logical. If `TRUE`, the `focal` argument is treated as a regular
-  expression to match coefficient names. Default is `FALSE`.
+  logical. If `TRUE`, `focal` is a regular expression matched against
+  the coefficient names. Default is `FALSE`.
 
-- shapes:
+## See also
 
-  a numeric vector of length 2 specifying the ggplot2 shapes to use for
-  non-significant and significant points, respectively. Default is
-  `c(4, 19)`.
+Other PIMA inference:
+[`pima()`](https://livioivil.github.io/pima/reference/pima.md),
+[`pima_flipscores()`](https://livioivil.github.io/pima/reference/pima_flipscores.md),
+[`pima_tree()`](https://livioivil.github.io/pima/reference/pima_tree.md)
 
-- facet.scales:
+## Examples
 
-  character string indicating if scales should be `"fixed"`, `"free"`,
-  `"free_x"`, or `"free_y"`. Default is `"free_x"`.
-
-- facet:
-
-  a formula for facetting the plot, passed to
-  [`facet_grid`](https://ggplot2.tidyverse.org/reference/facet_grid.html).
-
-- which.response:
-
-  a character vector specifying a subset of response variables to be
-  plotted.
+``` r
+mods <- list(
+  a = lm(Sepal.Width ~ Sepal.Length, data = iris),
+  b = lm(Sepal.Width ~ Sepal.Length + Species, data = iris),
+  c = lm(Sepal.Width ~ Sepal.Length + Petal.Width, data = iris)
+)
+res <- pima(mods, tested_coeffs = "Sepal.Length", seed = 1,
+            engine = pima_flipscores(n_flips = 500))
+res
+#> 
+#> == Multiverse analysis with 3 scenarios ==
+#> 
+#>   model                                  formula   family     link   Intercept
+#> 1     a               Sepal.Width ~ Sepal.Length gaussian identity (Intercept)
+#> 2     b     Sepal.Width ~ Sepal.Length + Species gaussian identity (Intercept)
+#> 3     c Sepal.Width ~ Sepal.Length + Petal.Width gaussian identity (Intercept)
+#>   Sepal.Length  Species Petal.Width
+#> 1 Sepal.Length excluded    excluded
+#> 2 Sepal.Length  Species    excluded
+#> 3 Sepal.Length excluded Petal.Width
+#> 
+summary(res)
+#>   model  coefficient    response   estimate     score       se         z
+#> 1     a Sepal.Length Sepal.Width -0.0618848 -6.322667 4.405665 -1.435122
+#> 2     b Sepal.Length Sepal.Width  0.3498801 13.630000 2.120158  6.428767
+#> 3     c Sepal.Length Sepal.Width  0.2892867  9.782199 2.366554  4.133520
+#>         pcor     p p.adj   family     link       wald.p
+#> 1 -0.1175698 0.132 0.200 gaussian identity 1.518983e-01
+#> 2  0.5302358 0.002 0.002 gaussian identity 4.187340e-12
+#> 3  0.3397733 0.002 0.002 gaussian identity 2.241644e-05
+plot(res)
+```
