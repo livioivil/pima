@@ -10,8 +10,13 @@ pima(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "non
 \item{mods}{list of objects that can be evaluated by \code{\link[flipscores]{flipscores}}, usually
 model objects produced by \code{glm} or \code{flipscores}.}
 
-\item{tested_coeffs}{tested coefficients. It can be a vector of names (common to all models)
-or a list of the same length as \code{mods}, where each element is a vector of names.
+\item{tested_coeffs}{tested coefficients. It can be a vector of names,
+tested in each model where they are present (every model must contain at
+least one of them), or a list of the same length as \code{mods}, where each
+element is a vector of coefficient names of that model (matched by name when
+the list is named). The list is needed when the same variable enters the
+models in different forms (e.g. \code{x}, \code{log(x)}): build it with
+\code{split()} on \code{spec_table(mods, focal.var = "x")}.
 If \code{NULL}, all coefficients are tested.}
 
 \item{n_flips}{number of sign flips.}
