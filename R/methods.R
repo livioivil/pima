@@ -1,8 +1,8 @@
 #' @title Methods for pima objects
 #'
-#' @description Methods for \code{pima} objects.
+#' @description Methods for `pima` objects.
 #' The following are methods to extract and manipulate relevant information from
-#' a \code{pima} object.
+#' a `pima` object.
 #'
 #' @name pima-method
 #' @docType methods
@@ -11,7 +11,7 @@ NULL
 
 #' print.pima print method for a pima object.
 #' @rdname pima-method
-#' @param x an object of class \code{pima}.
+#' @param x an object of class `pima`.
 #' @param n number of rows to print from the beginning and end of the scenario table.
 #' @param ... additional arguments to be passed
 #' @method print pima
@@ -30,7 +30,7 @@ print.pima <- function(x, n = 4, ...) {
 
 #' summary.pima summary method for a pima object.
 #' @rdname pima-method
-#' @param object an object of class \code{pima}.
+#' @param object an object of class `pima`.
 #' @param digits number of digits when rounding. Default to `NULL` thus no rounding.
 #' @param ... additional arguments to be passed
 #' @method  summary pima
@@ -52,11 +52,11 @@ summary.pima <- function(object, digits = NULL, ...) {
 #' Scatter plot of the specifications: calls [spec_scatter()] on the `pima`
 #' object.
 #' @rdname pima-method
-#' @param x an object of class \code{pima}.
+#' @param x an object of class `pima`.
 #' @param by,focal,xvar,yvar,p.adjusted,p.transf,alpha,xlab,ylab,shapes,facet,facet.scales,which.response
 #'   see [spec_scatter()].
-#' @param regex logical. If \code{TRUE}, `focal` is a regular expression
-#'   matched against the coefficient names. Default is \code{FALSE}.
+#' @param regex logical. If `TRUE`, `focal` is a regular expression
+#'   matched against the coefficient names. Default is `FALSE`.
 #' @param ... further arguments passed to [spec_scatter()] (e.g. `focal.var`,
 #'   `p`, `title`).
 #' @method  plot pima
@@ -109,7 +109,7 @@ plot.pima <- function(
 
 #' print.pima.multi
 #' @rdname pima-method
-#' @param object an object of class \code{pima.multi}.
+#' @param object an object of class `pima.multi`.
 #' @method  print pima.multi
 #' @docType methods
 #' @export

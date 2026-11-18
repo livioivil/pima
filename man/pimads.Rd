@@ -7,14 +7,14 @@
 \format{
 A data frame with 768 rows and 8 variables:
 \describe{
-  \item{npreg}{Number of pregnancies.}
-  \item{glucose}{Plasma glucose concentration from an oral glucose tolerance test.}
-  \item{pressure}{Diastolic blood pressure in mm Hg.}
-  \item{skin}{Triceps skin fold thickness in mm.}
-  \item{bmi}{Body mass index.}
-  \item{pedigree}{Diabetes pedigree function.}
-  \item{age}{Age in years.}
-  \item{diabetes}{Diabetes diagnosis, with levels \code{neg} and \code{pos}.}
+\item{npreg}{Number of pregnancies.}
+\item{glucose}{Plasma glucose concentration from an oral glucose tolerance test.}
+\item{pressure}{Diastolic blood pressure in mm Hg.}
+\item{skin}{Triceps skin fold thickness in mm.}
+\item{bmi}{Body mass index.}
+\item{pedigree}{Diabetes pedigree function.}
+\item{age}{Age in years.}
+\item{diabetes}{Diabetes diagnosis, with levels \code{neg} and \code{pos}.}
 }
 }
 \usage{

@@ -31,56 +31,56 @@ spec_curve(
 )
 }
 \arguments{
-\item{x}{A `pima` object, a `pima.multi` object created with `fit.specs`, a
-list of fitted `lm` or `glm` models, or a table returned by
-[spec_table()].}
+\item{x}{A \code{pima} object, a \code{pima.multi} object created with \code{fit.specs}, a
+list of fitted \code{lm} or \code{glm} models, or a table returned by
+\code{\link[=spec_table]{spec_table()}}.}
 
 \item{focal}{A character vector of coefficient names to plot (exact match,
-e.g. `"log(x)"` or `"groupB"`).}
+e.g. \code{"log(x)"} or \code{"groupB"}).}
 
 \item{focal.var}{A character vector of variable names to plot: all the
 coefficients coming from these variables are selected, whatever their
-transformation (e.g. `"x"` selects `x`, `log(x)` and `sqrt(x)`) or
-coding (e.g. `"group"` selects `groupB` and `groupC`). When both `focal`
-and `focal.var` are supplied, the union is plotted. When both are `NULL`,
-the defaults are the tested coefficients (`focal`, for `pima` objects),
-the focal predictors of [create_multi()] (`focal.var`, for `pima.multi`
+transformation (e.g. \code{"x"} selects \code{x}, \code{log(x)} and \code{sqrt(x)}) or
+coding (e.g. \code{"group"} selects \code{groupB} and \code{groupC}). When both \code{focal}
+and \code{focal.var} are supplied, the union is plotted. When both are \code{NULL},
+the defaults are the tested coefficients (\code{focal}, for \code{pima} objects),
+the focal predictors of \code{\link[=create_multi]{create_multi()}} (\code{focal.var}, for \code{pima.multi}
 objects), or all the coefficients except the intercept.}
 
 \item{yvar}{Character indicating the column of the specification table
-plotted on the y-axis of the top plot. Defaults to `"estimate"` with one
-coefficient and to `"pcor"` with more than one.}
+plotted on the y-axis of the top plot. Defaults to \code{"estimate"} with one
+coefficient and to \code{"pcor"} with more than one.}
 
 \item{p}{Character indicating the column of p-values used to define
-significance. Any column of the table can be used. If `NULL`, the column
+significance. Any column of the table can be used. If \code{NULL}, the column
 is chosen with fixed rules (see Details).}
 
-\item{p.adjusted}{Logical. For `pima` objects, `TRUE` uses the adjusted
-p-values (`"p.adj"`) and `FALSE` the unadjusted flipscores p-values
-(`"p"`); `NULL` (default) uses the adjusted ones when [pima()] applied a
-correction and the flipscores ones otherwise. For lists of models and `pima.multi` objects the
-p-values are never adjusted: `FALSE` (or `NULL`) uses `"wald.p"` and
-`TRUE` is an error. Ignored when `p` is supplied.}
+\item{p.adjusted}{Logical. For \code{pima} objects, \code{TRUE} uses the adjusted
+p-values (\code{"p.adj"}) and \code{FALSE} the unadjusted flipscores p-values
+(\code{"p"}); \code{NULL} (default) uses the adjusted ones when \code{\link[=pima]{pima()}} applied a
+correction and the flipscores ones otherwise. For lists of models and \code{pima.multi} objects the
+p-values are never adjusted: \code{FALSE} (or \code{NULL}) uses \code{"wald.p"} and
+\code{TRUE} is an error. Ignored when \code{p} is supplied.}
 
 \item{spec_vars}{Character vector of the specification columns shown in the
-bottom plot. If `NULL`, taken from `attr(x, "spec_vars")`. Needed when the
-attribute has been lost (e.g., after [subset()]).}
+bottom plot. If \code{NULL}, taken from \code{attr(x, "spec_vars")}. Needed when the
+attribute has been lost (e.g., after \code{\link[=subset]{subset()}}).}
 
 \item{exclude.vars}{Character vector of specification columns removed from
-the bottom plot (e.g. a predictor such as `"AGE"`, or `"fit_spec"`).}
+the bottom plot (e.g. a predictor such as \code{"AGE"}, or \code{"fit_spec"}).}
 
 \item{alpha}{A numeric value specifying the significance level for the
 confidence intervals and the point shapes. Default is 0.05.}
 
 \item{tbr}{A numeric vector of two elements indicating the vertical space
-ratio assigned to the top and bottom plots (e.g., `c(0.4, 0.6)`).}
+ratio assigned to the top and bottom plots (e.g., \code{c(0.4, 0.6)}).}
 
 \item{colors}{A character vector specifying the colors of the
 response ~ coefficient combinations. With a single combination the
-default is `"#0072B2"`.}
+default is \code{"#0072B2"}.}
 
 \item{shapes}{A numeric vector of two elements specifying the shapes for
-non-significant and significant results. Default to `c(4, 19)`.}
+non-significant and significant results. Default to \code{c(4, 19)}.}
 
 \item{title}{A character string for the overall plot title.}
 
@@ -88,62 +88,62 @@ non-significant and significant results. Default to `c(4, 19)`.}
 "Specification".}
 
 \item{ylab}{A character string for the y-axis title of the top plot.
-Default to the value of `yvar`.}
+Default to the value of \code{yvar}.}
 
-\item{top.theme}{A function returning a `ggplot2` theme for the top plot.
-Default to `ggplot2::theme_minimal()`.}
+\item{top.theme}{A function returning a \code{ggplot2} theme for the top plot.
+Default to \code{ggplot2::theme_minimal()}.}
 
-\item{bottom.theme}{A function returning a `ggplot2` theme for the bottom
-plot. Default to `ggplot2::theme_minimal()`.}
+\item{bottom.theme}{A function returning a \code{ggplot2} theme for the bottom
+plot. Default to \code{ggplot2::theme_minimal()}.}
 
-\item{redundant}{Logical. If `FALSE`, removes from the bottom plot the
+\item{redundant}{Logical. If \code{FALSE}, removes from the bottom plot the
 choices that do not vary across specifications and those splitting the
-specifications exactly as a previous one (e.g., `family` and `link` when
-fully determined by `fit_spec`).}
+specifications exactly as a previous one (e.g., \code{family} and \code{link} when
+fully determined by \code{fit_spec}).}
 
-\item{conf.int}{Logical. If `TRUE`, includes confidence intervals around the
-estimates (only when `yvar = "estimate"`). Wald intervals are used with
-`p = "wald.p"` when the standard error is available, otherwise intervals
+\item{conf.int}{Logical. If \code{TRUE}, includes confidence intervals around the
+estimates (only when \code{yvar = "estimate"}). Wald intervals are used with
+\code{p = "wald.p"} when the standard error is available, otherwise intervals
 are obtained by inverting the selected p-values.}
 
-\item{facet.y}{Logical. If `TRUE`, creates separate facets for each response
-variable in the top plot. Default is `FALSE`.}
+\item{facet.y}{Logical. If \code{TRUE}, creates separate facets for each response
+variable in the top plot. Default is \code{FALSE}.}
 
 \item{which.response}{A character vector specifying which response
 variables to include in the plot.}
 
-\item{yname}{Deprecated alias of `which.response`.}
+\item{yname}{Deprecated alias of \code{which.response}.}
 
-\item{which.plot}{One of `"both"` (default), `"top"` or `"bottom"`.}
+\item{which.plot}{One of \code{"both"} (default), \code{"top"} or \code{"bottom"}.}
 }
 \value{
-A [`patchwork`] object consisting of two aligned `ggplot2` plots,
-  or a single `ggplot2` plot when `which.plot` is `"top"` or `"bottom"`.
+A \code{\link[patchwork:patchwork]{patchwork}} object consisting of two aligned \code{ggplot2} plots,
+or a single \code{ggplot2} plot when \code{which.plot} is \code{"top"} or \code{"bottom"}.
 }
 \description{
 Plots a specification curve: the top panel shows the result of each
 specification (sorted), the bottom panel shows the analytical choices
-defining it. The plot is built from the table returned by [spec_table()],
-so it works with `pima` objects, `pima.multi` objects, lists of fitted
+defining it. The plot is built from the table returned by \code{\link[=spec_table]{spec_table()}},
+so it works with \code{pima} objects, \code{pima.multi} objects, lists of fitted
 models, or a (possibly filtered) specification table.
 }
 \details{
-When `p` is `NULL`, the p-values are chosen among the three columns
+When \code{p} is \code{NULL}, the p-values are chosen among the three columns
 produced by the package, with fixed rules:
 \itemize{
-\item `pima` objects (the table has `"p"`): the adjusted p-values
-  (`"p.adj"`) or, when [pima()] applied no correction (`method = "none"`),
-  the flipscores p-values (`"p"`). `p.adjusted = FALSE` always uses `"p"`;
-  `p.adjusted = TRUE` is an error when there are no adjusted p-values.
-\item lists of models and `pima.multi` objects (the table has only
-  `"wald.p"`): `"wald.p"`, the unadjusted Wald p-values of the model
-  summary.
+\item \code{pima} objects (the table has \code{"p"}): the adjusted p-values
+(\code{"p.adj"}) or, when \code{\link[=pima]{pima()}} applied no correction (\code{method = "none"}),
+the flipscores p-values (\code{"p"}). \code{p.adjusted = FALSE} always uses \code{"p"};
+\code{p.adjusted = TRUE} is an error when there are no adjusted p-values.
+\item lists of models and \code{pima.multi} objects (the table has only
+\code{"wald.p"}): \code{"wald.p"}, the unadjusted Wald p-values of the model
+summary.
 }
 Other columns (e.g., p-values adjusted by the user) are used only when
-passed through `p`.
+passed through \code{p}.
 
-All the selected rows are ordered together by `yvar`; the points of the
-top plot are coloured by `response ~ coefficient` (e.g. `x` and `log(x)`
+All the selected rows are ordered together by \code{yvar}; the points of the
+top plot are coloured by \code{response ~ coefficient} (e.g. \code{x} and \code{log(x)}
 have different colours).
 }
 \examples{
@@ -163,5 +163,5 @@ tab$p.holm <- stats::p.adjust(tab$wald.p, method = "holm")
 spec_curve(tab, p = "p.holm")
 }
 \seealso{
-[spec_table()]
+\code{\link[=spec_table]{spec_table()}}
 }

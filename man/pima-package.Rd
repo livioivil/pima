@@ -9,7 +9,7 @@ As main feature, it applies the PIMA procedure, a general and flexible framework
 that provides control of the Family-Wise Error Rate (FWER) and confidence bounds for True Discovery Proportions (TDPs).
 }
 \details{
-The starting point of the package is the \code{\link[pima]{pima}} function.
+The starting point of the package is the \code{\link[=pima]{pima()}} function.
 See examples there.
 }
 \references{

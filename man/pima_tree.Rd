@@ -14,18 +14,18 @@ pima_tree(
 )
 }
 \arguments{
-\item{res}{An object of class `pima`, as returned by [pima()]. Other objects (lists of models, `pima.multi` objects, specification tables) are not supported.}
+\item{res}{An object of class \code{pima}, as returned by \code{\link[=pima]{pima()}}. Other objects (lists of models, \code{pima.multi} objects, specification tables) are not supported.}
 
-\item{p.values}{A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the p-values from the `summary_table`.}
+\item{p.values}{A char string indicating which type of p-values to use. Options are \code{"raw"} or \code{"adjusted"} (default). When \code{"raw"}, the function uses the p-values from the \code{summary_table}.}
 
-\item{method}{used in function `rpart::rpart` if `method="class"` it will classify significant p-values at level `alpha`}
+\item{method}{used in \code{\link[rpart:rpart]{rpart::rpart()}}: if \code{method="class"} it will classify significant p-values at level \code{alpha}}
 
-\item{alpha}{used only when `method="class"`}
+\item{alpha}{used only when \code{method="class"}}
 
-\item{control}{control options passed to \code{\link[rpart]{rpart.control}}.
+\item{control}{control options passed to \code{\link[rpart:rpart.control]{rpart::rpart.control()}}.
 If \code{NULL}, \code{rpart.control(minsplit = 3)} is used.}
 
-\item{...}{additional arguments passed to \code{\link[rpart]{rpart}}.}
+\item{...}{additional arguments passed to \code{\link[rpart:rpart]{rpart::rpart()}}.}
 }
 \value{
 Invisibly returns the fitted \code{rpart} object.

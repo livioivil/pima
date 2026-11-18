@@ -20,63 +20,63 @@ voe(
 )
 }
 \arguments{
-\item{x}{a `pima` object, a `pima.multi` object created with `fit.specs`, a
-list of fitted `lm` or `glm` models, or a table returned by
-[spec_table()].}
+\item{x}{a \code{pima} object, a \code{pima.multi} object created with \code{fit.specs}, a
+list of fitted \code{lm} or \code{glm} models, or a table returned by
+\code{\link[=spec_table]{spec_table()}}.}
 
 \item{xvar}{column of the specification table to summarise (e.g.
-`"pcor"`, `"estimate"`).}
+\code{"pcor"}, \code{"estimate"}).}
 
 \item{p.adjusted}{which p-values to use, with the same rules as
-[spec_curve()]: for `pima` objects `TRUE` uses the adjusted p-values,
-`FALSE` the unadjusted flipscores ones and `NULL` (default) the adjusted
-ones when [pima()] applied a correction; for lists of models and
-`pima.multi` objects only the unadjusted Wald p-values exist (`"wald.p"`)
-and `TRUE` is an error.}
+\code{\link[=spec_curve]{spec_curve()}}: for \code{pima} objects \code{TRUE} uses the adjusted p-values,
+\code{FALSE} the unadjusted flipscores ones and \code{NULL} (default) the adjusted
+ones when \code{\link[=pima]{pima()}} applied a correction; for lists of models and
+\code{pima.multi} objects only the unadjusted Wald p-values exist (\code{"wald.p"})
+and \code{TRUE} is an error.}
 
 \item{q}{probabilities for the quantiles; the extremes define the
 amplitudes and the Janus effect.}
 
-\item{type}{`"additive"` (difference) or `"ratio"` (exp of the difference,
-only with `xvar = "estimate"`).}
+\item{type}{\code{"additive"} (difference) or \code{"ratio"} (exp of the difference,
+only with \code{xvar = "estimate"}).}
 
-\item{null}{value under the null hypothesis on the scale of `xvar`
-(0 for `estimate`, `pcor` and `z`).}
+\item{null}{value under the null hypothesis on the scale of \code{xvar}
+(0 for \code{estimate}, \code{pcor} and \code{z}).}
 
 \item{alpha}{significance level.}
 
-\item{decompose_variance}{if `TRUE`, adds [voe_variance()].}
+\item{decompose_variance}{if \code{TRUE}, adds \code{\link[=voe_variance]{voe_variance()}}.}
 
 \item{focal, focal.var}{coefficients and variables to consider, as in
-[spec_curve()]; by default the tested coefficients (`pima`), the focal
-predictors (`pima.multi`) or all the coefficients except the intercept.
+\code{\link[=spec_curve]{spec_curve()}}; by default the tested coefficients (\code{pima}), the focal
+predictors (\code{pima.multi}) or all the coefficients except the intercept.
 Each selected coefficient is a separate association.}
 
 \item{which.response}{responses to consider; defaults to all.}
 
 \item{p}{column of p-values of the specification table (e.g. one added
-with [stats::p.adjust()]). If `NULL`, chosen with the rules of
-`p.adjusted`.}
+with \code{\link[stats:p.adjust]{stats::p.adjust()}}). If \code{NULL}, chosen with the rules of
+\code{p.adjusted}.}
 }
 \value{
-An object of class `pima_voe`: a list with `summary` (one row per
-  response x coefficient), `quantiles` (long format), the settings used and,
-  optionally, `variance`.
+An object of class \code{pima_voe}: a list with \code{summary} (one row per
+response x coefficient), \code{quantiles} (long format), the settings used and,
+optionally, \code{variance}.
 }
 \description{
 Summarises how estimates and p-values vary across the specifications of a
 multiverse, separately for each response x coefficient.
 }
 \details{
-For each association it returns the quantiles of `xvar` and of
--log10(p), the amplitude `x_voe` (difference between the extreme quantiles
-of `xvar`, or its exponential when `type = "ratio"`), `p_voe` (difference
+For each association it returns the quantiles of \code{xvar} and of
+-log10(p), the amplitude \code{x_voe} (difference between the extreme quantiles
+of \code{xvar}, or its exponential when \code{type = "ratio"}), \code{p_voe} (difference
 between the extreme quantiles of -log10(p), the RP of Patel et al. 2015) and
-the Janus effect definitions (see [janus()]).
+the Janus effect definitions (see \code{\link[=janus]{janus()}}).
 
-`type = "ratio"` requires `xvar = "estimate"`: the ratio of the extreme
+\code{type = "ratio"} requires \code{xvar = "estimate"}: the ratio of the extreme
 quantiles of exp(estimate) equals exp() of their difference on the link
 scale (RHR/ROR of Patel et al. 2015). It is interpretable only for log,
 logit and cloglog links. Quantiles are always returned on the scale of
-`xvar`.
+\code{xvar}.
 }

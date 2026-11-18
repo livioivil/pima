@@ -4,12 +4,12 @@
 #'
 #' @param res An object of class `pima`, as returned by [pima()]. Other objects (lists of models, `pima.multi` objects, specification tables) are not supported.
 #' @param p.values A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the p-values from the `summary_table`.
-#' @param method used in function `rpart::rpart` if `method="class"` it will classify significant p-values at level `alpha`
+#' @param method used in [rpart::rpart()]: if `method="class"` it will classify significant p-values at level `alpha`
 #' @param alpha used only when `method="class"`
-#' @param control control options passed to \code{\link[rpart]{rpart.control}}.
-#' If \code{NULL}, \code{rpart.control(minsplit = 3)} is used.
-#' @param ... additional arguments passed to \code{\link[rpart]{rpart}}.
-#' @return Invisibly returns the fitted \code{rpart} object.
+#' @param control control options passed to [rpart::rpart.control()].
+#' If `NULL`, `rpart.control(minsplit = 3)` is used.
+#' @param ... additional arguments passed to [rpart::rpart()].
+#' @return Invisibly returns the fitted `rpart` object.
 #'
 #' @examples
 #' # Example usage (assuming `res` is a pre-computed result object)

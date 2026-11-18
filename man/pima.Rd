@@ -7,7 +7,7 @@
 pima(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...)
 }
 \arguments{
-\item{mods}{list of objects that can be evaluated by \code{\link[flipscores]{flipscores}}, usually
+\item{mods}{list of objects that can be evaluated by \code{\link[flipscores:flipscores]{flipscores::flipscores()}}, usually
 model objects produced by \code{glm} or \code{flipscores}.}
 
 \item{tested_coeffs}{tested coefficients. It can be a vector of names,
@@ -23,7 +23,7 @@ If \code{NULL}, all coefficients are tested.}
 
 \item{method}{correction method among \code{maxT}, \code{minP} and \code{none}. Can be abbreviated.}
 
-\item{...}{further parameters of \code{\link[jointest]{join_flipscores}}.}
+\item{...}{further parameters of \code{\link[flipscores:flipscores]{flipscores::flipscores()}}.}
 }
 \value{
 Returns an object of class \code{pima}, containing:
@@ -44,7 +44,7 @@ The output allows for multiple testing in multiverse analysis, providing weak an
 and confidence bounds for True Discovery Proportions (TDPs).
 }
 \details{
-The procedure builds on the sign-flip score test implemented in the function \code{flipscores} of the \strong{flipscores} package.
+The procedure builds on the sign-flip score test implemented in \code{\link[flipscores:flipscores]{flipscores::flipscores()}}.
 For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 for the null hypothesis that the coefficient is null against a two-sided alternative.
 If \code{method} is \code{maxT} (default) or \code{minP}, multiplicity-adjusted p-values are added
@@ -63,7 +63,7 @@ possibly by coefficient or by model: "Is there at least one significant effect?"
 
 Further parameters include:
 \itemize{
-\item \code{score_type}: type of score that is computed (see \code{\link[flipscores]{flipscores}} for more datails).
+\item \code{score_type}: type of score that is computed (see \code{\link[flipscores:flipscores]{flipscores::flipscores()}} for more details).
 The default \code{"standardized"} provides almost exact control of the error for any sample size.
 \item \code{statistics}: test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
 Different statistics will affect the multivariate inference, but not the univariate.

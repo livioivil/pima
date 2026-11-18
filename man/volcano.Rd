@@ -22,55 +22,55 @@ volcano(
 )
 }
 \arguments{
-\item{x}{a `pima` object, a `pima.multi` object created with `fit.specs`, a
-list of fitted `lm` or `glm` models, or a table returned by
-[spec_table()].}
+\item{x}{a \code{pima} object, a \code{pima.multi} object created with \code{fit.specs}, a
+list of fitted \code{lm} or \code{glm} models, or a table returned by
+\code{\link[=spec_table]{spec_table()}}.}
 
 \item{focal, focal.var}{coefficients and variables to consider, as in
-[spec_curve()]; by default the tested coefficients (`pima`), the focal
-predictors (`pima.multi`) or all the coefficients except the intercept.
+\code{\link[=spec_curve]{spec_curve()}}; by default the tested coefficients (\code{pima}), the focal
+predictors (\code{pima.multi}) or all the coefficients except the intercept.
 Each selected coefficient is a separate association.}
 
 \item{xvar}{column of the specification table to summarise (e.g.
-`"pcor"`, `"estimate"`).}
+\code{"pcor"}, \code{"estimate"}).}
 
 \item{p.adjusted}{which p-values to use, with the same rules as
-[spec_curve()]: for `pima` objects `TRUE` uses the adjusted p-values,
-`FALSE` the unadjusted flipscores ones and `NULL` (default) the adjusted
-ones when [pima()] applied a correction; for lists of models and
-`pima.multi` objects only the unadjusted Wald p-values exist (`"wald.p"`)
-and `TRUE` is an error.}
+\code{\link[=spec_curve]{spec_curve()}}: for \code{pima} objects \code{TRUE} uses the adjusted p-values,
+\code{FALSE} the unadjusted flipscores ones and \code{NULL} (default) the adjusted
+ones when \code{\link[=pima]{pima()}} applied a correction; for lists of models and
+\code{pima.multi} objects only the unadjusted Wald p-values exist (\code{"wald.p"})
+and \code{TRUE} is an error.}
 
 \item{p.cut}{p-value cutoffs drawn as horizontal lines.}
 
 \item{q}{probabilities for the quantiles; the extremes define the
 amplitudes and the Janus effect.}
 
-\item{type}{`"additive"` (difference) or `"ratio"` (exp of the difference,
-only with `xvar = "estimate"`).}
+\item{type}{\code{"additive"} (difference) or \code{"ratio"} (exp of the difference,
+only with \code{xvar = "estimate"}).}
 
-\item{null}{value under the null hypothesis on the scale of `xvar`
-(0 for `estimate`, `pcor` and `z`).}
+\item{null}{value under the null hypothesis on the scale of \code{xvar}
+(0 for \code{estimate}, \code{pcor} and \code{z}).}
 
 \item{alpha}{significance level.}
 
 \item{which.response}{responses to consider; defaults to all.}
 
-\item{median.traj}{if `TRUE`, adds the trajectory of the medians by the
+\item{median.traj}{if \code{TRUE}, adds the trajectory of the medians by the
 number of excluded predictors.}
 
 \item{p}{column of p-values of the specification table (e.g. one added
-with [stats::p.adjust()]). If `NULL`, chosen with the rules of
-`p.adjusted`.}
+with \code{\link[stats:p.adjust]{stats::p.adjust()}}). If \code{NULL}, chosen with the rules of
+\code{p.adjusted}.}
 
-\item{...}{further arguments passed to [spec_scatter()] (e.g. `xlab`,
-`ylab`, `shapes`, `by`).}
+\item{...}{further arguments passed to \code{\link[=spec_scatter]{spec_scatter()}} (e.g. \code{xlab},
+\code{ylab}, \code{shapes}, \code{by}).}
 }
 \value{
 A ggplot object.
 }
 \description{
-Plots `xvar` against -log10(p), adding the quantile lines computed by
-[voe()] and p-value cutoffs. With more than one association (response x
+Plots \code{xvar} against -log10(p), adding the quantile lines computed by
+\code{\link[=voe]{voe()}} and p-value cutoffs. With more than one association (response x
 coefficient) each one is drawn in its own panel, with its own lines.
 }

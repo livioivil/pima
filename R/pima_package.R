@@ -13,7 +13,7 @@
 # @importFrom methods as
 # @importFrom stats D as.formula model.matrix sd summary.glm update
 #' @details
-#' The starting point of the package is the \code{\link[pima]{pima}} function.
+#' The starting point of the package is the [pima()] function.
 #' See examples there.
 #' 
 #' @references

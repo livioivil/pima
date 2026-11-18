@@ -66,15 +66,15 @@ janus(x, ...)
 )
 }
 \arguments{
-\item{x}{a numeric vector of estimates, a `pima` object, a `pima.multi`
-object created with `fit.specs`, a list of fitted `lm` or `glm` models,
-or a table returned by [spec_table()].}
+\item{x}{a numeric vector of estimates, a \code{pima} object, a \code{pima.multi}
+object created with \code{fit.specs}, a list of fitted \code{lm} or \code{glm} models,
+or a table returned by \code{\link[=spec_table]{spec_table()}}.}
 
 \item{...}{further arguments (currently unused).}
 
-\item{p}{for vectors, a numeric vector of p-values, same length as `x`
-(if `NULL`, `J_sig` and `J_ext` are `NA`). Otherwise, the column of
-p-values of the specification table, as in [spec_curve()].}
+\item{p}{for vectors, a numeric vector of p-values, same length as \code{x}
+(if \code{NULL}, \code{J_sig} and \code{J_ext} are \code{NA}). Otherwise, the column of
+p-values of the specification table, as in \code{\link[=spec_curve]{spec_curve()}}.}
 
 \item{q}{probabilities; only the extremes are used.}
 
@@ -83,23 +83,23 @@ p-values of the specification table, as in [spec_curve()].}
 \item{alpha}{significance level.}
 
 \item{focal, focal.var}{coefficients and variables to consider, as in
-[spec_curve()]; by default the tested coefficients (`pima`), the focal
-predictors (`pima.multi`) or all the coefficients except the intercept.}
+\code{\link[=spec_curve]{spec_curve()}}; by default the tested coefficients (\code{pima}), the focal
+predictors (\code{pima.multi}) or all the coefficients except the intercept.}
 
 \item{p.adjusted}{which p-values to use, with the same rules as
-[spec_curve()]: adjusted p-values only exist for `pima` objects analysed
+\code{\link[=spec_curve]{spec_curve()}}: adjusted p-values only exist for \code{pima} objects analysed
 with a correction. Published values in the literature use raw p-values.}
 
 \item{which.response}{responses to consider; defaults to all.}
 
 \item{xvar}{column of the specification table whose sign is used. Any
-column with the same sign as the coefficient (`estimate`, `pcor`,
-`wald.t`) gives the same result.}
+column with the same sign as the coefficient (\code{estimate}, \code{pcor},
+\code{wald.t}) gives the same result.}
 }
 \value{
-For vectors, a list with `J_range`, `J_pct`, `J_ext`, `J_sig`,
-  `J_frac`. Otherwise, a data frame with one row per response x
-  coefficient.
+For vectors, a list with \code{J_range}, \code{J_pct}, \code{J_ext}, \code{J_sig},
+\code{J_frac}. Otherwise, a data frame with one row per response x
+coefficient.
 }
 \description{
 Computes the definitions of the Janus effect used in the vibration of
@@ -109,17 +109,17 @@ changes direction across specifications.
 \details{
 Definitions (M = number of specifications, null = value under H0):
 \itemize{
-\item `J_range`: minimum and maximum estimates on opposite sides of the null
-  (Vinatier et al. 2025).
-\item `J_pct`: lowest and highest quantiles in `q` on opposite sides of the
-  null (Patel et al. 2015; Palpacuer et al. 2019; Vinatier et al. 2024).
-  Quantiles are interpolated (`stats::quantile()` default).
-\item `J_ext`: the specifications closest to those quantiles are on opposite
-  sides of the null and both significant (Vinatier et al. 2024).
-\item `J_sig`: at least one significant estimate in each direction
-  (Klau et al. 2021, 2023).
-\item `J_frac`: proportion of estimates greater than the null
-  (Tierney et al. 2021).
+\item \code{J_range}: minimum and maximum estimates on opposite sides of the null
+(Vinatier et al. 2025).
+\item \code{J_pct}: lowest and highest quantiles in \code{q} on opposite sides of the
+null (Patel et al. 2015; Palpacuer et al. 2019; Vinatier et al. 2024).
+Quantiles are interpolated (\code{stats::quantile()} default).
+\item \code{J_ext}: the specifications closest to those quantiles are on opposite
+sides of the null and both significant (Vinatier et al. 2024).
+\item \code{J_sig}: at least one significant estimate in each direction
+(Klau et al. 2021, 2023).
+\item \code{J_frac}: proportion of estimates greater than the null
+(Tierney et al. 2021).
 }
 }
 \references{

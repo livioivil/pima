@@ -39,16 +39,16 @@
 
 \item{n}{number of rows to print from the beginning and end of the scenario table.}
 
-\item{...}{further arguments passed to [spec_scatter()] (e.g. `focal.var`,
-`p`, `title`).}
+\item{...}{further arguments passed to \code{\link[=spec_scatter]{spec_scatter()}} (e.g. \code{focal.var},
+\code{p}, \code{title}).}
 
 \item{object}{an object of class \code{pima.multi}.}
 
-\item{digits}{number of digits when rounding. Default to `NULL` thus no rounding.}
+\item{digits}{number of digits when rounding. Default to \code{NULL} thus no rounding.}
 
-\item{by, focal, xvar, yvar, p.adjusted, p.transf, alpha, xlab, ylab, shapes, facet, facet.scales, which.response}{see [spec_scatter()].}
+\item{by, focal, xvar, yvar, p.adjusted, p.transf, alpha, xlab, ylab, shapes, facet, facet.scales, which.response}{see \code{\link[=spec_scatter]{spec_scatter()}}.}
 
-\item{regex}{logical. If \code{TRUE}, `focal` is a regular expression
+\item{regex}{logical. If \code{TRUE}, \code{focal} is a regular expression
 matched against the coefficient names. Default is \code{FALSE}.}
 }
 \description{
@@ -56,6 +56,6 @@ Methods for \code{pima} objects.
 The following are methods to extract and manipulate relevant information from
 a \code{pima} object.
 
-Scatter plot of the specifications: calls [spec_scatter()] on the `pima`
+Scatter plot of the specifications: calls \code{\link[=spec_scatter]{spec_scatter()}} on the \code{pima}
 object.
 }

@@ -37,7 +37,7 @@
 #'   \item{bmi}{Body mass index.}
 #'   \item{pedigree}{Diabetes pedigree function.}
 #'   \item{age}{Age in years.}
-#'   \item{diabetes}{Diabetes diagnosis, with levels \code{neg} and \code{pos}.}
+#'   \item{diabetes}{Diabetes diagnosis, with levels `neg` and `pos`.}
 #' }
 #' @references
 #' Smith, J. W., Everhart, J. E., Dickson, W. C., Knowler, W. C.,

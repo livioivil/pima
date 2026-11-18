@@ -7,19 +7,19 @@
 \format{
 A data frame with 94 rows and 13 variables:
 \describe{
-  \item{year}{Year of the hurricane.}
-  \item{name}{Hurricane name.}
-  \item{masfem}{Name femininity score, from 1 masculine to 11 feminine.}
-  \item{min}{Minimum pressure.}
-  \item{gender_mf}{Name gender, male or female.}
-  \item{category}{Hurricane category.}
-  \item{alldeaths}{Total deaths.}
-  \item{ndam}{Normalized damage amount.}
-  \item{elapsedyrs}{Years elapsed since the hurricane.}
-  \item{source}{Data source.}
-  \item{masfem_mturk}{Name femininity score from MTurk ratings.}
-  \item{wind}{Highest wind speed.}
-  \item{ndam15}{Damage amount normalized to 2015.}
+\item{year}{Year of the hurricane.}
+\item{name}{Hurricane name.}
+\item{masfem}{Name femininity score, from 1 masculine to 11 feminine.}
+\item{min}{Minimum pressure.}
+\item{gender_mf}{Name gender, male or female.}
+\item{category}{Hurricane category.}
+\item{alldeaths}{Total deaths.}
+\item{ndam}{Normalized damage amount.}
+\item{elapsedyrs}{Years elapsed since the hurricane.}
+\item{source}{Data source.}
+\item{masfem_mturk}{Name femininity score from MTurk ratings.}
+\item{wind}{Highest wind speed.}
+\item{ndam15}{Damage amount normalized to 2015.}
 }
 }
 \source{

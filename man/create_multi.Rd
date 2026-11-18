@@ -19,52 +19,52 @@ create_multi(
 \arguments{
 \item{formula}{A formula describing the maximal model. Predictors on the
 right-hand side must be bare variable names combined additively.
-Transformations, interactions, and `.` are currently not supported in
-`formula`. Transformations should instead be supplied through `nfuns` or
-`cfuns`. Both one-sided formulas (e.g. `~ x + z`) and two-sided formulas
-(e.g. `y ~ x + z`) are supported. Whether a one-sided formula can be fitted
+Transformations, interactions, and \code{.} are currently not supported in
+\code{formula}. Transformations should instead be supplied through \code{nfuns} or
+\code{cfuns}. Both one-sided formulas (e.g. \code{~ x + z}) and two-sided formulas
+(e.g. \code{y ~ x + z}) are supported. Whether a one-sided formula can be fitted
 depends on the selected fitting function or adapter.}
 
-\item{data}{A data frame containing all variables referenced in `formula`.}
+\item{data}{A data frame containing all variables referenced in \code{formula}.}
 
 \item{focal}{Optional character vector naming predictors that must be
 included in every formula specification. By default focal predictors are
-not transformed; use `transf.focal` to allow their transformations.}
+not transformed; use \code{transf.focal} to allow their transformations.}
 
 \item{nfuns}{Optional transformations for numeric predictors. Supply either
 a character vector of function names to apply to every numeric predictor
-(e.g. `c("log", "sqrt")`) or a named list for variable-specific choices
-(e.g. `list(x = "log", z = c("log", "sqrt"))`). Functions are supplied
+(e.g. \code{c("log", "sqrt")}) or a named list for variable-specific choices
+(e.g. \code{list(x = "log", z = c("log", "sqrt"))}). Functions are supplied
 as character strings and are applied to one predictor at a time.
-In the list, `.default` sets the transformations of the predictors not
-named (e.g. `list(x = "log", .default = c("log", "sqrt"))`) and
-`x = NULL` leaves `x` untransformed. Focal predictors are transformed
-only with `transf.focal = TRUE`.}
+In the list, \code{.default} sets the transformations of the predictors not
+named (e.g. \code{list(x = "log", .default = c("log", "sqrt"))}) and
+\code{x = NULL} leaves \code{x} untransformed. Focal predictors are transformed
+only with \code{transf.focal = TRUE}.}
 
-\item{cfuns}{Same as `nfuns`, but for non-numeric predictors.}
+\item{cfuns}{Same as \code{nfuns}, but for non-numeric predictors.}
 
 \item{y.funs}{Character vector of transformations for the response
-(e.g. `c("log", "sqrt")`). Defaults to `"identity"`, i.e. the response as
-written in `formula`, which is always included. Each transformation is
+(e.g. \code{c("log", "sqrt")}). Defaults to \code{"identity"}, i.e. the response as
+written in \code{formula}, which is always included. Each transformation is
 treated as a different response: every predictor specification is crossed
-with every transformed response, and the `y.fun` column of `scenarios`
-records the transformation used (`NA` for one-sided formulas).
-Transformations other than `"identity"` require a two-sided formula with a
+with every transformed response, and the \code{y.fun} column of \code{scenarios}
+records the transformation used (\code{NA} for one-sided formulas).
+Transformations other than \code{"identity"} require a two-sided formula with a
 bare response.}
 
 \item{transf.focal}{Logical indicating whether transformations should also
 be considered for focal predictors. It can have length 1 or the same
-length as `focal`.}
+length as \code{focal}.}
 
 \item{subset}{Optional named list of logical vectors defining additional row
-subsets. Each vector must have length `nrow(data)` and contain no missing
-values. The full dataset is always added as the reserved subset `"all"`.}
+subsets. Each vector must have length \code{nrow(data)} and contain no missing
+values. The full dataset is always added as the reserved subset \code{"all"}.}
 
 \item{fit.specs}{Optional named list of model-fitting specifications. Each
-element can be either a fitting function that explicitly accepts `formula`
-and `data`, such as `stats::lm` or `stats::glm`, or a specification created
-with [create_fit()]. Passing a function directly is shorthand for a standard
-specification with no additional arguments. Use [create_fit()] when
+element can be either a fitting function that explicitly accepts \code{formula}
+and \code{data}, such as \code{stats::lm} or \code{stats::glm}, or a specification created
+with \code{\link[=create_fit]{create_fit()}}. Passing a function directly is shorthand for a standard
+specification with no additional arguments. Use \code{\link[=create_fit]{create_fit()}} when
 additional fitting arguments are needed or when an adapter is required for
 a non-standard fitting interface. Each fitting specification is crossed with
 every formula and subset specification. Manually constructed lists with the
@@ -73,26 +73,26 @@ same internal structure are also accepted for backward compatibility.}
 \value{
 A list with the following components:
 \describe{
-  \item{variables}{A data frame describing all available predictor-level
-    specifications and their corresponding formula calls.}
-  \item{formula_specs}{A data frame containing one row per admissible formula,
-    its `formula_id`, executable formula string in `calls`, and one
-    `spec_<predictor>` column per predictor describing the selected analytical
-    decision.}
-  \item{calls}{A character vector containing all admissible formula strings.}
-  \item{subset}{A named list of logical row selectors, including `all`.}
-  \item{scenarios}{A data frame containing the Cartesian product of formula
-    specifications, subsets, and, when supplied, fitting specifications.
-    Each row has a unique `model` identifier. If models are fitted, this also
-    contains `fit_ok` and `fit_error`.}
-  \item{fit.specs}{The normalized fitting specifications, returned only when
-    `fit.specs` is supplied.}
-  \item{mods}{A named list of fitted model objects, returned only when
-    `fit.specs` is supplied. Failed fits are stored as error objects.}
+\item{variables}{A data frame describing all available predictor-level
+specifications and their corresponding formula calls.}
+\item{formula_specs}{A data frame containing one row per admissible formula,
+its \code{formula_id}, executable formula string in \code{calls}, and one
+\verb{spec_<predictor>} column per predictor describing the selected analytical
+decision.}
+\item{calls}{A character vector containing all admissible formula strings.}
+\item{subset}{A named list of logical row selectors, including \code{all}.}
+\item{scenarios}{A data frame containing the Cartesian product of formula
+specifications, subsets, and, when supplied, fitting specifications.
+Each row has a unique \code{model} identifier. If models are fitted, this also
+contains \code{fit_ok} and \code{fit_error}.}
+\item{fit.specs}{The normalized fitting specifications, returned only when
+\code{fit.specs} is supplied.}
+\item{mods}{A named list of fitted model objects, returned only when
+\code{fit.specs} is supplied. Failed fits are stored as error objects.}
 }
 }
 \description{
-`create_multi()` generates a multiverse by crossing admissible analytical
+\code{create_multi()} generates a multiverse by crossing admissible analytical
 decisions about predictor inclusion and transformation with optional sample
 subsets and model-fitting specifications.
 }
@@ -100,17 +100,17 @@ subsets and model-fitting specifications.
 Predictor choices are generated as a Cartesian product. For a non-focal
 predictor the available decisions are exclusion, identity, and any supplied
 transformations. A focal predictor cannot be excluded and can only be
-transformed when permitted by `transf.focal`.
+transformed when permitted by \code{transf.focal}.
 
 The analytical decisions used to construct each formula are retained
-explicitly. In `formula_specs` and `scenarios`, each predictor has a column
-named `spec_<predictor>` whose value is `"excluded"`, `"identity"`, or the
+explicitly. In \code{formula_specs} and \code{scenarios}, each predictor has a column
+named \verb{spec_<predictor>} whose value is \code{"excluded"}, \code{"identity"}, or the
 name of the selected transformation. This makes downstream analyses of
 specification choices possible without parsing formula strings.
 
-When `fit.specs` is supplied, fitting errors do not stop the entire
-multiverse. The corresponding element of `mods` contains the error object,
-while `scenarios$fit_ok` and `scenarios$fit_error` record its status.
+When \code{fit.specs} is supplied, fitting errors do not stop the entire
+multiverse. The corresponding element of \code{mods} contains the error object,
+while \code{scenarios$fit_ok} and \code{scenarios$fit_error} record its status.
 Warnings emitted by fitting functions are handled normally by R and are not
 stored in the returned object.
 }
@@ -150,5 +150,5 @@ m2$scenarios
 
 }
 \seealso{
-[create_fit()]
+\code{\link[=create_fit]{create_fit()}}
 }

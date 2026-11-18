@@ -7,39 +7,39 @@
 create_fit(fun = NULL, ..., adapter = NULL)
 }
 \arguments{
-\item{fun}{Optional model-fitting function that explicitly accepts `formula`
-and `data`, such as `stats::lm`, `stats::glm`, `MASS::glm.nb`, or
-`lme4::lmer`. Supply either `fun` or `adapter`, but not both.}
+\item{fun}{Optional model-fitting function that explicitly accepts \code{formula}
+and \code{data}, such as \code{stats::lm}, \code{stats::glm}, \code{MASS::glm.nb}, or
+\code{lme4::lmer}. Supply either \code{fun} or \code{adapter}, but not both.}
 
 \item{...}{Additional named arguments for the fitting specification. With a
-standard `fun`, these arguments are passed directly to the fitting
-function. With an `adapter`, they are collected into the `args` list passed
+standard \code{fun}, these arguments are passed directly to the fitting
+function. With an \code{adapter}, they are collected into the \code{args} list passed
 to the adapter.}
 
 \item{adapter}{Optional function for fitting models that do not use the
-standard `formula` and `data` interface. An adapter must explicitly accept
-arguments named `formula`, `data`, and `args`, where `args` is the named
-list created from `...`. Because `adapter` follows `...`, it must be
+standard \code{formula} and \code{data} interface. An adapter must explicitly accept
+arguments named \code{formula}, \code{data}, and \code{args}, where \code{args} is the named
+list created from \code{...}. Because \code{adapter} follows \code{...}, it must be
 supplied by name.}
 }
 \value{
-An object of class `"pima.fitspec"` containing the fitting function
-  or adapter and its additional arguments. The object is intended for use in
-  the `fit.specs` argument of [create_multi()].
+An object of class \code{"pima.fitspec"} containing the fitting function
+or adapter and its additional arguments. The object is intended for use in
+the \code{fit.specs} argument of \code{\link[=create_multi]{create_multi()}}.
 }
 \description{
-`create_fit()` defines how a model should be fitted within a multiverse.
-Standard model-fitting functions are supplied through `fun`; functions with
-non-standard interfaces can be supported through `adapter`.
+\code{create_fit()} defines how a model should be fitted within a multiverse.
+Standard model-fitting functions are supplied through \code{fun}; functions with
+non-standard interfaces can be supported through \code{adapter}.
 }
 \details{
-Additional arguments must be named. `formula` and `data` are reserved because
-they are supplied by [create_multi()] for each scenario.
+Additional arguments must be named. \code{formula} and \code{data} are reserved because
+they are supplied by \code{\link[=create_multi]{create_multi()}} for each scenario.
 
-For a standard fitting function, arguments in `...` that are not explicitly
+For a standard fitting function, arguments in \code{...} that are not explicitly
 listed in the function formals generate a warning when the function accepts
-`...`, because they may be forwarded to another method. If the function does
-not accept `...`, unknown arguments generate an error.
+\code{...}, because they may be forwarded to another method. If the function does
+not accept \code{...}, unknown arguments generate an error.
 }
 \examples{
 create_fit(stats::lm)
@@ -64,5 +64,5 @@ create_fit(
 
 }
 \seealso{
-[create_multi()]
+\code{\link[=create_multi]{create_multi()}}
 }

@@ -25,65 +25,65 @@ spec_scatter(
 )
 }
 \arguments{
-\item{x}{A `pima` object, a `pima.multi` object created with `fit.specs`, a
-list of fitted `lm` or `glm` models, or a table returned by
-[spec_table()].}
+\item{x}{A \code{pima} object, a \code{pima.multi} object created with \code{fit.specs}, a
+list of fitted \code{lm} or \code{glm} models, or a table returned by
+\code{\link[=spec_table]{spec_table()}}.}
 
 \item{focal}{A character vector of coefficient names to plot (exact match,
-e.g. `"log(x)"` or `"groupB"`).}
+e.g. \code{"log(x)"} or \code{"groupB"}).}
 
 \item{focal.var}{A character vector of variable names to plot: all the
 coefficients coming from these variables are selected, whatever their
-transformation (e.g. `"x"` selects `x`, `log(x)` and `sqrt(x)`) or
-coding (e.g. `"group"` selects `groupB` and `groupC`). When both `focal`
-and `focal.var` are supplied, the union is plotted. When both are `NULL`,
-the defaults are the tested coefficients (`focal`, for `pima` objects),
-the focal predictors of [create_multi()] (`focal.var`, for `pima.multi`
+transformation (e.g. \code{"x"} selects \code{x}, \code{log(x)} and \code{sqrt(x)}) or
+coding (e.g. \code{"group"} selects \code{groupB} and \code{groupC}). When both \code{focal}
+and \code{focal.var} are supplied, the union is plotted. When both are \code{NULL},
+the defaults are the tested coefficients (\code{focal}, for \code{pima} objects),
+the focal predictors of \code{\link[=create_multi]{create_multi()}} (\code{focal.var}, for \code{pima.multi}
 objects), or all the coefficients except the intercept.}
 
 \item{xvar}{column of the specification table plotted on the x-axis.
-Default `"pcor"`, comparable across coefficients.}
+Default \code{"pcor"}, comparable across coefficients.}
 
 \item{yvar}{column of the specification table plotted on the y-axis. If
-`NULL` (default), the p-values transformed with `p.transf`.}
+\code{NULL} (default), the p-values transformed with \code{p.transf}.}
 
 \item{p}{Character indicating the column of p-values used to define
-significance. Any column of the table can be used. If `NULL`, the column
+significance. Any column of the table can be used. If \code{NULL}, the column
 is chosen with fixed rules (see Details).}
 
-\item{p.adjusted}{Logical. For `pima` objects, `TRUE` uses the adjusted
-p-values (`"p.adj"`) and `FALSE` the unadjusted flipscores p-values
-(`"p"`); `NULL` (default) uses the adjusted ones when [pima()] applied a
-correction and the flipscores ones otherwise. For lists of models and `pima.multi` objects the
-p-values are never adjusted: `FALSE` (or `NULL`) uses `"wald.p"` and
-`TRUE` is an error. Ignored when `p` is supplied.}
+\item{p.adjusted}{Logical. For \code{pima} objects, \code{TRUE} uses the adjusted
+p-values (\code{"p.adj"}) and \code{FALSE} the unadjusted flipscores p-values
+(\code{"p"}); \code{NULL} (default) uses the adjusted ones when \code{\link[=pima]{pima()}} applied a
+correction and the flipscores ones otherwise. For lists of models and \code{pima.multi} objects the
+p-values are never adjusted: \code{FALSE} (or \code{NULL}) uses \code{"wald.p"} and
+\code{TRUE} is an error. Ignored when \code{p} is supplied.}
 
-\item{p.transf}{transformation of the p-values (see [transf_p()]) or a
-custom function. Used when `yvar` is `NULL`.}
+\item{p.transf}{transformation of the p-values (see \code{\link[=transf_p]{transf_p()}}) or a
+custom function. Used when \code{yvar} is \code{NULL}.}
 
-\item{by}{colour of the points: `"coefficient"` (one colour per
-`response ~ coefficient`) and/or specification columns
-(`attr(spec_table(x), "spec_vars")`, e.g. `"fit_spec"`, `"link"` or a
+\item{by}{colour of the points: \code{"coefficient"} (one colour per
+\code{response ~ coefficient}) and/or specification columns
+(\code{attr(spec_table(x), "spec_vars")}, e.g. \code{"fit_spec"}, \code{"link"} or a
 predictor). With more than one, their combinations are used. A single
-group is drawn in `"#0072B2"`.}
+group is drawn in \code{"#0072B2"}.}
 
 \item{alpha}{significance level marked by the shape. If 0 or 1 the shapes
 are not labelled.}
 
-\item{xlab, ylab}{axis labels. Default to `xvar` and to the p-value column
-and its transformation (or `yvar`).}
+\item{xlab, ylab}{axis labels. Default to \code{xvar} and to the p-value column
+and its transformation (or \code{yvar}).}
 
-\item{title}{plot title. If `NULL`, describes the p-values used.}
+\item{title}{plot title. If \code{NULL}, describes the p-values used.}
 
 \item{shapes}{ggplot2 shapes for non-significant and significant points.
-Default `c(4, 19)`.}
+Default \code{c(4, 19)}.}
 
-\item{facet}{formula passed to [ggplot2::facet_grid()]. If `NULL`
-(default), `response ~ .` with one response and a single panel with
-more than one (use `response ~ .` to split them).}
+\item{facet}{formula passed to \code{\link[ggplot2:facet_grid]{ggplot2::facet_grid()}}. If \code{NULL}
+(default), \code{response ~ .} with one response and a single panel with
+more than one (use \code{response ~ .} to split them).}
 
-\item{facet.scales}{`"fixed"`, `"free"`, `"free_x"` (default) or
-`"free_y"`.}
+\item{facet.scales}{\code{"fixed"}, \code{"free"}, \code{"free_x"} (default) or
+\code{"free_y"}.}
 
 \item{which.response}{responses to plot; defaults to all.}
 }
@@ -92,11 +92,11 @@ A ggplot object.
 }
 \description{
 Plots one point per specification and coefficient: an estimate-like column
-(`xvar`) against the transformed p-values, with significant specifications
+(\code{xvar}) against the transformed p-values, with significant specifications
 marked by the shape. The plot is built from the table returned by
-[spec_table()], so it works with `pima` objects, `pima.multi` objects,
+\code{\link[=spec_table]{spec_table()}}, so it works with \code{pima} objects, \code{pima.multi} objects,
 lists of fitted models, or a (possibly filtered) specification table.
-`plot()` on a `pima` object calls this function.
+\code{plot()} on a \code{pima} object calls this function.
 }
 \examples{
 mods <- list(
@@ -110,5 +110,5 @@ spec_scatter(mods, focal = "Sepal.Length", p.transf = "-log10")
 spec_scatter(mods, focal = "Sepal.Length", by = "Species")
 }
 \seealso{
-[spec_table()], [spec_curve()], [volcano()]
+\code{\link[=spec_table]{spec_table()}}, \code{\link[=spec_curve]{spec_curve()}}, \code{\link[=volcano]{volcano()}}
 }

@@ -14,49 +14,49 @@ voe_variance(
 )
 }
 \arguments{
-\item{x}{a `pima` object, a `pima.multi` object created with `fit.specs`, a
-list of fitted `lm` or `glm` models, or a table returned by
-[spec_table()].}
+\item{x}{a \code{pima} object, a \code{pima.multi} object created with \code{fit.specs}, a
+list of fitted \code{lm} or \code{glm} models, or a table returned by
+\code{\link[=spec_table]{spec_table()}}.}
 
 \item{estimate}{column of the specification table to decompose.}
 
 \item{p.adjusted}{not used: p-values play no role in the decomposition.
-Kept for backward compatibility; when not `NULL` it is only checked with
-the rules of [voe()].}
+Kept for backward compatibility; when not \code{NULL} it is only checked with
+the rules of \code{\link[=voe]{voe()}}.}
 
 \item{focal, focal.var}{coefficients and variables to consider, as in
-[spec_curve()]; by default the tested coefficients (`pima`), the focal
-predictors (`pima.multi`) or all the coefficients except the intercept.
+\code{\link[=spec_curve]{spec_curve()}}; by default the tested coefficients (\code{pima}), the focal
+predictors (\code{pima.multi}) or all the coefficients except the intercept.
 Each selected coefficient is a separate association.}
 
 \item{which.response}{responses to consider; defaults to all.}
 }
 \value{
-A list with `r2` (one row per response x coefficient) and `dec`
-  (one row per response x coefficient x decision, with `source` equal to
-  `"predictor"` or `"other"`, and `r2u_inclusion`, `r2u_transformation` for
-  predictors).
+A list with \code{r2} (one row per response x coefficient) and \code{dec}
+(one row per response x coefficient x decision, with \code{source} equal to
+\code{"predictor"} or \code{"other"}, and \code{r2u_inclusion}, \code{r2u_transformation} for
+predictors).
 }
 \description{
-Regresses `estimate` on the specification decisions and reports, for each
+Regresses \code{estimate} on the specification decisions and reports, for each
 decision, the unique R-squared (R2 of the full model minus R2 without that
 decision), separately for each response x coefficient. With a complete,
 balanced grid of specifications and no interactions, the unique R-squared
 equals the ANOVA share of variance (Klau et al. 2023).
 }
 \details{
-Decisions are the predictors (`attr(spec_table(x), "spec_predictors")`,
+Decisions are the predictors (\code{attr(spec_table(x), "spec_predictors")},
 one factor per predictor whose levels are the terms used to include it and
-`"<predictor> (removed)"` when it is excluded) and the other specification
-choices (the remaining `attr(spec_table(x), "spec_vars")`, e.g. `subset`,
-`fit_spec`, `family`, `link`). Decisions that do not vary within an association are dropped, and
+\code{"<predictor> (removed)"} when it is excluded) and the other specification
+choices (the remaining \code{attr(spec_table(x), "spec_vars")}, e.g. \code{subset},
+\code{fit_spec}, \code{family}, \code{link}). Decisions that do not vary within an association are dropped, and
 so are decisions that define the same partition of the specifications as an
-earlier one (e.g. `link` when it is fully determined by `fit_spec`). A
-decision nested in another one (e.g. `link` with fewer levels than
-`fit_spec`) is kept, but its unique R-squared is 0 by construction.
+earlier one (e.g. \code{link} when it is fully determined by \code{fit_spec}). A
+decision nested in another one (e.g. \code{link} with fewer levels than
+\code{fit_spec}) is kept, but its unique R-squared is 0 by construction.
 
 For predictor decisions the unique R-squared is also split into two nested
-parts that sum to it: `r2u_inclusion` (removed vs included, whatever the
-form) and `r2u_transformation` (variation among the forms of an included
-predictor). Both are `NA` for the other decisions.
+parts that sum to it: \code{r2u_inclusion} (removed vs included, whatever the
+form) and \code{r2u_transformation} (variation among the forms of an included
+predictor). Both are \code{NA} for the other decisions.
 }

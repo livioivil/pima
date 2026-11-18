@@ -7,61 +7,61 @@
 spec_table(x, focal = NULL, focal.var = NULL)
 }
 \arguments{
-\item{x}{A list of fitted `lm` or `glm` models, a `pima.multi` object
-created by [create_multi()] with `fit.specs` (fitting `lm` or `glm`
-models), or a `pima` object. Other model classes are not supported.
-For a `pima` object the summary is the one computed by [pima()]
-(`se` is renamed `score.se` because it is the standard error of the
+\item{x}{A list of fitted \code{lm} or \code{glm} models, a \code{pima.multi} object
+created by \code{\link[=create_multi]{create_multi()}} with \code{fit.specs} (fitting \code{lm} or \code{glm}
+models), or a \code{pima} object. Other model classes are not supported.
+For a \code{pima} object the summary is the one computed by \code{\link[=pima]{pima()}}
+(\code{se} is renamed \code{score.se} because it is the standard error of the
 score, not of the estimate).}
 
 \item{focal}{Optional character vector of coefficient names to keep (exact
-match, e.g. `"log(x)"` or `"groupB"`).}
+match, e.g. \code{"log(x)"} or \code{"groupB"}).}
 
 \item{focal.var}{Optional character vector of variable names: keeps all the
-coefficients coming from these variables (e.g. `"x"` keeps `x`, `log(x)`
-and `sqrt(x)`; `"group"` keeps `groupB` and `groupC`). With both `focal`
-and `focal.var`, the union is kept. With both `NULL` (default), all the
+coefficients coming from these variables (e.g. \code{"x"} keeps \code{x}, \code{log(x)}
+and \code{sqrt(x)}; \code{"group"} keeps \code{groupB} and \code{groupC}). With both \code{focal}
+and \code{focal.var}, the union is kept. With both \code{NULL} (default), all the
 coefficients are returned, intercept included.}
 }
 \value{
 A data.frame with one row per model x coefficient and columns
-  `model`, `response`, `coefficient`, `term`, `variable`, `estimate`, `se`,
-  `wald.t`, `wald.p`, `pcor`, followed by the specification columns and the
-  model `formula` (for `pima` objects, the columns of the [pima()] summary
-  replace the model summary). Two
-  attributes describe the specification columns:
-  \itemize{
-  \item `spec_vars`: all the specification columns.
-  \item `spec_predictors`: the subset of `spec_vars` that are predictor
-    choices (inclusion and transformation, with `"excluded"` when the
-    predictor is not in the model). The remaining columns are other
-    choices (e.g., `subset`, `fit_spec`, `family`).
-  }
+\code{model}, \code{response}, \code{coefficient}, \code{term}, \code{variable}, \code{estimate}, \code{se},
+\code{wald.t}, \code{wald.p}, \code{pcor}, followed by the specification columns and the
+model \code{formula} (for \code{pima} objects, the columns of the \code{\link[=pima]{pima()}} summary
+replace the model summary). Two
+attributes describe the specification columns:
+\itemize{
+\item \code{spec_vars}: all the specification columns.
+\item \code{spec_predictors}: the subset of \code{spec_vars} that are predictor
+choices (inclusion and transformation, with \code{"excluded"} when the
+predictor is not in the model). The remaining columns are other
+choices (e.g., \code{subset}, \code{fit_spec}, \code{family}).
+}
 }
 \description{
 Stacks the coefficient table of each model (as returned by
-`summary(model)$coefficients`) and adds the analytical choices defining
+\code{summary(model)$coefficients}) and adds the analytical choices defining
 each specification.
 }
 \details{
-For lists of models and `pima.multi` objects, `estimate`, `se`, `wald.t`
-and `wald.p` are the columns of `summary(model)$coefficients`, unchanged.
-The only derived column is `pcor`, the partial correlation computed from
-the Wald statistic as `wald.t / sqrt(wald.t^2 + df)`, with `df` given by
-`df.residual(model)`. It is scale-free, so it can be compared across
-specifications using different transformations or link functions. For `lm`
-models it is exactly the partial correlation; for `glm` models it is the
+For lists of models and \code{pima.multi} objects, \code{estimate}, \code{se}, \code{wald.t}
+and \code{wald.p} are the columns of \code{summary(model)$coefficients}, unchanged.
+The only derived column is \code{pcor}, the partial correlation computed from
+the Wald statistic as \code{wald.t / sqrt(wald.t^2 + df)}, with \code{df} given by
+\code{df.residual(model)}. It is scale-free, so it can be compared across
+specifications using different transformations or link functions. For \code{lm}
+models it is exactly the partial correlation; for \code{glm} models it is the
 usual analogue based on the Wald z statistic. It inherits the model-based
 standard error, so when the variance is misspecified (e.g., overdispersion
-in a Poisson model) it can differ substantially from the `pcor` of a `pima`
-object, which is based on the (standardized) score statistic. It is `NA`
-when `df.residual()` is not available.
+in a Poisson model) it can differ substantially from the \code{pcor} of a \code{pima}
+object, which is based on the (standardized) score statistic. It is \code{NA}
+when \code{df.residual()} is not available.
 
-The columns `term` and `variable` link each coefficient to the term of the
+The columns \code{term} and \code{variable} link each coefficient to the term of the
 formula and to the variable it comes from. They are derived from the
 structure of the fitted model, not from the coefficient name: the term is
-given by `attr(model.matrix(model), "assign")` and the variable by
-[all.vars()] applied to the term (e.g. `log(x)` -> `x`). `variable` is `NA`
+given by \code{attr(model.matrix(model), "assign")} and the variable by
+\code{\link[=all.vars]{all.vars()}} applied to the term (e.g. \code{log(x)} -> \code{x}). \code{variable} is \code{NA}
 for the intercept and for terms involving more than one variable
-(interactions), which can be selected only through `focal`.
+(interactions), which can be selected only through \code{focal}.
 }

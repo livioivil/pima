@@ -7,28 +7,28 @@
 \method{subset}{pima.multi}(x, subset, ...)
 }
 \arguments{
-\item{x}{A `pima.multi` object.}
+\item{x}{A \code{pima.multi} object.}
 
-\item{subset}{A logical expression evaluated within `x$scenarios`. The
+\item{subset}{A logical expression evaluated within \code{x$scenarios}. The
 expression must return one logical value for each scenario and cannot
 contain missing values.}
 
 \item{...}{Additional arguments. Currently unused.}
 }
 \value{
-A `pima.multi` object containing only the selected scenarios and,
-  when available, their corresponding fitted models.
+A \code{pima.multi} object containing only the selected scenarios and,
+when available, their corresponding fitted models.
 }
 \description{
-Subsets a `pima.multi` object by selecting rows from its `scenarios`
+Subsets a \code{pima.multi} object by selecting rows from its \code{scenarios}
 component. The corresponding fitted models are subset accordingly, preserving
-the one-to-one correspondence between `scenarios$model` and the names of
-`models`.
+the one-to-one correspondence between \code{scenarios$model} and the names of
+\code{models}.
 }
 \details{
-Only the `scenarios` and `models` components are subset. Components describing
-the original multiverse specification, such as `formula_specs` and
-`specification`, are left unchanged.
+Only the \code{scenarios} and \code{models} components are subset. Components describing
+the original multiverse specification, such as \code{formula_specs} and
+\code{specification}, are left unchanged.
 
 Model identifiers are not renumbered after subsetting. This preserves the
 original correspondence between a scenario and its fitted model.
