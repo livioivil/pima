@@ -2,7 +2,7 @@
 #'
 #' This function builds a classification tree based on raw or adjusted p-values using the results of a regression model.
 #'
-#' @param res A list object with a specific structure containing regression model results. It should contain `mods`, a list of models, and `summary_table`, a data frame with the summary of results, including estimates and p-values.
+#' @param res An object of class `pima`, as returned by [pima()]. Other objects (lists of models, `pima.multi` objects, specification tables) are not supported.
 #' @param p.values A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the p-values from the `summary_table`.
 #' @param method used in function `rpart::rpart` if `method="class"` it will classify significant p-values at level `alpha`
 #' @param alpha used only when `method="class"`
@@ -23,6 +23,9 @@ pima_tree <- function(
   control = NULL,
   ...
 ) {
+  if (!inherits(res, "pima")) {
+    stop("`res` must be a `pima` object, as returned by pima().", call. = FALSE)
+  }
   if (is.null(control)) {
     control <- rpart::rpart.control(minsplit = 3)
   }

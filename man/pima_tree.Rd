@@ -14,7 +14,7 @@ pima_tree(
 )
 }
 \arguments{
-\item{res}{A list object with a specific structure containing regression model results. It should contain `mods`, a list of models, and `summary_table`, a data frame with the summary of results, including estimates and p-values.}
+\item{res}{An object of class `pima`, as returned by [pima()]. Other objects (lists of models, `pima.multi` objects, specification tables) are not supported.}
 
 \item{p.values}{A char string indicating which type of p-values to use. Options are `"raw"` or `"adjusted"` (default). When `"raw"`, the function uses the p-values from the `summary_table`.}
 
