@@ -7,9 +7,12 @@
 spec_curve(
   x,
   focal = NULL,
+  focal.var = NULL,
   yvar = NULL,
-  yname = NULL,
+  p = NULL,
   p.adjusted = NULL,
+  spec_vars = NULL,
+  exclude.vars = NULL,
   alpha = 0.05,
   tbr = c(0.4, 0.6),
   colors = NULL,
@@ -23,56 +26,142 @@ spec_curve(
   conf.int = FALSE,
   facet.y = FALSE,
   which.response = NULL,
+  yname = NULL,
   which.plot = "both"
 )
 }
 \arguments{
-\item{x}{An object of class `pima`, usually the result of the `pima()` function.}
+\item{x}{A `pima` object, a `pima.multi` object created with `fit.specs`, a
+list of fitted `lm` or `glm` models, or a table returned by
+[spec_table()].}
 
-\item{focal}{A character vector of focal coefficients to filter. If `NULL`, defaults to all tested coefficients in `x`.}
+\item{focal}{A character vector of coefficient names to plot (exact match,
+e.g. `"log(x)"` or `"groupB"`).}
 
-\item{yvar}{Character indicating the column of the `x$summary_table` object to be used in the y-axis of the top plot (usually the estimated parameter). Defaults to `"estimate"`.}
+\item{focal.var}{A character vector of variable names to plot: all the
+coefficients coming from these variables are selected, whatever their
+transformation (e.g. `"x"` selects `x`, `log(x)` and `sqrt(x)`) or
+coding (e.g. `"group"` selects `groupB` and `groupC`). When both `focal`
+and `focal.var` are supplied, the union is plotted. When both are `NULL`,
+the defaults are the tested coefficients (`focal`, for `pima` objects),
+the focal predictors of [create_multi()] (`focal.var`, for `pima.multi`
+objects), or all the coefficients except the intercept.}
 
-\item{yname}{Character indicating the name of the response variable to be plotted if the `pima` object contains more than one variable. If `NULL` (the default), all response variables are plotted.}
+\item{yvar}{Character indicating the column of the specification table
+plotted on the y-axis of the top plot. Defaults to `"estimate"` with one
+coefficient and to `"pcor"` with more than one.}
 
-\item{p.adjusted}{Logical indicating whether to use adjusted p-values for determining significance. Defaults to `TRUE` if an adjustment method was specified in the `pima` object.}
+\item{p}{Character indicating the column of p-values used to define
+significance. Any column of the table can be used. If `NULL`, the column
+is chosen with fixed rules (see Details).}
 
-\item{alpha}{A numeric value specifying the significance level for the confidence intervals and color-coding. Default is 0.05.}
+\item{p.adjusted}{Logical. For `pima` objects, `TRUE` uses the adjusted
+p-values (`"p.adj"`) and `FALSE` the unadjusted flipscores p-values
+(`"p"`); `NULL` (default) uses the adjusted ones when [pima()] applied a
+correction and the flipscores ones otherwise. For lists of models and `pima.multi` objects the
+p-values are never adjusted: `FALSE` (or `NULL`) uses `"wald.p"` and
+`TRUE` is an error. Ignored when `p` is supplied.}
 
-\item{tbr}{A numeric vector of two elements indicating the vertical space ratio assigned to the top and bottom plots (e.g., `c(0.4, 0.6)`).}
+\item{spec_vars}{Character vector of the specification columns shown in the
+bottom plot. If `NULL`, taken from `attr(x, "spec_vars")`. Needed when the
+attribute has been lost (e.g., after [subset()]).}
 
-\item{colors}{A character vector of two elements specifying the colors for non-significant and significant results.}
+\item{exclude.vars}{Character vector of specification columns removed from
+the bottom plot (e.g. a predictor such as `"AGE"`, or `"fit_spec"`).}
 
-\item{shapes}{A numeric vector of two elements specifying the shapes for non-significant and significant results. Default to `c(4, 19)`.}
+\item{alpha}{A numeric value specifying the significance level for the
+confidence intervals and the point shapes. Default is 0.05.}
+
+\item{tbr}{A numeric vector of two elements indicating the vertical space
+ratio assigned to the top and bottom plots (e.g., `c(0.4, 0.6)`).}
+
+\item{colors}{A character vector specifying the colors of the
+response ~ coefficient combinations. With a single combination the
+default is `"#0072B2"`.}
+
+\item{shapes}{A numeric vector of two elements specifying the shapes for
+non-significant and significant results. Default to `c(4, 19)`.}
 
 \item{title}{A character string for the overall plot title.}
 
-\item{xlab}{A character string for the x-axis title. Default to "Specification".}
+\item{xlab}{A character string for the x-axis title. Default to
+"Specification".}
 
-\item{ylab}{A character string for the y-axis title of the top plot. Default to the value of `yvar`.}
+\item{ylab}{A character string for the y-axis title of the top plot.
+Default to the value of `yvar`.}
 
-\item{top.theme}{A function returning a `ggplot2` theme for the top plot. Default to `ggplot2::theme_minimal()`.}
+\item{top.theme}{A function returning a `ggplot2` theme for the top plot.
+Default to `ggplot2::theme_minimal()`.}
 
-\item{bottom.theme}{A function returning a `ggplot2` theme for the bottom plot. Default to `ggplot2::theme_minimal()`.}
+\item{bottom.theme}{A function returning a `ggplot2` theme for the bottom
+plot. Default to `ggplot2::theme_minimal()`.}
 
-\item{redundant}{Logical. If `TRUE`, removes variables that do not vary across specifications from the bottom plot.}
+\item{redundant}{Logical. If `FALSE`, removes from the bottom plot the
+choices that do not vary across specifications and those splitting the
+specifications exactly as a previous one (e.g., `family` and `link` when
+fully determined by `fit_spec`).}
 
-\item{conf.int}{Logical. If `TRUE`, includes confidence intervals around estimated coefficients. (Ignored if `yvar` is not `"estimate"`).}
+\item{conf.int}{Logical. If `TRUE`, includes confidence intervals around the
+estimates (only when `yvar = "estimate"`). Wald intervals are used with
+`p = "wald.p"` when the standard error is available, otherwise intervals
+are obtained by inverting the selected p-values.}
 
-\item{facet.y}{Logical. If `TRUE`, creates separate facets for each response variable in the top plot. Default is `FALSE`.}
+\item{facet.y}{Logical. If `TRUE`, creates separate facets for each response
+variable in the top plot. Default is `FALSE`.}
 
-\item{which.response}{A character vector specifying which response variables to include in the plot.}
+\item{which.response}{A character vector specifying which response
+variables to include in the plot.}
+
+\item{yname}{Deprecated alias of `which.response`.}
+
+\item{which.plot}{One of `"both"` (default), `"top"` or `"bottom"`.}
 }
 \value{
-A [`patchwork`] object consisting of two aligned `ggplot2` plots. The top plot shows estimates/p-values, and the bottom plot shows the specification grid.
+A [`patchwork`] object consisting of two aligned `ggplot2` plots,
+  or a single `ggplot2` plot when `which.plot` is `"top"` or `"bottom"`.
 }
 \description{
-This function performs a specification curve analysis based on the results of a set of regression models.
-It visualizes the coefficient estimates with confidence intervals, p-values, and highlights
-significant specifications.
+Plots a specification curve: the top panel shows the result of each
+specification (sorted), the bottom panel shows the analytical choices
+defining it. The plot is built from the table returned by [spec_table()],
+so it works with `pima` objects, `pima.multi` objects, lists of fitted
+models, or a (possibly filtered) specification table.
+}
+\details{
+When `p` is `NULL`, the p-values are chosen among the three columns
+produced by the package, with fixed rules:
+\itemize{
+\item `pima` objects (the table has `"p"`): the adjusted p-values
+  (`"p.adj"`) or, when [pima()] applied no correction (`method = "none"`),
+  the flipscores p-values (`"p"`). `p.adjusted = FALSE` always uses `"p"`;
+  `p.adjusted = TRUE` is an error when there are no adjusted p-values.
+\item lists of models and `pima.multi` objects (the table has only
+  `"wald.p"`): `"wald.p"`, the unadjusted Wald p-values of the model
+  summary.
+}
+Other columns (e.g., p-values adjusted by the user) are used only when
+passed through `p`.
+
+All the selected rows are ordered together by `yvar`; the points of the
+top plot are coloured by `response ~ coefficient` (e.g. `x` and `log(x)`
+have different colours).
 }
 \examples{
-# Example usage (assuming `res` is a pre-computed pima object):
-# spec_curve(res, alpha = 0.05, conf.int = TRUE)
+mods <- list(
+  a = lm(Sepal.Width ~ Sepal.Length, data = iris),
+  b = lm(Sepal.Width ~ Sepal.Length + Species, data = iris),
+  c = lm(Sepal.Width ~ Sepal.Length + Petal.Width, data = iris)
+)
+spec_curve(mods, focal = "Sepal.Length")
 
+# from a (filtered) specification table
+tab <- spec_table(mods, focal = "Sepal.Length")
+spec_curve(tab[tab$model != "a", ])
+
+# p-values of your own are used only when requested
+tab$p.holm <- stats::p.adjust(tab$wald.p, method = "holm")
+spec_curve(tab, p = "p.holm")
+}
+\seealso{
+[spec_table()]
 }

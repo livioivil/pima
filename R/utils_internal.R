@@ -66,6 +66,10 @@
 
   colnames(XS) <- gsub("value\\.", "", colnames(XS))
 
+  # a predictor absent from a model is an explicit choice, not a missing value
+  xs_cols <- setdiff(colnames(XS), "model")
+  XS[xs_cols] <- lapply(XS[xs_cols], function(v) ifelse(is.na(v), "excluded", v))
+
   info <- merge(info, XS, by = "model")
 
   if (names(info[, 3, drop = FALSE]) == "model") {
@@ -215,3 +219,12 @@ as.glm <- function(x) {
   rownames(out) <- NULL
   out
 }
+
+# A predictor excluded from a specification is coded as "excluded". Older
+# `pima` objects code it as NA: accept both.
+.is_excluded <- function(x) {
+  is.na(x) | x == "excluded"
+}
+
+# default colour of the points when a plot has a single colour group
+.single_color <- "#0072B2"
