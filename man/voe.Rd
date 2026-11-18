@@ -68,15 +68,40 @@ Summarises how estimates and p-values vary across the specifications of a
 multiverse, separately for each response x coefficient.
 }
 \details{
-For each association it returns the quantiles of \code{xvar} and of
--log10(p), the amplitude \code{x_voe} (difference between the extreme quantiles
-of \code{xvar}, or its exponential when \code{type = "ratio"}), \code{p_voe} (difference
-between the extreme quantiles of -log10(p), the RP of Patel et al. 2015) and
-the Janus effect definitions (see \code{\link[=janus]{janus()}}).
+Let \eqn{x_s} be the value of \code{xvar} and \eqn{p_s} the p-value of
+specification \eqn{s}, \eqn{Q_q} the \eqn{q}-th quantile across the
+specifications and \eqn{q_1 < q_2} the extremes of \code{q}. For each
+association the function returns the quantiles of \eqn{x_s} and of
+\eqn{-\log_{10} p_s}{-log10(p_s)}, the amplitudes
+\deqn{x_{\mathrm{voe}} = Q_{q_2}(x) - Q_{q_1}(x), \qquad p_{\mathrm{voe}} = Q_{q_2}(-\log_{10} p) - Q_{q_1}(-\log_{10} p)}{x_voe = Q_q2(x) - Q_q1(x),   p_voe = Q_q2(-log10 p) - Q_q1(-log10 p)}
+(\code{p_voe} is the relative p-value of \insertCite{patel2015assessment;textual}{pima}),
+and the Janus effect definitions (see \code{\link[=janus]{janus()}}).
 
 \code{type = "ratio"} requires \code{xvar = "estimate"}: the ratio of the extreme
 quantiles of exp(estimate) equals exp() of their difference on the link
-scale (RHR/ROR of Patel et al. 2015). It is interpretable only for log,
+scale (the relative hazard or odds ratio of \insertCite{patel2015assessment;textual}{pima}),
+that is \eqn{\exp(x_{\mathrm{voe}})}{exp(x_voe)}. It is interpretable only for log,
 logit and cloglog links. Quantiles are always returned on the scale of
 \code{xvar}.
 }
+\examples{
+multi <- create_multi(
+  Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+  data = iris,
+  focal = "Sepal.Length",
+  nfuns = "log",
+  fit.specs = list(lm = lm)
+)
+voe(multi)
+voe(multi, xvar = "estimate", decompose_variance = TRUE)
+}
+\references{
+\insertAllCited{}
+}
+\seealso{
+Other vibration of effects:
+\code{\link[=janus]{janus()}},
+\code{\link[=voe_variance]{voe_variance()}},
+\code{\link[=volcano]{volcano()}}
+}
+\concept{vibration of effects}

@@ -28,8 +28,10 @@
 #' For lists of models and `pima.multi` objects, `estimate`, `se`, `wald.t`
 #' and `wald.p` are the columns of `summary(model)$coefficients`, unchanged.
 #' The only derived column is `pcor`, the partial correlation computed from
-#' the Wald statistic as `wald.t / sqrt(wald.t^2 + df)`, with `df` given by
-#' `df.residual(model)`. It is scale-free, so it can be compared across
+#' the Wald statistic \eqn{t} (`wald.t`) and the residual degrees of freedom
+#' \eqn{\nu} (`df.residual(model)`):
+#' \deqn{r = \frac{t}{\sqrt{t^2 + \nu}}.}{pcor = t / sqrt(t^2 + df).}
+#' It is scale-free, so it can be compared across
 #' specifications using different transformations or link functions. For `lm`
 #' models it is exactly the partial correlation; for `glm` models it is the
 #' usual analogue based on the Wald z statistic. It inherits the model-based
@@ -59,7 +61,22 @@
 #'     predictor is not in the model). The remaining columns are other
 #'     choices (e.g., `subset`, `fit_spec`, `family`).
 #'   }
+#' @family specification tables and plots
 #' @export
+#' @examples
+#' multi <- create_multi(
+#'   Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+#'   data = iris,
+#'   focal = "Sepal.Length",
+#'   nfuns = "log",
+#'   fit.specs = list(lm = lm)
+#' )
+#' tab <- spec_table(multi, focal.var = "Sepal.Length")
+#' head(tab)
+#' attr(tab, "spec_vars")
+#'
+#' # filter the table and plot it
+#' spec_curve(tab[tab$Species != "excluded", ])
 spec_table <- function(x, focal = NULL, focal.var = NULL) {
   tab <- if (inherits(x, "pima")) .spec_table_pima(x) else .spec_table_models(x)
   .filter_focal(tab, focal = focal, focal.var = focal.var)

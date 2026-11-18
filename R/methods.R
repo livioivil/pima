@@ -6,6 +6,7 @@
 #'
 #' @name pima-method
 #' @docType methods
+#' @family PIMA inference
 
 NULL
 
@@ -62,6 +63,16 @@ summary.pima <- function(object, digits = NULL, ...) {
 #' @method  plot pima
 #' @docType methods
 #' @export
+#' @examples
+#' mods <- list(
+#'   a = lm(Sepal.Width ~ Sepal.Length, data = iris),
+#'   b = lm(Sepal.Width ~ Sepal.Length + Species, data = iris),
+#'   c = lm(Sepal.Width ~ Sepal.Length + Petal.Width, data = iris)
+#' )
+#' res <- pima(mods, tested_coeffs = "Sepal.Length", n_flips = 500, seed = 1)
+#' res
+#' summary(res)
+#' plot(res)
 
 plot.pima <- function(
   x,

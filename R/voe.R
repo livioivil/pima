@@ -105,19 +105,29 @@
 #' effects literature. The Janus effect indicates that the same association
 #' changes direction across specifications.
 #'
-#' Definitions (M = number of specifications, null = value under H0):
+#' Let \eqn{x_1, \dots, x_M} be the estimates of the \eqn{M} specifications,
+#' \eqn{p_s} their p-values, \eqn{\theta_0} the value under the null (`null`),
+#' \eqn{Q_q} the \eqn{q}-th quantile across the specifications (interpolated,
+#' as in [stats::quantile()]) and \eqn{q_1 < q_2} the extremes of `q`.
 #' \itemize{
-#' \item `J_range`: minimum and maximum estimates on opposite sides of the null
-#'   (Vinatier et al. 2025).
-#' \item `J_pct`: lowest and highest quantiles in `q` on opposite sides of the
-#'   null (Patel et al. 2015; Palpacuer et al. 2019; Vinatier et al. 2024).
-#'   Quantiles are interpolated (`stats::quantile()` default).
-#' \item `J_ext`: the specifications closest to those quantiles are on opposite
-#'   sides of the null and both significant (Vinatier et al. 2024).
-#' \item `J_sig`: at least one significant estimate in each direction
-#'   (Klau et al. 2021, 2023).
-#' \item `J_frac`: proportion of estimates greater than the null
-#'   (Tierney et al. 2021).
+#' \item `J_range` \insertCite{vinatier2025what}{pima}: minimum and maximum
+#'   estimates on opposite sides of the null,
+#'   \eqn{\min_s x_s < \theta_0 < \max_s x_s}{min(x) < null < max(x)}.
+#' \item `J_pct` \insertCite{patel2015assessment,palpacuer2019vibration,vinatier2024vibration}{pima}:
+#'   extreme quantiles on opposite sides of the null,
+#'   \eqn{Q_{q_1}(x) < \theta_0 < Q_{q_2}(x)}{Q_q1(x) < null < Q_q2(x)}.
+#' \item `J_ext` \insertCite{vinatier2024vibration}{pima}: the specifications
+#'   \eqn{s_1} and \eqn{s_2} closest to \eqn{Q_{q_1}(x)} and \eqn{Q_{q_2}(x)}
+#'   are on opposite sides of the null and both significant,
+#'   \eqn{x_{s_1} < \theta_0 < x_{s_2}}{x_s1 < null < x_s2} and
+#'   \eqn{p_{s_1}, p_{s_2} \le \alpha}{p_s1, p_s2 <= alpha}.
+#' \item `J_sig` \insertCite{klau2021examining,klau2023comparing}{pima}: at
+#'   least one significant estimate in each direction, i.e. there are
+#'   \eqn{s} and \eqn{s'} with \eqn{p_s, p_{s'} \le \alpha}{p_s, p_s' <= alpha}
+#'   and \eqn{x_s < \theta_0 < x_{s'}}{x_s < null < x_s'}.
+#' \item `J_frac` \insertCite{tierney2021leveraging}{pima}: proportion of
+#'   estimates greater than the null,
+#'   \eqn{\frac{1}{M} \sum_{s=1}^{M} \mathbf{1}(x_s > \theta_0)}{mean(x > null)}.
 #' }
 #'
 #' @param x a numeric vector of estimates, a `pima` object, a `pima.multi`
@@ -144,16 +154,25 @@
 #'   `J_frac`. Otherwise, a data frame with one row per response x
 #'   coefficient.
 #' @references
-#' \insertRef{patel2015assessment}{pima}
-#'
-#' \insertRef{klau2021examining}{pima}
-#'
-#' \insertRef{tierney2021leveraging}{pima}
-#'
-#' \insertRef{vinatier2024vibration}{pima}
-#'
-#' \insertRef{vinatier2025what}{pima}
+#' \insertAllCited{}
+#' @family vibration of effects
 #' @export
+#' @examples
+#' # vectors of estimates and p-values
+#' set.seed(1)
+#' est <- rnorm(100, mean = 0.1, sd = 0.2)
+#' p <- runif(100)
+#' janus(est, p)
+#'
+#' # a multiverse of fitted models
+#' multi <- create_multi(
+#'   Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+#'   data = iris,
+#'   focal = "Sepal.Length",
+#'   nfuns = "log",
+#'   fit.specs = list(lm = lm)
+#' )
+#' janus(multi)
 janus <- function(x, ...) UseMethod("janus")
 
 #' @rdname janus
@@ -240,15 +259,19 @@ janus.data.frame <- janus.pima
 #' Summarises how estimates and p-values vary across the specifications of a
 #' multiverse, separately for each response x coefficient.
 #'
-#' For each association it returns the quantiles of `xvar` and of
-#' -log10(p), the amplitude `x_voe` (difference between the extreme quantiles
-#' of `xvar`, or its exponential when `type = "ratio"`), `p_voe` (difference
-#' between the extreme quantiles of -log10(p), the RP of Patel et al. 2015) and
-#' the Janus effect definitions (see [janus()]).
+#' Let \eqn{x_s} be the value of `xvar` and \eqn{p_s} the p-value of
+#' specification \eqn{s}, \eqn{Q_q} the \eqn{q}-th quantile across the
+#' specifications and \eqn{q_1 < q_2} the extremes of `q`. For each
+#' association the function returns the quantiles of \eqn{x_s} and of
+#' \eqn{-\log_{10} p_s}{-log10(p_s)}, the amplitudes
+#' \deqn{x_{\mathrm{voe}} = Q_{q_2}(x) - Q_{q_1}(x), \qquad p_{\mathrm{voe}} = Q_{q_2}(-\log_{10} p) - Q_{q_1}(-\log_{10} p)}{x_voe = Q_q2(x) - Q_q1(x),   p_voe = Q_q2(-log10 p) - Q_q1(-log10 p)}
+#' (`p_voe` is the relative p-value of \insertCite{patel2015assessment;textual}{pima}),
+#' and the Janus effect definitions (see [janus()]).
 #'
 #' `type = "ratio"` requires `xvar = "estimate"`: the ratio of the extreme
 #' quantiles of exp(estimate) equals exp() of their difference on the link
-#' scale (RHR/ROR of Patel et al. 2015). It is interpretable only for log,
+#' scale (the relative hazard or odds ratio of \insertCite{patel2015assessment;textual}{pima}),
+#' that is \eqn{\exp(x_{\mathrm{voe}})}{exp(x_voe)}. It is interpretable only for log,
 #' logit and cloglog links. Quantiles are always returned on the scale of
 #' `xvar`.
 #'
@@ -282,7 +305,20 @@ janus.data.frame <- janus.pima
 #' @return An object of class `pima_voe`: a list with `summary` (one row per
 #'   response x coefficient), `quantiles` (long format), the settings used and,
 #'   optionally, `variance`.
+#' @references
+#' \insertAllCited{}
+#' @family vibration of effects
 #' @export
+#' @examples
+#' multi <- create_multi(
+#'   Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+#'   data = iris,
+#'   focal = "Sepal.Length",
+#'   nfuns = "log",
+#'   fit.specs = list(lm = lm)
+#' )
+#' voe(multi)
+#' voe(multi, xvar = "estimate", decompose_variance = TRUE)
 voe <- function(
     x,
     xvar = "pcor",
@@ -387,11 +423,14 @@ print.pima_voe <- function(x, digits = 3, ...) {
 
 #' Variance decomposition of the vibration of effects
 #'
-#' Regresses `estimate` on the specification decisions and reports, for each
-#' decision, the unique R-squared (R2 of the full model minus R2 without that
-#' decision), separately for each response x coefficient. With a complete,
+#' Regresses `estimate` on the specification decisions (as factors) and
+#' reports, for each decision \eqn{d}, the unique R-squared
+#' \deqn{R^2_{\mathrm{u}}(d) = R^2_{\mathrm{full}} - R^2_{-d},}{R2u(d) = R2(full) - R2(without d),}
+#' where \eqn{R^2_{\mathrm{full}}}{R2(full)} is the R-squared of the model with
+#' all the decisions and \eqn{R^2_{-d}}{R2(without d)} the one without
+#' \eqn{d}, separately for each response x coefficient. With a complete,
 #' balanced grid of specifications and no interactions, the unique R-squared
-#' equals the ANOVA share of variance (Klau et al. 2023).
+#' equals the ANOVA share of variance \insertCite{klau2023comparing}{pima}.
 #'
 #' Decisions are the predictors (`attr(spec_table(x), "spec_predictors")`,
 #' one factor per predictor whose levels are the terms used to include it and
@@ -417,7 +456,19 @@ print.pima_voe <- function(x, digits = 3, ...) {
 #'   (one row per response x coefficient x decision, with `source` equal to
 #'   `"predictor"` or `"other"`, and `r2u_inclusion`, `r2u_transformation` for
 #'   predictors).
+#' @references
+#' \insertAllCited{}
+#' @family vibration of effects
 #' @export
+#' @examples
+#' multi <- create_multi(
+#'   Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+#'   data = iris,
+#'   focal = "Sepal.Length",
+#'   nfuns = "log",
+#'   fit.specs = list(lm = lm)
+#' )
+#' voe_variance(multi, estimate = "estimate")
 voe_variance <- function(
     x,
     estimate = "pcor",
@@ -559,7 +610,21 @@ voe_variance <- function(
 #' @param ... further arguments passed to [spec_scatter()] (e.g. `xlab`,
 #'   `ylab`, `shapes`, `by`).
 #' @return A ggplot object.
+#' @family vibration of effects
+#' @family specification tables and plots
 #' @export
+#' @examples
+#' multi <- create_multi(
+#'   Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+#'   data = iris,
+#'   focal = "Sepal.Length",
+#'   nfuns = "log",
+#'   fit.specs = list(lm = lm)
+#' )
+#' volcano(multi, xvar = "estimate")
+#'
+#' # one panel per association
+#' volcano(multi, focal.var = c("Sepal.Length", "Petal.Width"), xvar = "estimate")
 volcano <- function(x,
                     focal = NULL,
                     xvar = "pcor",

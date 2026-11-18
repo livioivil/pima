@@ -14,6 +14,7 @@
 #' @examples
 #' # Example usage (assuming `res` is a pre-computed result object)
 #' # pima_tree(res, p.values = "raw")
+#' @family PIMA inference
 #' @export
 pima_tree <- function(
   res,

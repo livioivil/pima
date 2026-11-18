@@ -110,5 +110,10 @@ spec_scatter(mods, focal = "Sepal.Length", p.transf = "-log10")
 spec_scatter(mods, focal = "Sepal.Length", by = "Species")
 }
 \seealso{
-\code{\link[=spec_table]{spec_table()}}, \code{\link[=spec_curve]{spec_curve()}}, \code{\link[=volcano]{volcano()}}
+Other specification tables and plots:
+\code{\link[=spec_curve]{spec_curve()}},
+\code{\link[=spec_table]{spec_table()}},
+\code{\link[=transf_p]{transf_p()}},
+\code{\link[=volcano]{volcano()}}
 }
+\concept{specification tables and plots}

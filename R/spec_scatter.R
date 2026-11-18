@@ -33,7 +33,7 @@
 #'   `"free_y"`.
 #' @param which.response responses to plot; defaults to all.
 #' @return A ggplot object.
-#' @seealso [spec_table()], [spec_curve()], [volcano()]
+#' @family specification tables and plots
 #' @export
 #'
 #' @examples

@@ -3,7 +3,13 @@
 #' @param p a numeric vector with p-values
 #' @param method the transformation method. Can be one of "raw" (no transformation),
 #' "-log10" or "z". Can also be a custom function.
+#' @details
+#' `"-log10"` returns \eqn{-\log_{10} p}{-log10(p)}. `"z"` returns the
+#' absolute normal quantile corresponding to a two-sided p-value,
+#' \deqn{z = \Phi^{-1}\left(1 - \frac{p}{2}\right),}{z = qnorm(1 - p/2),}
+#' where \eqn{\Phi} is the standard normal distribution function.
 #' @returns the transformed p-values
+#' @family specification tables and plots
 #' @export
 #'
 #' @examples

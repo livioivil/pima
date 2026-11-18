@@ -939,7 +939,9 @@
 #'     `fit.specs` is supplied. Failed fits are stored as error objects.}
 #' }
 #'
-#' @seealso [create_fit()]
+#' @references
+#' \insertRef{steegen2016increasing}{pima}
+#' @family multiverse construction
 #' @export
 #'
 #' @examples
@@ -1105,7 +1107,7 @@ create_multi <- function(formula,
 #'   or adapter and its additional arguments. The object is intended for use in
 #'   the `fit.specs` argument of [create_multi()].
 #'
-#' @seealso [create_multi()]
+#' @family multiverse construction
 #' @export
 #'
 #' @examples

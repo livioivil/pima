@@ -37,3 +37,9 @@ This function builds a classification tree based on raw or adjusted p-values usi
 # Example usage (assuming `res` is a pre-computed result object)
 # pima_tree(res, p.values = "raw")
 }
+\seealso{
+Other PIMA inference:
+\code{\link[=pima]{pima()}},
+\code{\link{pima-method}}
+}
+\concept{PIMA inference}

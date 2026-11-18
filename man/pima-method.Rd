@@ -59,3 +59,20 @@ a \code{pima} object.
 Scatter plot of the specifications: calls \code{\link[=spec_scatter]{spec_scatter()}} on the \code{pima}
 object.
 }
+\examples{
+mods <- list(
+  a = lm(Sepal.Width ~ Sepal.Length, data = iris),
+  b = lm(Sepal.Width ~ Sepal.Length + Species, data = iris),
+  c = lm(Sepal.Width ~ Sepal.Length + Petal.Width, data = iris)
+)
+res <- pima(mods, tested_coeffs = "Sepal.Length", n_flips = 500, seed = 1)
+res
+summary(res)
+plot(res)
+}
+\seealso{
+Other PIMA inference:
+\code{\link[=pima]{pima()}},
+\code{\link[=pima_tree]{pima_tree()}}
+}
+\concept{PIMA inference}

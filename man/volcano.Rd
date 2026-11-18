@@ -74,3 +74,30 @@ Plots \code{xvar} against -log10(p), adding the quantile lines computed by
 \code{\link[=voe]{voe()}} and p-value cutoffs. With more than one association (response x
 coefficient) each one is drawn in its own panel, with its own lines.
 }
+\examples{
+multi <- create_multi(
+  Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+  data = iris,
+  focal = "Sepal.Length",
+  nfuns = "log",
+  fit.specs = list(lm = lm)
+)
+volcano(multi, xvar = "estimate")
+
+# one panel per association
+volcano(multi, focal.var = c("Sepal.Length", "Petal.Width"), xvar = "estimate")
+}
+\seealso{
+Other vibration of effects:
+\code{\link[=janus]{janus()}},
+\code{\link[=voe]{voe()}},
+\code{\link[=voe_variance]{voe_variance()}}
+
+Other specification tables and plots:
+\code{\link[=spec_curve]{spec_curve()}},
+\code{\link[=spec_scatter]{spec_scatter()}},
+\code{\link[=spec_table]{spec_table()}},
+\code{\link[=transf_p]{transf_p()}}
+}
+\concept{specification tables and plots}
+\concept{vibration of effects}

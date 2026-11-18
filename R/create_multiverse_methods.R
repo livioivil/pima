@@ -13,6 +13,7 @@
 #'   so they are unique in the result. The `.source` column identifies the
 #'   originating object. Specification columns absent from a block contain
 #'   `NA` for its rows. All inputs must either have fitted models or have none.
+#' @family multiverse construction
 #' @export
 #' @method c pima.multi
 #'

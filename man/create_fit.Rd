@@ -64,5 +64,9 @@ create_fit(
 
 }
 \seealso{
-\code{\link[=create_multi]{create_multi()}}
+Other multiverse construction:
+\code{\link[=c.pima.multi]{c.pima.multi()}},
+\code{\link[=create_multi]{create_multi()}},
+\code{\link[=subset.pima.multi]{subset.pima.multi()}}
 }
+\concept{multiverse construction}

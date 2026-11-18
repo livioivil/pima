@@ -32,6 +32,10 @@ data(hurricane)
 A data set used to study the association between hurricane name femininity
 and hurricane fatalities.
 }
+\examples{
+data("hurricane", package = "pima")
+head(hurricane)
+}
 \references{
 \insertAllCited{}
 }

@@ -149,6 +149,13 @@ m2 <- create_multi(
 m2$scenarios
 
 }
-\seealso{
-\code{\link[=create_fit]{create_fit()}}
+\references{
+\insertRef{steegen2016increasing}{pima}
 }
+\seealso{
+Other multiverse construction:
+\code{\link[=c.pima.multi]{c.pima.multi()}},
+\code{\link[=create_fit]{create_fit()}},
+\code{\link[=subset.pima.multi]{subset.pima.multi()}}
+}
+\concept{multiverse construction}

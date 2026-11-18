@@ -38,11 +38,14 @@ A list with \code{r2} (one row per response x coefficient) and \code{dec}
 predictors).
 }
 \description{
-Regresses \code{estimate} on the specification decisions and reports, for each
-decision, the unique R-squared (R2 of the full model minus R2 without that
-decision), separately for each response x coefficient. With a complete,
+Regresses \code{estimate} on the specification decisions (as factors) and
+reports, for each decision \eqn{d}, the unique R-squared
+\deqn{R^2_{\mathrm{u}}(d) = R^2_{\mathrm{full}} - R^2_{-d},}{R2u(d) = R2(full) - R2(without d),}
+where \eqn{R^2_{\mathrm{full}}}{R2(full)} is the R-squared of the model with
+all the decisions and \eqn{R^2_{-d}}{R2(without d)} the one without
+\eqn{d}, separately for each response x coefficient. With a complete,
 balanced grid of specifications and no interactions, the unique R-squared
-equals the ANOVA share of variance (Klau et al. 2023).
+equals the ANOVA share of variance \insertCite{klau2023comparing}{pima}.
 }
 \details{
 Decisions are the predictors (\code{attr(spec_table(x), "spec_predictors")},
@@ -60,3 +63,23 @@ parts that sum to it: \code{r2u_inclusion} (removed vs included, whatever the
 form) and \code{r2u_transformation} (variation among the forms of an included
 predictor). Both are \code{NA} for the other decisions.
 }
+\examples{
+multi <- create_multi(
+  Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+  data = iris,
+  focal = "Sepal.Length",
+  nfuns = "log",
+  fit.specs = list(lm = lm)
+)
+voe_variance(multi, estimate = "estimate")
+}
+\references{
+\insertAllCited{}
+}
+\seealso{
+Other vibration of effects:
+\code{\link[=janus]{janus()}},
+\code{\link[=voe]{voe()}},
+\code{\link[=volcano]{volcano()}}
+}
+\concept{vibration of effects}

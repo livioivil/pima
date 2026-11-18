@@ -91,7 +91,9 @@
 #' @return A [`patchwork`] object consisting of two aligned `ggplot2` plots,
 #'   or a single `ggplot2` plot when `which.plot` is `"top"` or `"bottom"`.
 #'
-#' @seealso [spec_table()]
+#' @references
+#' \insertRef{simonsohn2020specification}{pima}
+#' @family specification tables and plots
 #' @export
 #'
 #' @examples

@@ -162,6 +162,14 @@ spec_curve(tab[tab$model != "a", ])
 tab$p.holm <- stats::p.adjust(tab$wald.p, method = "holm")
 spec_curve(tab, p = "p.holm")
 }
-\seealso{
-\code{\link[=spec_table]{spec_table()}}
+\references{
+\insertRef{simonsohn2020specification}{pima}
 }
+\seealso{
+Other specification tables and plots:
+\code{\link[=spec_scatter]{spec_scatter()}},
+\code{\link[=spec_table]{spec_table()}},
+\code{\link[=transf_p]{transf_p()}},
+\code{\link[=volcano]{volcano()}}
+}
+\concept{specification tables and plots}

@@ -47,8 +47,10 @@ each specification.
 For lists of models and \code{pima.multi} objects, \code{estimate}, \code{se}, \code{wald.t}
 and \code{wald.p} are the columns of \code{summary(model)$coefficients}, unchanged.
 The only derived column is \code{pcor}, the partial correlation computed from
-the Wald statistic as \code{wald.t / sqrt(wald.t^2 + df)}, with \code{df} given by
-\code{df.residual(model)}. It is scale-free, so it can be compared across
+the Wald statistic \eqn{t} (\code{wald.t}) and the residual degrees of freedom
+\eqn{\nu} (\code{df.residual(model)}):
+\deqn{r = \frac{t}{\sqrt{t^2 + \nu}}.}{pcor = t / sqrt(t^2 + df).}
+It is scale-free, so it can be compared across
 specifications using different transformations or link functions. For \code{lm}
 models it is exactly the partial correlation; for \code{glm} models it is the
 usual analogue based on the Wald z statistic. It inherits the model-based
@@ -65,3 +67,26 @@ given by \code{attr(model.matrix(model), "assign")} and the variable by
 for the intercept and for terms involving more than one variable
 (interactions), which can be selected only through \code{focal}.
 }
+\examples{
+multi <- create_multi(
+  Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+  data = iris,
+  focal = "Sepal.Length",
+  nfuns = "log",
+  fit.specs = list(lm = lm)
+)
+tab <- spec_table(multi, focal.var = "Sepal.Length")
+head(tab)
+attr(tab, "spec_vars")
+
+# filter the table and plot it
+spec_curve(tab[tab$Species != "excluded", ])
+}
+\seealso{
+Other specification tables and plots:
+\code{\link[=spec_curve]{spec_curve()}},
+\code{\link[=spec_scatter]{spec_scatter()}},
+\code{\link[=transf_p]{transf_p()}},
+\code{\link[=volcano]{volcano()}}
+}
+\concept{specification tables and plots}

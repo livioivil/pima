@@ -24,6 +24,10 @@ data(pimads)
 A data set of diabetes outcomes and clinical predictors for women from the
 Pima Indian population.
 }
+\examples{
+data("pimads", package = "pima")
+head(pimads)
+}
 \references{
 \insertRef{smith1988adap}{pima}
 }

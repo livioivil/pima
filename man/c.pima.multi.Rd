@@ -38,3 +38,10 @@ b <- create_multi(
 both <- c(width = a, species = b)
 both$scenarios
 }
+\seealso{
+Other multiverse construction:
+\code{\link[=create_fit]{create_fit()}},
+\code{\link[=create_multi]{create_multi()}},
+\code{\link[=subset.pima.multi]{subset.pima.multi()}}
+}
+\concept{multiverse construction}

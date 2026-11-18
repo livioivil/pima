@@ -107,29 +107,55 @@ effects literature. The Janus effect indicates that the same association
 changes direction across specifications.
 }
 \details{
-Definitions (M = number of specifications, null = value under H0):
+Let \eqn{x_1, \dots, x_M} be the estimates of the \eqn{M} specifications,
+\eqn{p_s} their p-values, \eqn{\theta_0} the value under the null (\code{null}),
+\eqn{Q_q} the \eqn{q}-th quantile across the specifications (interpolated,
+as in \code{\link[stats:quantile]{stats::quantile()}}) and \eqn{q_1 < q_2} the extremes of \code{q}.
 \itemize{
-\item \code{J_range}: minimum and maximum estimates on opposite sides of the null
-(Vinatier et al. 2025).
-\item \code{J_pct}: lowest and highest quantiles in \code{q} on opposite sides of the
-null (Patel et al. 2015; Palpacuer et al. 2019; Vinatier et al. 2024).
-Quantiles are interpolated (\code{stats::quantile()} default).
-\item \code{J_ext}: the specifications closest to those quantiles are on opposite
-sides of the null and both significant (Vinatier et al. 2024).
-\item \code{J_sig}: at least one significant estimate in each direction
-(Klau et al. 2021, 2023).
-\item \code{J_frac}: proportion of estimates greater than the null
-(Tierney et al. 2021).
+\item \code{J_range} \insertCite{vinatier2025what}{pima}: minimum and maximum
+estimates on opposite sides of the null,
+\eqn{\min_s x_s < \theta_0 < \max_s x_s}{min(x) < null < max(x)}.
+\item \code{J_pct} \insertCite{patel2015assessment,palpacuer2019vibration,vinatier2024vibration}{pima}:
+extreme quantiles on opposite sides of the null,
+\eqn{Q_{q_1}(x) < \theta_0 < Q_{q_2}(x)}{Q_q1(x) < null < Q_q2(x)}.
+\item \code{J_ext} \insertCite{vinatier2024vibration}{pima}: the specifications
+\eqn{s_1} and \eqn{s_2} closest to \eqn{Q_{q_1}(x)} and \eqn{Q_{q_2}(x)}
+are on opposite sides of the null and both significant,
+\eqn{x_{s_1} < \theta_0 < x_{s_2}}{x_s1 < null < x_s2} and
+\eqn{p_{s_1}, p_{s_2} \le \alpha}{p_s1, p_s2 <= alpha}.
+\item \code{J_sig} \insertCite{klau2021examining,klau2023comparing}{pima}: at
+least one significant estimate in each direction, i.e. there are
+\eqn{s} and \eqn{s'} with \eqn{p_s, p_{s'} \le \alpha}{p_s, p_s' <= alpha}
+and \eqn{x_s < \theta_0 < x_{s'}}{x_s < null < x_s'}.
+\item \code{J_frac} \insertCite{tierney2021leveraging}{pima}: proportion of
+estimates greater than the null,
+\eqn{\frac{1}{M} \sum_{s=1}^{M} \mathbf{1}(x_s > \theta_0)}{mean(x > null)}.
 }
+}
+\examples{
+# vectors of estimates and p-values
+set.seed(1)
+est <- rnorm(100, mean = 0.1, sd = 0.2)
+p <- runif(100)
+janus(est, p)
+
+# a multiverse of fitted models
+multi <- create_multi(
+  Sepal.Width ~ Sepal.Length + Petal.Width + Species,
+  data = iris,
+  focal = "Sepal.Length",
+  nfuns = "log",
+  fit.specs = list(lm = lm)
+)
+janus(multi)
 }
 \references{
-\insertRef{patel2015assessment}{pima}
-
-\insertRef{klau2021examining}{pima}
-
-\insertRef{tierney2021leveraging}{pima}
-
-\insertRef{vinatier2024vibration}{pima}
-
-\insertRef{vinatier2025what}{pima}
+\insertAllCited{}
 }
+\seealso{
+Other vibration of effects:
+\code{\link[=voe]{voe()}},
+\code{\link[=voe_variance]{voe_variance()}},
+\code{\link[=volcano]{volcano()}}
+}
+\concept{vibration of effects}

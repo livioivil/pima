@@ -4,7 +4,17 @@
 \alias{pima}
 \title{Post-selection Inference in Multiverse Analysis}
 \usage{
-pima(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...)
+pima(
+  mods,
+  tested_coeffs = NULL,
+  n_flips = 5000,
+  method = c("maxT", "minP", "none"),
+  tail = 0,
+  extra = NULL,
+  id = NULL,
+  parametric = FALSE,
+  ...
+)
 }
 \arguments{
 \item{mods}{list of objects that can be evaluated by \code{\link[flipscores:flipscores]{flipscores::flipscores()}}, usually
@@ -22,6 +32,22 @@ If \code{NULL}, all coefficients are tested.}
 \item{n_flips}{number of sign flips.}
 
 \item{method}{correction method among \code{maxT}, \code{minP} and \code{none}. Can be abbreviated.}
+
+\item{tail}{direction of the tests used for the adjusted p-values: \code{0}
+(two-sided, default), a positive value (greater) or a negative value
+(less). Passed to \code{\link[=p.adjust]{p.adjust()}}.}
+
+\item{extra}{optional data frame with one row per model (in the order of
+\code{mods}) of additional information, added to \code{info} and \code{summary_table}.
+For \code{pima.multi} objects the columns \code{model}, \code{subset} and \code{fit_spec} of
+the scenarios (and \code{.source}, \code{y.fun} when present) are added
+automatically.}
+
+\item{id}{currently not used.}
+
+\item{parametric}{if \code{TRUE}, uses the experimental parametric backend based
+on \code{\link[multcomp:mmm]{multcomp::mmm()}} instead of the sign-flip score test. Its output is
+not compatible with the other functions of the package.}
 
 \item{...}{further parameters of \code{\link[flipscores:flipscores]{flipscores::flipscores()}}.}
 }
@@ -48,18 +74,12 @@ The procedure builds on the sign-flip score test implemented in \code{\link[flip
 For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 for the null hypothesis that the coefficient is null against a two-sided alternative.
 If \code{method} is \code{maxT} (default) or \code{minP}, multiplicity-adjusted p-values are added
-using the step-down method of Westfall and Young (1993). Adjusted p-values provide control of the FWER
+using the step-down method of \insertCite{westfall1993resampling;textual}{pima} (see \emph{P-values} below). Adjusted p-values provide control of the FWER
 asymptotically in the sample size and, for practical purposes, almost exact control for any sample size.
 
 Post-selection inference is achieved by merging information from the considered models:
-\itemize{
-\item the output summary shows adjusted p-values for strong FWER control:
-"Which effects in which models are significant?"
-\item \code{global_tests} produces a global p-value for weak FWER control,
-possibly by coefficient or by model: "Is there at least one significant effect?"
-\item \code{pimaAnalysis} (\strong{sumSome}) computes a lower confidence bound for the TDP, among all tested effects or within a subset:
-"How many of the considered effects are significant?"
-}
+the adjusted p-values in the output summary provide strong FWER control and answer the question
+"Which effects in which models are significant?".
 
 Further parameters include:
 \itemize{
@@ -71,6 +91,28 @@ Different statistics will affect the multivariate inference, but not the univari
 \item \code{output_models}: \code{TRUE} to return the list of model objects produced by \code{flipscores}.
 }
 }
+\section{P-values}{
+
+Let \eqn{T_{jb}} be the test statistic of the \eqn{j}-th tested coefficient
+(\eqn{j = 1, \dots, m}, over all the models) under the \eqn{b}-th
+sign-flipping transformation (\eqn{b = 1, \dots, B}, with \eqn{B} =
+\code{n_flips} and \eqn{b = 1} the identity), taken in absolute value for
+two-sided tests. The raw p-value is the proportion of transformations
+giving a statistic at least as extreme as the observed one:
+\deqn{p_j = \frac{1}{B} \sum_{b=1}^{B} \mathbf{1}\left(T_{jb} \ge T_{j1}\right).}{p_j = #{b : T_jb >= T_j1} / B.}
+With \code{method = "maxT"}, a hypothesis \eqn{H_j} in the set \eqn{R} of the
+hypotheses not yet rejected is rejected at level \eqn{\alpha} when
+\deqn{T_{j1} > c_\alpha(R), \qquad c_\alpha(R) = Q_{1-\alpha}\left(\max_{k \in R} T_{kb};\ b = 1, \dots, B\right),}{T_j1 > c(R), with c(R) the (1 - alpha) quantile of the B values max_{k in R} T_kb,}
+then \eqn{R} is updated and the step is repeated until no further
+hypothesis is rejected. The adjusted p-value \eqn{\tilde p_j}{p.adj_j} is
+the smallest \eqn{\alpha} in the grid \eqn{0.001, 0.002, \dots, 0.099,
+0.1, 0.2, \dots, 0.9} (rounded down to multiples of \eqn{1/B}) at which
+\eqn{H_j} is rejected, and 1 if it is never rejected: adjusted p-values
+are therefore reported on this grid. \code{method = "minP"} applies the same
+procedure to the p-values of each transformation instead of the
+statistics.
+}
+
 \examples{
 # Generate data
 set.seed(123)
@@ -92,22 +134,9 @@ mods <- list(mod1 = mod1, mod2 = mod2, mod3 = mod3, mod4 = mod4)
 res <- pima(mods, tested_coeffs = c("X1","X2","X3B","X3C"))
 summary(res)
 
-# Global p-values: overall, by model and by coefficient
-summary(global_tests(res))
-summary(global_tests(res, by = "model"))
-summary(global_tests(res, by = "coefficient"))
-
-# Global tests for each factor
-summary(global_tests(res, by = "individual", comb_factors = TRUE))
-
-# These tests can be aggregated as before (e.g., by coefficient)
-summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
-
-# Lower 95\%-confidence bound for the TDP
-# require(sumSome)
-# pimaAnalysis(res, alpha = 0.4)
-# pimaAnalysis(res, by = "Model", alpha = 0.4)
-# pimaAnalysis(res, by = "Coeff", alpha = 0.4)
+# Specifications and adjusted p-values
+plot(res)
+spec_curve(res)
 }
 \references{
 \insertRef{girardi2024pima}{pima}
@@ -115,4 +144,12 @@ summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
 \insertRef{hemerik2020robust}{pima}
 
 \insertRef{desantis2025inference}{pima}
+
+\insertAllCited{}
 }
+\seealso{
+Other PIMA inference:
+\code{\link{pima-method}},
+\code{\link[=pima_tree]{pima_tree()}}
+}
+\concept{PIMA inference}

@@ -34,6 +34,13 @@ Model identifiers are not renumbered after subsetting. This preserves the
 original correspondence between a scenario and its fitted model.
 }
 \examples{
+multi <- create_multi(
+  Sepal.Width ~ Sepal.Length + Petal.Width,
+  data = iris,
+  nfuns = "log",
+  fit.specs = list(lm = lm, glm = glm)
+)
+
 # Keep only successfully fitted models
 successful <- subset(multi, fit_ok)
 
@@ -50,3 +57,10 @@ log_models <- subset(
 )
 
 }
+\seealso{
+Other multiverse construction:
+\code{\link[=c.pima.multi]{c.pima.multi()}},
+\code{\link[=create_fit]{create_fit()}},
+\code{\link[=create_multi]{create_multi()}}
+}
+\concept{multiverse construction}

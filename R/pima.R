@@ -4,7 +4,6 @@
 #' The method jointly computes resampling-based test statistics for all coefficients of interest in all models.
 #' The output allows for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate (FWER)
 #' and confidence bounds for True Discovery Proportions (TDPs).
-#' @usage pima(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), ...) 
 #' @param mods list of objects that can be evaluated by [flipscores::flipscores()], usually
 #' model objects produced by `glm` or `flipscores`.
 #' @param tested_coeffs tested coefficients. It can be a vector of names,
@@ -17,22 +16,28 @@
 #' If `NULL`, all coefficients are tested.
 #' @param n_flips number of sign flips.
 #' @param method correction method among `maxT`, `minP` and `none`. Can be abbreviated.
+#' @param tail direction of the tests used for the adjusted p-values: `0`
+#'   (two-sided, default), a positive value (greater) or a negative value
+#'   (less). Passed to [p.adjust()].
+#' @param extra optional data frame with one row per model (in the order of
+#'   `mods`) of additional information, added to `info` and `summary_table`.
+#'   For `pima.multi` objects the columns `model`, `subset` and `fit_spec` of
+#'   the scenarios (and `.source`, `y.fun` when present) are added
+#'   automatically.
+#' @param id currently not used.
+#' @param parametric if `TRUE`, uses the experimental parametric backend based
+#'   on [multcomp::mmm()] instead of the sign-flip score test. Its output is
+#'   not compatible with the other functions of the package.
 #' @param ... further parameters of [flipscores::flipscores()].
 #' @details The procedure builds on the sign-flip score test implemented in [flipscores::flipscores()].
 #' For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 #' for the null hypothesis that the coefficient is null against a two-sided alternative.
 #' If `method` is `maxT` (default) or `minP`, multiplicity-adjusted p-values are added
-#' using the step-down method of Westfall and Young (1993). Adjusted p-values provide control of the FWER
+#' using the step-down method of \insertCite{westfall1993resampling;textual}{pima} (see *P-values* below). Adjusted p-values provide control of the FWER
 #' asymptotically in the sample size and, for practical purposes, almost exact control for any sample size.
 #' @details Post-selection inference is achieved by merging information from the considered models:
-#' \itemize{
-#' \item the output summary shows adjusted p-values for strong FWER control:
-#' "Which effects in which models are significant?"
-#' \item `global_tests` produces a global p-value for weak FWER control,
-#' possibly by coefficient or by model: "Is there at least one significant effect?"
-#' \item `pimaAnalysis` (**sumSome**) computes a lower confidence bound for the TDP, among all tested effects or within a subset:
-#' "How many of the considered effects are significant?"
-#' }
+#' the adjusted p-values in the output summary provide strong FWER control and answer the question
+#' "Which effects in which models are significant?".
 #' @details Further parameters include:
 #' \itemize{
 #' \item `score_type`: type of score that is computed (see [flipscores::flipscores()] for more details).
@@ -42,6 +47,26 @@
 #' \item `seed`: can be specified to ensure replicability of results.
 #' \item `output_models`: `TRUE` to return the list of model objects produced by `flipscores`.
 #' }
+#' @section P-values:
+#' Let \eqn{T_{jb}} be the test statistic of the \eqn{j}-th tested coefficient
+#' (\eqn{j = 1, \dots, m}, over all the models) under the \eqn{b}-th
+#' sign-flipping transformation (\eqn{b = 1, \dots, B}, with \eqn{B} =
+#' `n_flips` and \eqn{b = 1} the identity), taken in absolute value for
+#' two-sided tests. The raw p-value is the proportion of transformations
+#' giving a statistic at least as extreme as the observed one:
+#' \deqn{p_j = \frac{1}{B} \sum_{b=1}^{B} \mathbf{1}\left(T_{jb} \ge T_{j1}\right).}{p_j = #{b : T_jb >= T_j1} / B.}
+#' With `method = "maxT"`, a hypothesis \eqn{H_j} in the set \eqn{R} of the
+#' hypotheses not yet rejected is rejected at level \eqn{\alpha} when
+#' \deqn{T_{j1} > c_\alpha(R), \qquad c_\alpha(R) = Q_{1-\alpha}\left(\max_{k \in R} T_{kb};\ b = 1, \dots, B\right),}{T_j1 > c(R), with c(R) the (1 - alpha) quantile of the B values max_{k in R} T_kb,}
+#' then \eqn{R} is updated and the step is repeated until no further
+#' hypothesis is rejected. The adjusted p-value \eqn{\tilde p_j}{p.adj_j} is
+#' the smallest \eqn{\alpha} in the grid \eqn{0.001, 0.002, \dots, 0.099,
+#' 0.1, 0.2, \dots, 0.9} (rounded down to multiples of \eqn{1/B}) at which
+#' \eqn{H_j} is rejected, and 1 if it is never rejected: adjusted p-values
+#' are therefore reported on this grid. `method = "minP"` applies the same
+#' procedure to the p-values of each transformation instead of the
+#' statistics.
+#'
 #' @return Returns an object of class `pima`, containing:
 #' \itemize{
 #' \item `Tspace`: data frame of test statistics, where columns correspond to tests, and rows to sign-flipping transformations
@@ -57,6 +82,8 @@
 #' \insertRef{hemerik2020robust}{pima}
 #'
 #' \insertRef{desantis2025inference}{pima}
+#'
+#' \insertAllCited{}
 #' 
 #' @examples
 #' # Generate data
@@ -79,22 +106,10 @@
 #' res <- pima(mods, tested_coeffs = c("X1","X2","X3B","X3C"))
 #' summary(res)
 #' 
-#' # Global p-values: overall, by model and by coefficient
-#' summary(global_tests(res))
-#' summary(global_tests(res, by = "model"))
-#' summary(global_tests(res, by = "coefficient"))
-#' 
-#' # Global tests for each factor
-#' summary(global_tests(res, by = "individual", comb_factors = TRUE))
-#' 
-#' # These tests can be aggregated as before (e.g., by coefficient)
-#' summary(global_tests(res, by = "coefficient", comb_factors = TRUE))
-#' 
-#' # Lower 95%-confidence bound for the TDP
-#' # require(sumSome)
-#' # pimaAnalysis(res, alpha = 0.4)
-#' # pimaAnalysis(res, by = "Model", alpha = 0.4)
-#' # pimaAnalysis(res, by = "Coeff", alpha = 0.4)
+#' # Specifications and adjusted p-values
+#' plot(res)
+#' spec_curve(res)
+#' @family PIMA inference
 #' @export
 
 pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), tail = 0, extra = NULL, id = NULL, parametric = FALSE, ...) {
@@ -228,9 +243,17 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
 #' @return A `pima.multi` object containing only the selected scenarios and,
 #'   when available, their corresponding fitted models.
 #'
+#' @family multiverse construction
 #' @export
 #'
 #' @examples
+#' multi <- create_multi(
+#'   Sepal.Width ~ Sepal.Length + Petal.Width,
+#'   data = iris,
+#'   nfuns = "log",
+#'   fit.specs = list(lm = lm, glm = glm)
+#' )
+#'
 #' # Keep only successfully fitted models
 #' successful <- subset(multi, fit_ok)
 #'

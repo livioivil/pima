@@ -22,6 +22,9 @@
 #' @source Original analysis from \insertCite{jung2014female;textual}{pima}.
 #' @references
 #' \insertAllCited{}
+#' @examples
+#' data("hurricane", package = "pima")
+#' head(hurricane)
 "hurricane"
 
 #' Pima Indians diabetes data
@@ -42,4 +45,7 @@
 #' }
 #' @references
 #' \insertRef{smith1988adap}{pima}
+#' @examples
+#' data("pimads", package = "pima")
+#' head(pimads)
 "pimads"
