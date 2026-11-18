@@ -2,23 +2,29 @@
 % Please edit documentation in R/pima.R
 \name{pima}
 \alias{pima}
+\alias{pima.list}
+\alias{pima.pima.multi}
+\alias{pima.multiverse}
+\alias{pima.default}
 \title{Post-selection Inference in Multiverse Analysis}
 \usage{
 pima(
   mods,
   tested_coeffs = NULL,
-  n_flips = 5000,
-  method = c("maxT", "minP", "none"),
+  method = NULL,
   tail = 0,
   extra = NULL,
   id = NULL,
-  parametric = FALSE,
+  seed = NULL,
+  engine = "flipscores",
   ...
 )
 }
 \arguments{
-\item{mods}{list of objects that can be evaluated by \code{\link[flipscores:flipscores]{flipscores::flipscores()}}, usually
-model objects produced by \code{glm} or \code{flipscores}.}
+\item{mods}{the models of the multiverse: a list of fitted models (usually
+\code{glm} or \code{lm}; unnamed lists are named \code{model1}, \code{model2}, ...), a
+\code{pima.multi} object created by \code{\link[=create_multi]{create_multi()}} or a \code{multiverse} object
+of the \pkg{multiverse} package.}
 
 \item{tested_coeffs}{tested coefficients. It can be a vector of names,
 tested in each model where they are present (every model must contain at
@@ -29,13 +35,19 @@ models in different forms (e.g. \code{x}, \code{log(x)}): build it with
 \code{split()} on \code{spec_table(mods, focal.var = "x")}.
 If \code{NULL}, all coefficients are tested.}
 
-\item{n_flips}{number of sign flips.}
+\item{method}{multiplicity correction, among the ones of the engine (can
+be abbreviated). With \code{engine = "flipscores"}: \code{"maxT"} (default),
+\code{"minP"} or \code{"none"}. With \code{engine = "multcomp"}, the types of
+\code{\link[multcomp:adjusted]{multcomp::adjusted()}}: \code{"single-step"} (default), \code{"free"},
+\code{"Westfall"}, \code{"Shaffer"}, or the methods of \code{\link[stats:p.adjust]{stats::p.adjust()}}
+(\code{"holm"}, \code{"hochberg"}, \code{"hommel"}, \code{"bonferroni"}, \code{"BH"}, \code{"BY"},
+\code{"fdr"}, \code{"none"}). With \code{"none"} there are no adjusted p-values. If
+\code{NULL} (default), the default of the engine.}
 
-\item{method}{correction method among \code{maxT}, \code{minP} and \code{none}. Can be abbreviated.}
-
-\item{tail}{direction of the tests used for the adjusted p-values: \code{0}
-(two-sided, default), a positive value (greater) or a negative value
-(less). Passed to \code{\link[=p.adjust]{p.adjust()}}.}
+\item{tail}{direction of the tests: \code{0} (two-sided, default), a positive
+value (greater) or a negative value (less). With \code{engine = "flipscores"}
+it is used for the adjusted p-values (passed to \code{\link[=p.adjust]{p.adjust()}}); with
+\code{engine = "multcomp"} for all the p-values.}
 
 \item{extra}{optional data frame with one row per model (in the order of
 \code{mods}) of additional information, added to \code{info} and \code{summary_table}.
@@ -49,12 +61,18 @@ the name of a column of the models' data or a one-sided formula (e.g.
 after subsetting or removing missing values); repeated values define
 clusters. If \code{NULL} (default), the scores are aligned by row names.}
 
-\item{parametric}{if \code{TRUE}, uses the experimental parametric backend based
-on \code{\link[multcomp:mmm]{multcomp::mmm()}} instead of the sign-flip score test (see
-\code{\link[=pima.mmm]{pima.mmm()}}). Its output is not compatible with the other functions of
-the package.}
+\item{seed}{seed of the random numbers, for reproducible results: the sign
+flips with \code{engine = "flipscores"}, the numerical integration of the
+adjusted p-values with \code{engine = "multcomp"}. If \code{NULL} (default), the
+current state of the random number generator is used.}
 
-\item{...}{further parameters of \code{\link[flipscores:flipscores]{flipscores::flipscores()}}.}
+\item{engine}{the test used: \code{"flipscores"} (default), the sign-flip score
+test, or \code{"multcomp"}, the experimental parametric test based on
+\code{\link[multcomp:mmm]{multcomp::mmm()}} (see \emph{Engines} below). To set the arguments of the
+engine (e.g. \code{n_flips}), use \code{\link[=pima_flipscores]{pima_flipscores()}} or \code{\link[=pima_multcomp]{pima_multcomp()}}.}
+
+\item{...}{not used: the arguments of the engines are given to
+\code{\link[=pima_flipscores]{pima_flipscores()}} or \code{\link[=pima_multcomp]{pima_multcomp()}}.}
 }
 \value{
 Returns an object of class \code{pima}, containing:
@@ -63,9 +81,12 @@ Returns an object of class \code{pima}, containing:
 (the first is the identity).
 \item \code{summary_table}: data frame containing a summary for each tested coefficient in each model:
 estimate, score, standard error, z value, partial correlation, raw p-value, adjusted p-value.
-\item \code{mods}: list of model objects computed by \code{flipscores}.
+\item \code{objects}: list of model objects computed by \code{flipscores}.
 \item \code{tested_coeffs}: tested coefficients, as in input.
+\item \code{engine}: the engine used, with its arguments (see \code{\link[=pima_flipscores]{pima_flipscores()}}).
 }
+With \code{engine = "multcomp"} there is no \code{Tspace}, \code{objects} are the
+fitted models and \code{glht} is the \code{\link[multcomp:glht]{multcomp::glht()}} object.
 }
 \description{
 Applies the PIMA procedure to make selective inference on one or more parameters within a multiverse of models,
@@ -86,22 +107,17 @@ Post-selection inference is achieved by merging information from the considered 
 the adjusted p-values in the output summary provide strong FWER control and answer the question
 "Which effects in which models are significant?".
 
-Further parameters include:
-\itemize{
-\item \code{score_type}: type of score that is computed (see \code{\link[flipscores:flipscores]{flipscores::flipscores()}} for more details).
-The default \code{"standardized"} provides almost exact control of the error for any sample size.
-\item \code{statistics}: test statistics computed by the procedure. Currently, \code{t} is the only implemented method.
-Different statistics will affect the multivariate inference, but not the univariate.
-\item \code{seed}: can be specified to ensure replicability of results.
-\item \code{output_models}: \code{TRUE} to return the list of model objects produced by \code{flipscores}.
-}
+The number of sign flips and the other arguments of
+\code{\link[flipscores:flipscores]{flipscores::flipscores()}} are given to \code{\link[=pima_flipscores]{pima_flipscores()}}, e.g.
+\code{score_type}, the type of score: the default \code{"standardized"} provides
+almost exact control of the error for any sample size.
 }
 \section{P-values}{
 
 Let \eqn{T_{jb}} be the test statistic of the \eqn{j}-th tested coefficient
 (\eqn{j = 1, \dots, m}, over all the models) under the \eqn{b}-th
 sign-flipping transformation (\eqn{b = 1, \dots, B}, with \eqn{B} =
-\code{n_flips} and \eqn{b = 1} the identity), taken in absolute value for
+\code{n_flips} of \code{\link[=pima_flipscores]{pima_flipscores()}} and \eqn{b = 1} the identity), taken in absolute value for
 two-sided tests. The raw p-value is the proportion of transformations
 giving a statistic at least as extreme as the observed one:
 \deqn{p_j = \frac{1}{B} \sum_{b=1}^{B} \mathbf{1}\left(T_{jb} \ge T_{j1}\right).}{p_j = #{b : T_jb >= T_j1} / B.}
@@ -116,6 +132,34 @@ the smallest \eqn{\alpha} in the grid \eqn{0.001, 0.002, \dots, 0.099,
 are therefore reported on this grid. \code{method = "minP"} applies the same
 procedure to the p-values of each transformation instead of the
 statistics.
+}
+
+\section{Engines}{
+
+The engine is chosen with \code{engine}: a name (\code{"flipscores"} or
+\code{"multcomp"}) uses its default arguments, \code{\link[=pima_flipscores]{pima_flipscores()}} and
+\code{\link[=pima_multcomp]{pima_multcomp()}} set them. The other arguments of \code{pima()} are common to
+the engines.
+
+With \code{engine = "flipscores"} (default) the tests are the sign-flip score
+tests described above. With \code{engine = "multcomp"} (experimental, parametric) the
+tested coefficients of all the models are tested jointly with
+\code{\link[multcomp:mmm]{multcomp::mmm()}} and \code{\link[multcomp:glht]{multcomp::glht()}}: the covariance between the
+estimates of different models comes from the sandwich estimator of the
+stacked estimating equations
+\insertCite{pipper2012versatile,hothorn2008simultaneous}{pima}. \code{p} are
+the univariate p-values and \code{p.adj} the p-values adjusted with the type
+of \code{\link[multcomp:adjusted]{multcomp::adjusted()}} given in \code{method}: \code{"single-step"} (default) and
+\code{"free"} (its step-down version) use the correlation between the tests,
+like the maxT procedure; \code{se} is the standard error of the estimate. The adjusted p-values are computed by
+numerical integration, with a small random error: set \code{seed} (and, for more
+precision, \code{algorithm} in \code{\link[=pima_multcomp]{pima_multcomp()}}).
+
+Without \code{id}, the multcomp engine requires the models to be fitted on the
+same observations, in the same order. With \code{id} (the name of a column of
+the models' data, with no repeated values within a model), the scores of
+each model are aligned on the union of the observations, with zeros for
+the observations a model does not use.
 }
 
 \examples{
@@ -155,6 +199,7 @@ spec_curve(res)
 \seealso{
 Other PIMA inference:
 \code{\link{pima-method}},
+\code{\link[=pima_flipscores]{pima_flipscores()}},
 \code{\link[=pima_tree]{pima_tree()}}
 }
 \concept{PIMA inference}

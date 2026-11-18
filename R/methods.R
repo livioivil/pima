@@ -69,7 +69,8 @@ summary.pima <- function(object, digits = NULL, ...) {
 #'   b = lm(Sepal.Width ~ Sepal.Length + Species, data = iris),
 #'   c = lm(Sepal.Width ~ Sepal.Length + Petal.Width, data = iris)
 #' )
-#' res <- pima(mods, tested_coeffs = "Sepal.Length", n_flips = 500, seed = 1)
+#' res <- pima(mods, tested_coeffs = "Sepal.Length", seed = 1,
+#'             engine = pima_flipscores(n_flips = 500))
 #' res
 #' summary(res)
 #' plot(res)

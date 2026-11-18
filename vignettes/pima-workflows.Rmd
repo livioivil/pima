@@ -99,10 +99,12 @@ mods <- list(
 manual_res <- pima(
   mods,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
   method = "maxT",
-  score_type = "standardized",
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(
+    n_flips = n_flips_vignette,
+    score_type = "standardized"
+  )
 )
 
 summary(manual_res, digits = 3)
@@ -113,10 +115,13 @@ The main arguments are:
 - `mods`: a list of model objects, usually `glm` objects.
 - `tested_coeffs`: coefficients to test. It can be a character vector common to
   all models, or a list with one character vector per model.
-- `n_flips`: number of sign flips.
-- `method`: multiplicity adjustment, `"maxT"`, `"minP"`, or `"none"`.
-- `score_type`, `seed`, `output_models`, and other arguments are passed to
-  `flipscores::flipscores()`.
+- `method`: multiplicity adjustment of the engine: `"maxT"` (default),
+  `"minP"`, or `"none"` with flipscores; the types of `multcomp::adjusted()`
+  (`"single-step"`, `"free"`, `"Westfall"`, `"holm"`, ...) with multcomp.
+- `engine`: the test, `"flipscores"` (default) or `"multcomp"`. Its own
+  arguments are set with `pima_flipscores()` (`n_flips`, `score_type` and the
+  other arguments of `flipscores::flipscores()`) or `pima_multcomp()`.
+- `seed`: seed of the random numbers, for reproducible results.
 
 If the same conceptual effect has different coefficient names across models,
 use a list for `tested_coeffs`.
@@ -141,8 +146,8 @@ mixed_res <- pima(
     linear = "npreg",
     quadratic = "I(npreg^2)"
   ),
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 summary(mixed_res, digits = 3)
@@ -164,9 +169,9 @@ extra <- data.frame(
 manual_res <- pima(
   mods,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
+  extra = extra,
   seed = 1,
-  extra = extra
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 manual_res
@@ -290,8 +295,8 @@ sim_mods <- list(
 sim_res <- pima(
   sim_mods,
   tested_coeffs = "x",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 plot(sim_res, facet = response ~ ., p.adjusted = FALSE)
@@ -300,7 +305,7 @@ spec_curve(
   sim_res,
   focal = "x",
   p.adjusted = FALSE,
-  facet.y = TRUE,
+  facet = response ~ .,
   tbr = c(0.60, 0.40),
   which.response = c("y1", "y2"),
   title = "Two responses, one focal coefficient",
@@ -364,8 +369,8 @@ multi_ok <- subset(multi, fit_ok)
 multi_res <- pima(
   multi_ok,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 head(summary(multi_res, digits = 3))
@@ -397,8 +402,8 @@ multi_logit_all <- subset(
 multi_logit_res <- pima(
   multi_logit_all,
   tested_coeffs = "npreg",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 spec_curve(
@@ -516,8 +521,8 @@ parameters(M)
 hurricane_res <- pima(
   M,
   tested_coeffs = "MasFem",
-  n_flips = n_flips_vignette,
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 summary(hurricane_res, digits = 3)
@@ -580,9 +585,9 @@ factor_mods <- list(
 raw_factor_res <- pima(
   factor_mods,
   tested_coeffs = c("x", "groupB", "groupC"),
-  n_flips = n_flips_vignette,
   method = "none",
-  seed = 1
+  seed = 1,
+  engine = pima_flipscores(n_flips = n_flips_vignette)
 )
 
 head(summary(raw_factor_res, digits = 3))

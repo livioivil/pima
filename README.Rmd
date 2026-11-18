@@ -78,7 +78,7 @@ spec_curve(res)
 spec_curve(res, which.response = "Y")
 
 # faceting the response
-spec_curve(res, facet.y = TRUE)
+spec_curve(res, facet = response ~ .)
 ```
 
 

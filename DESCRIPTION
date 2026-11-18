@@ -21,6 +21,7 @@ Imports:
     formula.tools,
     ggplot2,
     flipscores,
+    multcomp,
     patchwork,
     rlang,
     Rdpack,
@@ -37,7 +38,6 @@ RdMacros: Rdpack
 Config/roxygen2/version: 8.0.0
 Suggests: 
     knitr,
-    multcomp,
     multiverse,
     rmarkdown
 VignetteBuilder: knitr

@@ -47,7 +47,8 @@
 #'   non-significant and significant results. Default to `c(4, 19)`.
 #' @param title A character string for the overall plot title.
 #' @param xlab A character string for the x-axis title. Default to
-#'   "Specification".
+#'   "Specification". The x-axis (the index of the specifications) is shown in
+#'   the bottom plot, or in the top plot when `which.plot = "top"`.
 #' @param ylab A character string for the y-axis title of the top plot.
 #'   Default to the value of `yvar`.
 #' @param top.theme A function returning a `ggplot2` theme for the top plot.
@@ -62,8 +63,12 @@
 #'   estimates (only when `yvar = "estimate"`). Wald intervals are used with
 #'   `p = "wald.p"` when the standard error is available, otherwise intervals
 #'   are obtained by inverting the selected p-values.
-#' @param facet.y Logical. If `TRUE`, creates separate facets for each response
-#'   variable in the top plot. Default is `FALSE`.
+#' @param facet A formula with columns of the specification table, as in
+#'   [ggplot2::facet_grid()], splitting the top plot into panels, e.g.
+#'   `response ~ coefficient`, `response ~ .` or `. ~ coefficient`. If `NULL`
+#'   (default), a single panel. See Details.
+#' @param facet.scales Scales of the panels: `"free_y"` (default), `"fixed"`,
+#'   `"free_x"` or `"free"`, as in [ggplot2::facet_grid()].
 #' @param which.response A character vector specifying which response
 #'   variables to include in the plot.
 #' @param yname Deprecated alias of `which.response`.
@@ -84,9 +89,18 @@
 #' Other columns (e.g., p-values adjusted by the user) are used only when
 #' passed through `p`.
 #'
-#' All the selected rows are ordered together by `yvar`; the points of the
-#' top plot are coloured by `response ~ coefficient` (e.g. `x` and `log(x)`
-#' have different colours).
+#' The rows are ordered by `yvar`. The points of the top plot are coloured by
+#' `response ~ coefficient` (e.g. `x` and `log(x)` have different colours),
+#' leaving out the columns used in `facet`.
+#'
+#' With `facet`, the rows are ordered within each panel. With the bottom plot
+#' (`which.plot = "both"`) each specification keeps its own position on the
+#' x-axis, so that the top and bottom plots stay aligned: the panels are
+#' stacked in rows (one for each combination of the `facet` columns) and
+#' follow each other on the x-axis. With `which.plot = "top"` the panels are
+#' laid out as in `facet`, each with the x-axis of its own specifications.
+#' Whether the values in the same panel are comparable (e.g. the estimates of
+#' `x` and `log(x)` with `facet = response ~ .`) is up to the user.
 #'
 #' @return A [`patchwork`] object consisting of two aligned `ggplot2` plots,
 #'   or a single `ggplot2` plot when `which.plot` is `"top"` or `"bottom"`.
@@ -131,7 +145,8 @@ spec_curve <- function(
   bottom.theme = NULL,
   redundant = TRUE,
   conf.int = FALSE,
-  facet.y = FALSE,
+  facet = NULL,
+  facet.scales = "free_y",
   which.response = NULL,
   yname = NULL,
   which.plot = "both"
@@ -208,8 +223,30 @@ spec_curve <- function(
     stop(sprintf("`yvar` column \"%s\" not found in the table.", yvar), call. = FALSE)
   }
 
+  which.plot <- match.arg(which.plot, choices = c("top", "bottom", "both"))
+  facet.scales <- match.arg(facet.scales, c("free_y", "fixed", "free_x", "free"))
+  facet_vars <- character(0)
+  if (!is.null(facet)) {
+    if (!inherits(facet, "formula")) {
+      stop("`facet` must be a formula, e.g. `response ~ coefficient`.", call. = FALSE)
+    }
+    facet_vars <- setdiff(all.vars(facet), ".")
+    miss <- setdiff(facet_vars, names(tab))
+    if (length(miss)) {
+      stop(sprintf("`facet` columns not found in the table: %s.",
+                   paste(miss, collapse = ", ")), call. = FALSE)
+    }
+  }
+
   # top data: ordering, significance, confidence intervals
-  tab <- tab[order(tab[[yvar]]), , drop = FALSE]
+  if (length(facet_vars)) {
+    # panels in order of appearance; the rows are ordered within each panel
+    panel <- do.call(paste, c(lapply(facet_vars, function(v) as.character(tab[[v]])), sep = " | "))
+    tab$.panel <- factor(panel, levels = unique(panel))
+    tab <- tab[order(tab$.panel, tab[[yvar]]), , drop = FALSE]
+  } else {
+    tab <- tab[order(tab[[yvar]]), , drop = FALSE]
+  }
   tab$.id_spec <- seq_len(nrow(tab))
   tab$is_signif <- factor(as.integer(tab[[p]] <= alpha), levels = c(0, 1))
 
@@ -266,16 +303,24 @@ spec_curve <- function(
   shapes <- stats::setNames(shapes, c("0", "1"))
   shape_labels <- paste0(c("p >  ", "p <= "), alpha)
 
-  # one colour per coefficient (e.g. x and log(x) are distinguished)
-  tab$.coefficient_y <- if (facet.y) {
-    sprintf("~ %s", tab$coefficient)
-  } else {
-    sprintf("%s ~ %s", tab$response, tab$coefficient)
+  # colours: response ~ coefficient, without the columns of the panels
+  tab$.coefficient_y <- sprintf(
+    "%s ~ %s",
+    if ("response" %in% facet_vars) "" else tab$response,
+    if ("coefficient" %in% facet_vars) "" else tab$coefficient
+  )
+  tab$.coefficient_y <- trimws(tab$.coefficient_y)
+
+  # x-axis of the top plot: with the bottom plot, the position of each
+  # specification (shared with the bottom plot); without, within each panel
+  tab$.x_top <- tab$.id_spec
+  if (length(facet_vars) && which.plot == "top") {
+    tab$.x_top <- stats::ave(tab$.id_spec, tab$.panel, FUN = seq_along)
   }
 
   top <- ggplot2::ggplot(
     data = tab,
-    ggplot2::aes(x = .data[[".id_spec"]], y = .data[[yvar]])
+    ggplot2::aes(x = .data[[".x_top"]], y = .data[[yvar]])
   ) +
     ggplot2::geom_point(
       ggplot2::aes(
@@ -286,40 +331,61 @@ spec_curve <- function(
     ) +
     top.theme() +
     ggplot2::theme(
-      axis.title.x = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_blank(),
-      axis.ticks.x = ggplot2::element_blank(),
       legend.position = "bottom",
       legend.title = ggplot2::element_blank()
     ) +
     ggplot2::ggtitle(title) +
+    # the x-axis and the p-value legend are in the bottom plot, unless the
+    # top plot is alone
     ggplot2::scale_shape_manual(
       values = shapes,
-      guide = "none",
+      guide = if (which.plot == "top") "legend" else "none",
       name = "p-value",
       drop = FALSE,
       labels = shape_labels
     ) +
-    ggplot2::labs(y = ylab)
+    ggplot2::labs(x = xlab, y = ylab)
+
+  if (which.plot != "top") {
+    top <- top + ggplot2::theme(
+      axis.title.x = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank()
+    )
+  }
 
   if (!is.null(colors)) {
     top <- top + ggplot2::scale_color_manual(values = colors)
   } else if (length(unique(tab$.coefficient_y)) == 1L) {
-    top <- top + ggplot2::scale_color_manual(values = .single_color)
+    # a single colour; no legend when the panels already separate response
+    # and coefficient
+    top <- top + ggplot2::scale_color_manual(
+      values = .single_color,
+      guide = if (all(c("response", "coefficient") %in% facet_vars)) "none" else "legend"
+    )
   }
 
   if (conf.int && yvar == "estimate") {
     top <- top +
       ggplot2::geom_segment(ggplot2::aes(
-        x = .data[[".id_spec"]],
-        xend = .data[[".id_spec"]],
+        x = .data[[".x_top"]],
+        xend = .data[[".x_top"]],
         y = .data[["est.ci.lb"]],
         yend = .data[["est.ci.ub"]]
       ))
   }
 
-  if (facet.y) {
-    top <- top + ggplot2::facet_grid(stats::as.formula("response ~ ."))
+  if (length(facet_vars)) {
+    if (which.plot == "top") {
+      top <- top + ggplot2::facet_grid(facet, scales = facet.scales)
+    } else {
+      # aligned with the bottom plot: one row of panels per combination, the
+      # x-axis shared (only the y-axis can be free)
+      y_scales <- if (facet.scales %in% c("free_y", "free")) "free_y" else "fixed"
+      top <- top +
+        ggplot2::facet_grid(stats::as.formula(".panel ~ ."), scales = y_scales) +
+        ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 0, hjust = 0))
+    }
   }
 
   bottom <- ggplot2::ggplot(
@@ -348,7 +414,6 @@ spec_curve <- function(
       labels = shape_labels
     )
 
-  which.plot <- match.arg(which.plot, choices = c("top", "bottom", "both"))
   switch(
     which.plot,
     both = patchwork::wrap_plots(top, bottom, ncol = 1, heights = tbr),

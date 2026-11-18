@@ -11,7 +11,7 @@
 .pad_models <- function(mods, id) {
   ids <- lapply(mods, .model_ids, id = id)
   if (any(vapply(ids, anyDuplicated, 1L) > 0)) {
-    stop("`id` has repeated values within a model: clusters are not supported by the parametric method.",
+    stop("`id` has repeated values within a model: clusters are not supported by the multcomp engine.",
          call. = FALSE)
   }
   id_all <- unique(unlist(ids))                         # union of the ids of all models
@@ -37,59 +37,32 @@ estfun.padded <- function(x, ...) {
   out
 }
 
-#' Parametric simultaneous inference across models
-#'
-#' Experimental parametric backend of [pima()] (`parametric = TRUE`). The
-#' tested coefficients of all the models are tested jointly with
-#' [multcomp::mmm()] and [multcomp::glht()]: the covariance between the
-#' estimates of different models comes from the sandwich estimator of the
-#' stacked estimating equations
-#' \insertCite{pipper2012versatile,hothorn2008simultaneous}{pima}, and the
-#' p-values are adjusted with the single-step method.
-#'
-#' Without `id` the models must be fitted on the same observations, in the
-#' same order. With `id`, the scores of each model are aligned on the union of
-#' the observations, with zeros for the observations a model does not use.
-#'
-#' @param x named list of fitted models.
-#' @param id name of a column of the models' data identifying the
-#'   observations, used to align models fitted on different rows. Each value
-#'   must appear at most once in each model (clusters are not supported).
-#' @param tested_coeffs coefficients to test, as in [pima()]: a character
-#'   vector (the coefficients present in each model are tested) or a list with
-#'   one element per model. If `NULL`, all the coefficients of each model.
-#' @return A data frame with one row per tested coefficient: `model`,
-#'   `coefficient`, `estimate`, `se`, `z`, the Wald p-value of the single
-#'   model (`p`) and the adjusted p-value (`p.adj`).
-#' @references
-#' \insertAllCited{}
-#' @seealso [pima()]
-#' @keywords internal
-#' @export
-#' @examples
-#' mods <- list(
-#'   a = glm(Sepal.Width ~ Sepal.Length, data = iris),
-#'   b = glm(Sepal.Width ~ Sepal.Length + Species, data = iris),
-#'   c = glm(Sepal.Width ~ log(Petal.Width), data = iris)
-#' )
-#' pima.mmm(mods, tested_coeffs = c("Sepal.Length", "log(Petal.Width)"))
-pima.mmm <- function(x, id = NULL, tested_coeffs = NULL) {
-  if (is.null(names(x))) {
-    names(x) <- paste0("model", seq_along(x))
-  }
+# multcomp engine (experimental, parametric): joint test of the tested
+# coefficients of all the models with multcomp::mmm() and multcomp::glht().
+# `method` is a type of multcomp::adjusted(); `algorithm` is the argument of
+# pima_multcomp().
+# Returns the same structure as .pima_flipscores(): see "Engines" in ?pima.
+.pima_multcomp <- function(mods, tested_coeffs, method, tail, id, seed,
+                           algorithm = NULL) {
+  warning("the multcomp engine is experimental.", call. = FALSE)
 
   if (is.null(id)) {
-    n <- vapply(x, stats::nobs, numeric(1))
+    n <- vapply(mods, stats::nobs, numeric(1))
     if (length(unique(n)) > 1L) {
       stop("the models are fitted on different numbers of observations: use `id` to align them.",
            call. = FALSE)
     }
-    fit <- do.call(multcomp::mmm, x)
+    fit <- do.call(multcomp::mmm, mods)
   } else {
-    fit <- do.call(multcomp::mmm, .pad_models(x, id = id))
+    if (inherits(id, "formula")) id <- all.vars(id)
+    if (!is.character(id) || length(id) != 1L) {
+      stop("with the multcomp engine `id` must be the name of a column of the models' data.",
+           call. = FALSE)
+    }
+    fit <- do.call(multcomp::mmm, .pad_models(mods, id = id))
   }
 
-  tested <- .mmm_tested(x, tested_coeffs)
+  tested <- .mmm_tested(mods, tested_coeffs)
 
   # one row per tested coefficient, selecting it from the stacked
   # coefficients of mmm() ("model: coefficient"): coefficient names are used
@@ -99,21 +72,38 @@ pima.mmm <- function(x, id = NULL, tested_coeffs = NULL) {
                 use.names = FALSE)
   K <- matrix(0, length(lab), length(cf), dimnames = list(lab, names(cf)))
   K[cbind(lab, lab)] <- 1
-  mc <- summary(multcomp::glht(fit, linfct = K))
+  alternative <- if (tail > 0) "greater" else if (tail < 0) "less" else "two.sided"
+  g <- multcomp::glht(fit, linfct = K, alternative = alternative)
+  uni <- summary(g, test = multcomp::univariate())$test
 
-  xs <- data.frame(
-    model = rep(names(tested), lengths(tested)),
+  model <- rep(names(tested), lengths(tested))
+  df <- vapply(mods, stats::df.residual, numeric(1))[model]
+  st <- data.frame(
+    model = model,
     coefficient = unlist(tested, use.names = FALSE),
-    estimate = unname(mc$test$coefficients),
-    se = unname(mc$test$sigma),
-    z = unname(mc$test$tstat),
-    p.adj = unname(mc$test$pvalues)
+    estimate = unname(uni$coefficients),
+    se = unname(uni$sigma),
+    z = unname(uni$tstat),
+    pcor = unname(uni$tstat / sqrt(uni$tstat^2 + df)),
+    p = unname(uni$pvalues)
   )
+  if (method != "none") {
+    # "single-step", "free", "Westfall" and "Shaffer" integrate the
+    # multivariate normal numerically (`algorithm`, `seed`)
+    test <- if (is.null(algorithm)) {
+      multcomp::adjusted(method)
+    } else {
+      multcomp::adjusted(method, algorithm = algorithm)
+    }
+    if (!is.null(seed)) set.seed(seed)
+    st$p.adj <- unname(summary(g, test = test)$test$pvalues)
+  }
 
-  wald <- .bind_rows(lapply(x, .get_glm_summary), "model")
-  xs$p <- wald$wald.p[match(paste(xs$model, xs$coefficient, sep = "\r"),
-                            paste(wald$model, wald$coefficient, sep = "\r"))]
-  xs[, c("model", "coefficient", "estimate", "se", "z", "p", "p.adj")]
+  list(
+    out = list(summary_table = st, objects = mods, glht = g),
+    args = list(id = id, seed = seed),
+    class = character(0)
+  )
 }
 
 # Tested coefficients of each model, with the names used by coef(): a vector

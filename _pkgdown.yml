@@ -15,6 +15,7 @@ reference:
   desc: Joint sign-flip score tests across the specifications, with multiplicity control.
   contents:
   - pima
+  - pima_flipscores
   - pima-method
   - pima_tree
   - reexports

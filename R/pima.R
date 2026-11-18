@@ -4,8 +4,10 @@
 #' The method jointly computes resampling-based test statistics for all coefficients of interest in all models.
 #' The output allows for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate (FWER)
 #' and confidence bounds for True Discovery Proportions (TDPs).
-#' @param mods list of objects that can be evaluated by [flipscores::flipscores()], usually
-#' model objects produced by `glm` or `flipscores`.
+#' @param mods the models of the multiverse: a list of fitted models (usually
+#'   `glm` or `lm`; unnamed lists are named `model1`, `model2`, ...), a
+#'   `pima.multi` object created by [create_multi()] or a `multiverse` object
+#'   of the \pkg{multiverse} package.
 #' @param tested_coeffs tested coefficients. It can be a vector of names,
 #' tested in each model where they are present (every model must contain at
 #' least one of them), or a list of the same length as `mods`, where each
@@ -14,11 +16,18 @@
 #' models in different forms (e.g. `x`, `log(x)`): build it with
 #' `split()` on `spec_table(mods, focal.var = "x")`.
 #' If `NULL`, all coefficients are tested.
-#' @param n_flips number of sign flips.
-#' @param method correction method among `maxT`, `minP` and `none`. Can be abbreviated.
-#' @param tail direction of the tests used for the adjusted p-values: `0`
-#'   (two-sided, default), a positive value (greater) or a negative value
-#'   (less). Passed to [p.adjust()].
+#' @param method multiplicity correction, among the ones of the engine (can
+#'   be abbreviated). With `engine = "flipscores"`: `"maxT"` (default),
+#'   `"minP"` or `"none"`. With `engine = "multcomp"`, the types of
+#'   [multcomp::adjusted()]: `"single-step"` (default), `"free"`,
+#'   `"Westfall"`, `"Shaffer"`, or the methods of [stats::p.adjust()]
+#'   (`"holm"`, `"hochberg"`, `"hommel"`, `"bonferroni"`, `"BH"`, `"BY"`,
+#'   `"fdr"`, `"none"`). With `"none"` there are no adjusted p-values. If
+#'   `NULL` (default), the default of the engine.
+#' @param tail direction of the tests: `0` (two-sided, default), a positive
+#'   value (greater) or a negative value (less). With `engine = "flipscores"`
+#'   it is used for the adjusted p-values (passed to [p.adjust()]); with
+#'   `engine = "multcomp"` for all the p-values.
 #' @param extra optional data frame with one row per model (in the order of
 #'   `mods`) of additional information, added to `info` and `summary_table`.
 #'   For `pima.multi` objects the columns `model`, `subset` and `fit_spec` of
@@ -29,11 +38,16 @@
 #'   `~id`). Used to align the scores of models fitted on different rows (e.g.
 #'   after subsetting or removing missing values); repeated values define
 #'   clusters. If `NULL` (default), the scores are aligned by row names.
-#' @param parametric if `TRUE`, uses the experimental parametric backend based
-#'   on [multcomp::mmm()] instead of the sign-flip score test (see
-#'   [pima.mmm()]). Its output is not compatible with the other functions of
-#'   the package.
-#' @param ... further parameters of [flipscores::flipscores()].
+#' @param seed seed of the random numbers, for reproducible results: the sign
+#'   flips with `engine = "flipscores"`, the numerical integration of the
+#'   adjusted p-values with `engine = "multcomp"`. If `NULL` (default), the
+#'   current state of the random number generator is used.
+#' @param engine the test used: `"flipscores"` (default), the sign-flip score
+#'   test, or `"multcomp"`, the experimental parametric test based on
+#'   [multcomp::mmm()] (see *Engines* below). To set the arguments of the
+#'   engine (e.g. `n_flips`), use [pima_flipscores()] or [pima_multcomp()].
+#' @param ... not used: the arguments of the engines are given to
+#'   [pima_flipscores()] or [pima_multcomp()].
 #' @details The procedure builds on the sign-flip score test implemented in [flipscores::flipscores()].
 #' For each tested coefficient in each model, it computes a set of resampling-based test statistics and a raw p-value
 #' for the null hypothesis that the coefficient is null against a two-sided alternative.
@@ -43,20 +57,15 @@
 #' @details Post-selection inference is achieved by merging information from the considered models:
 #' the adjusted p-values in the output summary provide strong FWER control and answer the question
 #' "Which effects in which models are significant?".
-#' @details Further parameters include:
-#' \itemize{
-#' \item `score_type`: type of score that is computed (see [flipscores::flipscores()] for more details).
-#' The default `"standardized"` provides almost exact control of the error for any sample size.
-#' \item `statistics`: test statistics computed by the procedure. Currently, `t` is the only implemented method.
-#' Different statistics will affect the multivariate inference, but not the univariate.
-#' \item `seed`: can be specified to ensure replicability of results.
-#' \item `output_models`: `TRUE` to return the list of model objects produced by `flipscores`.
-#' }
+#' @details The number of sign flips and the other arguments of
+#' [flipscores::flipscores()] are given to [pima_flipscores()], e.g.
+#' `score_type`, the type of score: the default `"standardized"` provides
+#' almost exact control of the error for any sample size.
 #' @section P-values:
 #' Let \eqn{T_{jb}} be the test statistic of the \eqn{j}-th tested coefficient
 #' (\eqn{j = 1, \dots, m}, over all the models) under the \eqn{b}-th
 #' sign-flipping transformation (\eqn{b = 1, \dots, B}, with \eqn{B} =
-#' `n_flips` and \eqn{b = 1} the identity), taken in absolute value for
+#' `n_flips` of [pima_flipscores()] and \eqn{b = 1} the identity), taken in absolute value for
 #' two-sided tests. The raw p-value is the proportion of transformations
 #' giving a statistic at least as extreme as the observed one:
 #' \deqn{p_j = \frac{1}{B} \sum_{b=1}^{B} \mathbf{1}\left(T_{jb} \ge T_{j1}\right).}{p_j = #{b : T_jb >= T_j1} / B.}
@@ -72,15 +81,44 @@
 #' procedure to the p-values of each transformation instead of the
 #' statistics.
 #'
+#' @section Engines:
+#' The engine is chosen with `engine`: a name (`"flipscores"` or
+#' `"multcomp"`) uses its default arguments, [pima_flipscores()] and
+#' [pima_multcomp()] set them. The other arguments of `pima()` are common to
+#' the engines.
+#'
+#' With `engine = "flipscores"` (default) the tests are the sign-flip score
+#' tests described above. With `engine = "multcomp"` (experimental, parametric) the
+#' tested coefficients of all the models are tested jointly with
+#' [multcomp::mmm()] and [multcomp::glht()]: the covariance between the
+#' estimates of different models comes from the sandwich estimator of the
+#' stacked estimating equations
+#' \insertCite{pipper2012versatile,hothorn2008simultaneous}{pima}. `p` are
+#' the univariate p-values and `p.adj` the p-values adjusted with the type
+#' of [multcomp::adjusted()] given in `method`: `"single-step"` (default) and
+#' `"free"` (its step-down version) use the correlation between the tests,
+#' like the maxT procedure; `se` is the standard error of the estimate. The adjusted p-values are computed by
+#' numerical integration, with a small random error: set `seed` (and, for more
+#' precision, `algorithm` in [pima_multcomp()]).
+#'
+#' Without `id`, the multcomp engine requires the models to be fitted on the
+#' same observations, in the same order. With `id` (the name of a column of
+#' the models' data, with no repeated values within a model), the scores of
+#' each model are aligned on the union of the observations, with zeros for
+#' the observations a model does not use.
+#'
 #' @return Returns an object of class `pima`, containing:
 #' \itemize{
 #' \item `Tspace`: data frame of test statistics, where columns correspond to tests, and rows to sign-flipping transformations
 #' (the first is the identity).
 #' \item `summary_table`: data frame containing a summary for each tested coefficient in each model:
 #' estimate, score, standard error, z value, partial correlation, raw p-value, adjusted p-value.
-#' \item `mods`: list of model objects computed by `flipscores`.
+#' \item `objects`: list of model objects computed by `flipscores`.
 #' \item `tested_coeffs`: tested coefficients, as in input.
+#' \item `engine`: the engine used, with its arguments (see [pima_flipscores()]).
 #' }
+#' With `engine = "multcomp"` there is no `Tspace`, `objects` are the
+#' fitted models and `glht` is the [multcomp::glht()] object.
 #' @references
 #' \insertRef{girardi2024pima}{pima}
 #'
@@ -117,82 +155,145 @@
 #' @family PIMA inference
 #' @export
 
-pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", "minP", "none"), tail = 0, extra = NULL, id = NULL, parametric = FALSE, ...) {
-  
-  if(inherits(mods, "pima.multi")){
-    old <- mods
-    mods <- mods$models
-    extra_columns <- c("model", "subset", "fit_spec")
-    if (".source" %in% names(old$scenarios)) {
-      extra_columns <- c(extra_columns, ".source")
-    }
-    if ("y.fun" %in% names(old$scenarios)) {
-      extra_columns <- c(extra_columns, "y.fun")
-    }
-    new_extra <- old$scenarios[, extra_columns, drop = FALSE]
-    if(!is.null(extra)){
-      extra <- cbind(extra, new_extra)
-    } else{
-      extra <- new_extra
-    }
-  }
-  
-  # TODO experimental multiverse support
-  if(inherits(mods, "multiverse")){
-    multi <- .parse_multiverse_object(mods)
-    mods <- multi$models
-    new_extra <- multi$extra
-    if(!is.null(extra)){
-      extra <- cbind(extra, new_extra)
-    } else{
-      extra <- new_extra
-    }
-  }
-  
-  mods_are_glm <- sapply(mods, function(x) inherits(x, "glm"))
+pima <- function(mods, tested_coeffs = NULL,
+                 method = NULL, tail = 0,
+                 extra = NULL, id = NULL, seed = NULL, engine = "flipscores", ...) {
+  UseMethod("pima")
+}
 
-  if(!all(mods_are_glm)){
+# The methods share the arguments of the generic (shown by autocompletion
+# whatever the input) and are documented by its usage: the input-specific
+# methods only turn `mods` into a list of models plus `extra` columns and call
+# pima.list().
+
+#' @rdname pima
+#' @usage NULL
+#' @export
+pima.list <- function(mods, tested_coeffs = NULL,
+                      method = NULL, tail = 0,
+                      extra = NULL, id = NULL, seed = NULL, engine = "flipscores", ...) {
+  .check_no_dots(...)
+  engine <- .as_engine(engine)
+  method <- .engine_method(engine$name, method)
+  mods <- .prepare_models(mods)
+  tested_coeffs <- .check_tested_coeffs(mods, tested_coeffs)
+
+  fit <- switch(
+    engine$name,
+    flipscores = .pima_flipscores(mods, tested_coeffs = tested_coeffs,
+                                  method = method, tail = tail, id = id,
+                                  seed = seed, args = engine$args),
+    multcomp = do.call(.pima_multcomp,
+                       c(list(mods, tested_coeffs = tested_coeffs, method = method,
+                              tail = tail, id = id, seed = seed), engine$args))
+  )
+  .new_pima(fit, mods, tested_coeffs = tested_coeffs, extra = extra,
+            method = method, engine = engine)
+}
+
+#' @rdname pima
+#' @usage NULL
+#' @export
+pima.pima.multi <- function(mods, tested_coeffs = NULL,
+                            method = NULL, tail = 0,
+                            extra = NULL, id = NULL, seed = NULL, engine = "flipscores", ...) {
+  .check_no_dots(...)
+  if (is.null(mods$models)) {
+    stop("the `pima.multi` object has no fitted models: use `fit.specs` in create_multi().",
+         call. = FALSE)
+  }
+  cols <- intersect(c("model", "subset", "fit_spec", ".source", "y.fun"),
+                    names(mods$scenarios))
+  new_extra <- mods$scenarios[, cols, drop = FALSE]
+  pima.list(mods$models, tested_coeffs = tested_coeffs, method = method,
+            tail = tail, extra = .cbind_extra(extra, new_extra), id = id,
+            seed = seed, engine = engine)
+}
+
+#' @rdname pima
+#' @usage NULL
+#' @export
+pima.multiverse <- function(mods, tested_coeffs = NULL,
+                            method = NULL, tail = 0,
+                            extra = NULL, id = NULL, seed = NULL, engine = "flipscores", ...) {
+  .check_no_dots(...)
+  # TODO experimental multiverse support
+  multi <- .parse_multiverse_object(mods)
+  pima.list(multi$models, tested_coeffs = tested_coeffs, method = method,
+            tail = tail, extra = .cbind_extra(extra, multi$extra), id = id,
+            seed = seed, engine = engine)
+}
+
+#' @rdname pima
+#' @usage NULL
+#' @export
+pima.default <- function(mods, tested_coeffs = NULL,
+                         method = NULL, tail = 0,
+                         extra = NULL, id = NULL, seed = NULL, engine = "flipscores", ...) {
+  stop("`mods` must be a list of fitted models, a `pima.multi` object (see create_multi()) ",
+       "or a `multiverse` object. For a single model use list(model).", call. = FALSE)
+}
+
+# The arguments of the engines (n_flips, ...) are not arguments of pima()
+.check_no_dots <- function(...) {
+  dots <- names(list(...))
+  if (length(dots)) {
+    dots[dots == ""] <- "<unnamed>"
+    stop(sprintf(paste0("unused arguments in pima(): %s. The arguments of the engines ",
+                        "(e.g. `n_flips`) go to pima_flipscores() or pima_multcomp(), ",
+                        "e.g. engine = pima_flipscores(n_flips = 1000)."),
+                 paste0("`", dots, "`", collapse = ", ")), call. = FALSE)
+  }
+}
+
+# Models ready for the engines: named, and lm models refitted as glm
+.prepare_models <- function(mods) {
+  if (!length(mods)) {
+    stop("`mods` is an empty list.", call. = FALSE)
+  }
+  if (is.null(names(mods))) {
+    names(mods) <- paste0("model", seq_along(mods))
+  }
+  if (!all(vapply(mods, inherits, logical(1), what = "glm"))) {
     # TODO check if refitting is safe
-    # stop("all models within mods must be of class glm!")
     mods <- lapply(mods, as.glm)
   }
-  
-  tested_coeffs <- .check_tested_coeffs(mods, tested_coeffs)
-  
-  # TODO temporary testing the parametric pima
-  if(parametric){
-    warning("Current implementation of parametric pima based on multcomp::mmm() is experimental! The output is not compatible with other methods.")
-    res <- pima.mmm(mods, id = id, tested_coeffs = tested_coeffs)
-    return(res)
-  }
+  mods
+}
 
-  method <- match.arg(method, c("maxT", "minP", "none"))
-  
-  extra_args <- list(...)
-  
-  flipscores_args <- c(
-    list(formula = mods, tested_coeffs = tested_coeffs, n_flips = n_flips, id = id), 
-    extra_args
-  )
-  
-  out <- do.call(flipscores::flipscores, flipscores_args)
-  old_class <- class(out)
-  
+.cbind_extra <- function(extra, new_extra) {
+  if (is.null(extra)) new_extra else cbind(extra, new_extra)
+}
+
+# Sign-flip score engine. `args` are the arguments of pima_flipscores().
+# Returns the flipscores output (adjusted with p.adjust() unless method is
+# "none"), the arguments passed to flipscores (stored in the pima object) and
+# the class of the flipscores output.
+.pima_flipscores <- function(mods, tested_coeffs, method, tail, id, seed, args) {
+  args <- c(list(formula = mods, tested_coeffs = tested_coeffs, id = id, seed = seed), args)
+  out <- do.call(flipscores::flipscores, args)
+  cls <- class(out)
+
   # TODO check if removing res$call is problematic
   out <- out[names(out) != "call"]
-  
-  if(method != "none"){
-    # TODO is tail something to put as parameter?
+
+  if (method != "none") {
     out <- flipscores::p.adjust(object = out, tail = tail, method = method)
   }
-  
-  # get all the arguments of jointest::join_flipscores to be
-  # used in other functions
-  
-  join_flipscores_args <- .get_fn_args(flipscores::flipscores, 
-                                       new.args = flipscores_args, 
-                                       exclude = c("...", "mods"))
-  
+
+  list(
+    out = out,
+    args = .get_fn_args(flipscores::flipscores, new.args = args,
+                        exclude = c("...", "mods")),
+    class = cls
+  )
+}
+
+# Common part of the pima object: responses, model information, extra
+# columns and Wald p-values, added to the output of an engine.
+.new_pima <- function(fit, mods, tested_coeffs, extra, method, engine) {
+  out <- fit$out
+
   # flipscores labels the response with all.vars(), so log(y) and y would
   # share the same label: use the deparsed left-hand side instead.
   responses <- .get_response_name(out$objects)
@@ -201,27 +302,22 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   info <- .get_info_models(out$objects, extra)
   out$info <- info$info
   out$tested_coeffs <- tested_coeffs
-  out <- c(out, join_flipscores_args)
+  out <- c(out, fit$args)
   out$p.adjust.method <- method
   out$extra <- info$extra
-  
+  out$engine <- engine
+
   # add extra to summary table
   out$summary_table <- merge(out$summary_table, info$extra, by = "model")
 
   # get wald statistics
-  wald_l <- lapply(seq_along(mods), function(i) {
-    d <- .get_glm_summary(mods[[i]])
-    d$model <- names(mods[i])
-    d
-  })
-
-  wald_l <- do.call(rbind, wald_l)
+  wald <- .bind_rows(lapply(mods, .get_glm_summary), "model")
   out$summary_table <- merge(out$summary_table,
-        wald_l[, c("model", "coefficient", "wald.p")],
-        by = c("model", "coefficient"))
-  
-  class(out) <- unique(c("pima", old_class))
-  return(out)
+                             wald[, c("model", "coefficient", "wald.p")],
+                             by = c("model", "coefficient"))
+
+  class(out) <- unique(c("pima", fit$class))
+  out
 }
 
 #' Subset a multiverse object

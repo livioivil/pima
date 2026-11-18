@@ -24,7 +24,8 @@ spec_curve(
   bottom.theme = NULL,
   redundant = TRUE,
   conf.int = FALSE,
-  facet.y = FALSE,
+  facet = NULL,
+  facet.scales = "free_y",
   which.response = NULL,
   yname = NULL,
   which.plot = "both"
@@ -85,7 +86,8 @@ non-significant and significant results. Default to \code{c(4, 19)}.}
 \item{title}{A character string for the overall plot title.}
 
 \item{xlab}{A character string for the x-axis title. Default to
-"Specification".}
+"Specification". The x-axis (the index of the specifications) is shown in
+the bottom plot, or in the top plot when \code{which.plot = "top"}.}
 
 \item{ylab}{A character string for the y-axis title of the top plot.
 Default to the value of \code{yvar}.}
@@ -106,8 +108,13 @@ estimates (only when \code{yvar = "estimate"}). Wald intervals are used with
 \code{p = "wald.p"} when the standard error is available, otherwise intervals
 are obtained by inverting the selected p-values.}
 
-\item{facet.y}{Logical. If \code{TRUE}, creates separate facets for each response
-variable in the top plot. Default is \code{FALSE}.}
+\item{facet}{A formula with columns of the specification table, as in
+\code{\link[ggplot2:facet_grid]{ggplot2::facet_grid()}}, splitting the top plot into panels, e.g.
+\code{response ~ coefficient}, \code{response ~ .} or \code{. ~ coefficient}. If \code{NULL}
+(default), a single panel. See Details.}
+
+\item{facet.scales}{Scales of the panels: \code{"free_y"} (default), \code{"fixed"},
+\code{"free_x"} or \code{"free"}, as in \code{\link[ggplot2:facet_grid]{ggplot2::facet_grid()}}.}
 
 \item{which.response}{A character vector specifying which response
 variables to include in the plot.}
@@ -142,9 +149,18 @@ summary.
 Other columns (e.g., p-values adjusted by the user) are used only when
 passed through \code{p}.
 
-All the selected rows are ordered together by \code{yvar}; the points of the
-top plot are coloured by \code{response ~ coefficient} (e.g. \code{x} and \code{log(x)}
-have different colours).
+The rows are ordered by \code{yvar}. The points of the top plot are coloured by
+\code{response ~ coefficient} (e.g. \code{x} and \code{log(x)} have different colours),
+leaving out the columns used in \code{facet}.
+
+With \code{facet}, the rows are ordered within each panel. With the bottom plot
+(\code{which.plot = "both"}) each specification keeps its own position on the
+x-axis, so that the top and bottom plots stay aligned: the panels are
+stacked in rows (one for each combination of the \code{facet} columns) and
+follow each other on the x-axis. With \code{which.plot = "top"} the panels are
+laid out as in \code{facet}, each with the x-axis of its own specifications.
+Whether the values in the same panel are comparable (e.g. the estimates of
+\code{x} and \code{log(x)} with \code{facet = response ~ .}) is up to the user.
 }
 \examples{
 mods <- list(

@@ -40,6 +40,7 @@ This function builds a classification tree based on raw or adjusted p-values usi
 \seealso{
 Other PIMA inference:
 \code{\link[=pima]{pima()}},
-\code{\link{pima-method}}
+\code{\link{pima-method}},
+\code{\link[=pima_flipscores]{pima_flipscores()}}
 }
 \concept{PIMA inference}

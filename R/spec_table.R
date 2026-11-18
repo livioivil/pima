@@ -181,7 +181,10 @@ spec_table <- function(x, focal = NULL, focal.var = NULL) {
   st <- x$summary_table
   st <- st[, setdiff(names(st), ".assign"), drop = FALSE]
   # in flipscores `se` is the standard error of the score, not of the estimate
-  names(st)[names(st) == "se"] <- "score.se"
+  # (objects without `engine` come from flipscores)
+  if (.engine_name(x) == "flipscores") {
+    names(st)[names(st) == "se"] <- "score.se"
+  }
   st$.row <- seq_len(nrow(st))
 
   # coefficient -> term -> variable from the fitted models
