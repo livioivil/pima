@@ -2,9 +2,17 @@ Package: pima
 Type: Package
 Title: Post-selection Inference in Multiverse Analysis
 Version: 1.2.1
-Date: 2022-09-15
-Author: Livio Finos, Paolo Girardi, Filippo Gambarota, Anna Vesely, Giulia Calignano, Massimiliano Pastore, Gianmarco Altoè
-Maintainer: Filippo Gambarota <filippo.gambarota@unipd.it>
+Date: 2026-11-18
+Authors@R: c(
+    person("Livio", "Finos", role = "aut"),
+    person("Paolo", "Girardi", role = "aut"),
+    person("Filippo", "Gambarota", email = "filippo.gambarota@unipd.it",
+           role = c("aut", "cre")),
+    person("Anna", "Vesely", role = "aut"),
+    person("Giulia", "Calignano", role = "aut"),
+    person("Massimiliano", "Pastore", role = "aut"),
+    person("Gianmarco", "Altoè", role = "aut")
+  )
 Description: Runs resampling-based tests jointly to allow for multiple testing in multiverse analysis, providing weak and strong control of the Family-Wise Error Rate and True Discovery Proportions. As main feature, it applies the PIMA procedure, a general and flexible framework based on the sign-flip score test. Details can be found in Girardi et al. (2024) <doi:10.1007/s11336-024-09973-6>.
 License: GPL (>= 2)
 Depends:

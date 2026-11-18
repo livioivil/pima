@@ -2,3 +2,40 @@ url: https://livioivil.github.io/pima/
 template:
   bootstrap: 5
 
+
+reference:
+- title: Multiverse construction
+  desc: Generate and fit the specifications of a multiverse.
+  contents:
+  - create_multi
+  - create_fit
+  - subset.pima.multi
+  - c.pima.multi
+- title: PIMA inference
+  desc: Joint sign-flip score tests across the specifications, with multiplicity control.
+  contents:
+  - pima
+  - pima-method
+  - pima_tree
+  - reexports
+- title: Specification tables and plots
+  desc: Collect the results of the specifications and plot them.
+  contents:
+  - spec_table
+  - spec_curve
+  - spec_scatter
+  - transf_p
+- title: Vibration of effects
+  desc: Describe how the estimates vary across the specifications.
+  contents:
+  - voe
+  - voe_variance
+  - janus
+  - volcano
+- title: Data
+  contents:
+  - hurricane
+  - pimads
+- title: Package
+  contents:
+  - pima-package
