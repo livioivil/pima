@@ -996,6 +996,11 @@ create_multi <- function(formula,
     fit.specs = fit.specs
   )
   
+  scenarios <- cbind(
+    scenarios,
+    data.frame(do.call(rbind, lapply(scenarios$calls, .nelem_formula)))
+  )
+  
   out <- list(
     variables = variables,
     formula_specs = formula_specs,

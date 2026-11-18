@@ -137,3 +137,11 @@ c.pima.multi <- function(..., recursive = FALSE) {
   rownames(out) <- NULL
   out
 }
+
+.nelem_formula <- function(f){
+  f <- as.formula(f)
+  x <- formula.tools::rhs.vars(f)
+  y <- formula.tools::lhs.vars(f)
+  list(nx = length(x),
+       ny = length(y))
+}
