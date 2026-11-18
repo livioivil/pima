@@ -35,7 +35,11 @@ not transformed; use `transf.focal` to allow their transformations.}
 a character vector of function names to apply to every numeric predictor
 (e.g. `c("log", "sqrt")`) or a named list for variable-specific choices
 (e.g. `list(x = "log", z = c("log", "sqrt"))`). Functions are supplied
-as character strings and are applied to one predictor at a time.}
+as character strings and are applied to one predictor at a time.
+In the list, `.default` sets the transformations of the predictors not
+named (e.g. `list(x = "log", .default = c("log", "sqrt"))`) and
+`x = NULL` leaves `x` untransformed. Focal predictors are transformed
+only with `transf.focal = TRUE`.}
 
 \item{cfuns}{Same as `nfuns`, but for non-numeric predictors.}
 

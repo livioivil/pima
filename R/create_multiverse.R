@@ -217,7 +217,25 @@
       call. = FALSE
     )
   }
-  
+
+  # `.default`: transformations for every variable not named in the list
+  if (".default" %in% names(funs)) {
+    if (".default" %in% vars) {
+      stop(
+        sprintf("`.default` is reserved in `%s` and cannot be a predictor name.", arg_name),
+        call. = FALSE
+      )
+    }
+    default <- funs[[".default"]]
+    funs <- funs[names(funs) != ".default"]
+    if (!is.null(default)) {
+      default <- validate_funs(default)
+      for (x in vars) {
+        out[[x]] <- default
+      }
+    }
+  }
+
   unknown_vars <- setdiff(names(funs), vars)
   
   if (length(unknown_vars) > 0L) {
@@ -233,9 +251,11 @@
   
   for (x in names(funs)) {
     if (is.null(funs[[x]])) {
+      # no transformations for this variable, even with `.default`
+      out[x] <- list(NULL)
       next
     }
-    
+
     out[[x]] <- validate_funs(funs[[x]])
   }
   
@@ -852,6 +872,10 @@
 #'   (e.g. `c("log", "sqrt")`) or a named list for variable-specific choices
 #'   (e.g. `list(x = "log", z = c("log", "sqrt"))`). Functions are supplied
 #'   as character strings and are applied to one predictor at a time.
+#'   In the list, `.default` sets the transformations of the predictors not
+#'   named (e.g. `list(x = "log", .default = c("log", "sqrt"))`) and
+#'   `x = NULL` leaves `x` untransformed. Focal predictors are transformed
+#'   only with `transf.focal = TRUE`.
 #' @param cfuns Same as `nfuns`, but for non-numeric predictors.
 #' @param y.funs Character vector of transformations for the response
 #'   (e.g. `c("log", "sqrt")`). Defaults to `"identity"`, i.e. the response as
