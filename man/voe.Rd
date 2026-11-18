@@ -7,23 +7,32 @@
 voe(
   x,
   xvar = "pcor",
-  p.adjusted = TRUE,
+  p.adjusted = NULL,
   q = c(0.01, 0.5, 0.99),
   type = c("additive", "ratio"),
   null = 0,
   alpha = 0.05,
   decompose_variance = FALSE,
   focal = NULL,
-  which.response = NULL
+  which.response = NULL,
+  focal.var = NULL,
+  p = NULL
 )
 }
 \arguments{
-\item{x}{an object of class `pima`.}
+\item{x}{a `pima` object, a `pima.multi` object created with `fit.specs`, a
+list of fitted `lm` or `glm` models, or a table returned by
+[spec_table()].}
 
-\item{xvar}{column of `summary_table` to summarise (e.g. `"pcor"`,
-`"estimate"`).}
+\item{xvar}{column of the specification table to summarise (e.g.
+`"pcor"`, `"estimate"`).}
 
-\item{p.adjusted}{if `TRUE` uses adjusted p-values, otherwise raw ones.}
+\item{p.adjusted}{which p-values to use, with the same rules as
+[spec_curve()]: for `pima` objects `TRUE` uses the adjusted p-values,
+`FALSE` the unadjusted flipscores ones and `NULL` (default) the adjusted
+ones when [pima()] applied a correction; for lists of models and
+`pima.multi` objects only the unadjusted Wald p-values exist (`"wald.p"`)
+and `TRUE` is an error.}
 
 \item{q}{probabilities for the quantiles; the extremes define the
 amplitudes and the Janus effect.}
@@ -38,9 +47,16 @@ only with `xvar = "estimate"`).}
 
 \item{decompose_variance}{if `TRUE`, adds [voe_variance()].}
 
-\item{focal}{coefficients to consider; defaults to `x$tested_coeffs`.}
+\item{focal, focal.var}{coefficients and variables to consider, as in
+[spec_curve()]; by default the tested coefficients (`pima`), the focal
+predictors (`pima.multi`) or all the coefficients except the intercept.
+Each selected coefficient is a separate association.}
 
 \item{which.response}{responses to consider; defaults to all.}
+
+\item{p}{column of p-values of the specification table (e.g. one added
+with [stats::p.adjust()]). If `NULL`, chosen with the rules of
+`p.adjusted`.}
 }
 \value{
 An object of class `pima_voe`: a list with `summary` (one row per

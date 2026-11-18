@@ -8,25 +8,38 @@ volcano(
   x,
   focal = NULL,
   xvar = "pcor",
-  p.adjusted = TRUE,
+  p.adjusted = NULL,
   p.cut = c(0.05, 0.001),
   q = c(0.01, 0.5, 0.99),
   type = c("additive", "ratio"),
   null = 0,
   alpha = 0.05,
   which.response = NULL,
-  median.traj = FALSE
+  median.traj = FALSE,
+  focal.var = NULL,
+  p = NULL,
+  ...
 )
 }
 \arguments{
-\item{x}{an object of class `pima`.}
+\item{x}{a `pima` object, a `pima.multi` object created with `fit.specs`, a
+list of fitted `lm` or `glm` models, or a table returned by
+[spec_table()].}
 
-\item{focal}{coefficients to consider; defaults to `x$tested_coeffs`.}
+\item{focal, focal.var}{coefficients and variables to consider, as in
+[spec_curve()]; by default the tested coefficients (`pima`), the focal
+predictors (`pima.multi`) or all the coefficients except the intercept.
+Each selected coefficient is a separate association.}
 
-\item{xvar}{column of `summary_table` to summarise (e.g. `"pcor"`,
-`"estimate"`).}
+\item{xvar}{column of the specification table to summarise (e.g.
+`"pcor"`, `"estimate"`).}
 
-\item{p.adjusted}{if `TRUE` uses adjusted p-values, otherwise raw ones.}
+\item{p.adjusted}{which p-values to use, with the same rules as
+[spec_curve()]: for `pima` objects `TRUE` uses the adjusted p-values,
+`FALSE` the unadjusted flipscores ones and `NULL` (default) the adjusted
+ones when [pima()] applied a correction; for lists of models and
+`pima.multi` objects only the unadjusted Wald p-values exist (`"wald.p"`)
+and `TRUE` is an error.}
 
 \item{p.cut}{p-value cutoffs drawn as horizontal lines.}
 
@@ -42,12 +55,22 @@ only with `xvar = "estimate"`).}
 \item{alpha}{significance level.}
 
 \item{which.response}{responses to consider; defaults to all.}
+
+\item{median.traj}{if `TRUE`, adds the trajectory of the medians by the
+number of excluded predictors.}
+
+\item{p}{column of p-values of the specification table (e.g. one added
+with [stats::p.adjust()]). If `NULL`, chosen with the rules of
+`p.adjusted`.}
+
+\item{...}{further arguments passed to [spec_scatter()] (e.g. `xlab`,
+`ylab`, `shapes`, `by`).}
 }
 \value{
 A ggplot object.
 }
 \description{
-Plots `xvar` against -log10(p) for one association (one response x
-coefficient), adding the quantile lines computed by [voe()] and p-value
-cutoffs.
+Plots `xvar` against -log10(p), adding the quantile lines computed by
+[voe()] and p-value cutoffs. With more than one association (response x
+coefficient) each one is drawn in its own panel, with its own lines.
 }

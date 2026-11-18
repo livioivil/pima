@@ -7,20 +7,27 @@
 voe_variance(
   x,
   estimate = "pcor",
-  p.adjusted = TRUE,
+  p.adjusted = NULL,
   focal = NULL,
-  which.response = NULL
+  which.response = NULL,
+  focal.var = NULL
 )
 }
 \arguments{
-\item{x}{an object of class `pima`.}
+\item{x}{a `pima` object, a `pima.multi` object created with `fit.specs`, a
+list of fitted `lm` or `glm` models, or a table returned by
+[spec_table()].}
 
-\item{estimate}{column of `summary_table` to decompose.}
+\item{estimate}{column of the specification table to decompose.}
 
-\item{p.adjusted}{if `TRUE` uses adjusted p-values (only needed to build the
-specification data).}
+\item{p.adjusted}{not used: p-values play no role in the decomposition.
+Kept for backward compatibility; when not `NULL` it is only checked with
+the rules of [voe()].}
 
-\item{focal}{coefficients to consider; defaults to `x$tested_coeffs`.}
+\item{focal, focal.var}{coefficients and variables to consider, as in
+[spec_curve()]; by default the tested coefficients (`pima`), the focal
+predictors (`pima.multi`) or all the coefficients except the intercept.
+Each selected coefficient is a separate association.}
 
 \item{which.response}{responses to consider; defaults to all.}
 }
@@ -38,11 +45,11 @@ balanced grid of specifications and no interactions, the unique R-squared
 equals the ANOVA share of variance (Klau et al. 2023).
 }
 \details{
-Decisions are the predictors (`attr(x$info, "xs")`, one factor per
-predictor whose levels are the terms used to include it and
+Decisions are the predictors (`attr(spec_table(x), "spec_predictors")`,
+one factor per predictor whose levels are the terms used to include it and
 `"<predictor> (removed)"` when it is excluded) and the other specification
-choices (`attr(x$info, "extra")`, e.g. `subset`, `fit_spec`, `family`,
-`link`). Decisions that do not vary within an association are dropped, and
+choices (the remaining `attr(spec_table(x), "spec_vars")`, e.g. `subset`,
+`fit_spec`, `family`, `link`). Decisions that do not vary within an association are dropped, and
 so are decisions that define the same partition of the specifications as an
 earlier one (e.g. `link` when it is fully determined by `fit_spec`). A
 decision nested in another one (e.g. `link` with fewer levels than

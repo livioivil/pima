@@ -1,9 +1,11 @@
 # -----------------------------------------------------------------------------
-# Vibration of Effects (VoE) for pima objects
+# Vibration of Effects (VoE)
 # -----------------------------------------------------------------------------
 #
-# All summaries are computed separately for each association, i.e. for each
-# response x coefficient pair in `summary_table`. Pooling different
+# All the functions work on the table returned by spec_table(), so they accept
+# pima objects, pima.multi objects, lists of lm/glm models and spec_table()
+# tables. All summaries are computed separately for each association, i.e. for
+# each response x coefficient pair. Pooling different
 # coefficients or responses would mix different associations.
 
 # -----------------------------------------------------------------------------
@@ -20,45 +22,47 @@
   q
 }
 
-# Name of the p-value column to use
-.p_col <- function(x, p.adjusted) {
-  if (!p.adjusted) {
-    return("p")
+# Specification table used by the VoE functions: spec_table() of `x`, or `x`
+# itself when it is already a table (e.g. a filtered spec_table())
+.voe_table <- function(x) {
+  tab <- if (is.data.frame(x)) x else spec_table(x)
+  if (is.null(tab$response)) {
+    tab$response <- "(response)"
   }
-  if (identical(x$p.adjust.method, "none") || is.null(x$summary_table$p.adj)) {
-    stop("adjusted p-values are not available: use `p.adjusted = FALSE` ",
-         "or re-run pima() with a correction method.", call. = FALSE)
-  }
-  "p.adj"
+  tab
 }
 
-# Filter summary_table to the focal coefficients and responses
-.voe_data <- function(x, focal = NULL, which.response = NULL, xvar = "estimate") {
-  d <- x$summary_table
-  
-  if (is.null(d$response)) {
-    d$response <- "(response)"
+# Select the associations to summarise. Defaults as in spec_curve(): tested
+# coefficients (pima), focal predictors (pima.multi), otherwise all the
+# coefficients. The intercept is always dropped.
+.voe_select <- function(tab, x, focal = NULL, focal.var = NULL,
+                        which.response = NULL, xvar = "estimate") {
+  if (!length(focal) && !length(focal.var)) {
+    if (inherits(x, "pima")) focal <- unique(unlist(x$tested_coeffs))
+    if (inherits(x, "pima.multi")) focal.var <- x$specification$focal
   }
   if (!is.null(which.response)) {
-    d <- d[d$response %in% which.response, , drop = FALSE]
+    tab <- tab[tab$response %in% which.response, , drop = FALSE]
   }
-  
-  if (is.null(focal)) {
-    focal <- unique(unlist(x$tested_coeffs))
-  }
-  if (!is.null(focal)) {
-    d <- d[d$coefficient %in% focal, , drop = FALSE]
-  }
-  d <- d[!grepl("Intercept", d$coefficient, fixed = TRUE), , drop = FALSE]
-  
-  if (!xvar %in% names(d)) {
-    stop(sprintf("`%s` is not a column of `summary_table`.", xvar), call. = FALSE)
-  }
-  if (!nrow(d)) {
-    stop("no coefficients left after filtering: check `focal` and `which.response`.",
+  tab <- .filter_focal(tab, focal = focal, focal.var = focal.var)
+  tab <- tab[tab$coefficient != "(Intercept)", , drop = FALSE]
+
+  if (!xvar %in% names(tab)) {
+    stop(sprintf("`%s` is not a column of the specification table.", xvar),
          call. = FALSE)
   }
-  d
+  if (!nrow(tab)) {
+    stop("no coefficients left after filtering: check `focal`, `focal.var` ",
+         "and `which.response`.", call. = FALSE)
+  }
+  rownames(tab) <- NULL
+  tab
+}
+
+.voe_data <- function(x, focal = NULL, focal.var = NULL, which.response = NULL,
+                      xvar = "estimate") {
+  .voe_select(.voe_table(x), x, focal = focal, focal.var = focal.var,
+              which.response = which.response, xvar = xvar)
 }
 
 # One group per association (response x coefficient)
@@ -116,23 +120,29 @@
 #'   (Tierney et al. 2021).
 #' }
 #'
-#' @param x a numeric vector of estimates, or an object of class `pima`.
-#' @param p a numeric vector of p-values, same length as `x`. If `NULL`,
-#'   `J_sig` and `J_ext` are `NA`.
+#' @param x a numeric vector of estimates, a `pima` object, a `pima.multi`
+#'   object created with `fit.specs`, a list of fitted `lm` or `glm` models,
+#'   or a table returned by [spec_table()].
+#' @param p for vectors, a numeric vector of p-values, same length as `x`
+#'   (if `NULL`, `J_sig` and `J_ext` are `NA`). Otherwise, the column of
+#'   p-values of the specification table, as in [spec_curve()].
 #' @param q probabilities; only the extremes are used.
 #' @param null value under the null hypothesis (0 on the link scale).
 #' @param alpha significance level.
-#' @param focal coefficients to consider; defaults to `x$tested_coeffs`.
-#' @param p.adjusted if `TRUE` uses adjusted p-values, otherwise raw ones.
-#'   Published values in the literature use raw p-values.
+#' @param focal,focal.var coefficients and variables to consider, as in
+#'   [spec_curve()]; by default the tested coefficients (`pima`), the focal
+#'   predictors (`pima.multi`) or all the coefficients except the intercept.
+#' @param p.adjusted which p-values to use, with the same rules as
+#'   [spec_curve()]: adjusted p-values only exist for `pima` objects analysed
+#'   with a correction. Published values in the literature use raw p-values.
 #' @param which.response responses to consider; defaults to all.
-#' @param xvar column of `summary_table` whose sign is used. Any column with
-#'   the same sign as the coefficient (`estimate`, `pcor`, `z`) gives the same
-#'   result.
+#' @param xvar column of the specification table whose sign is used. Any
+#'   column with the same sign as the coefficient (`estimate`, `pcor`,
+#'   `wald.t`) gives the same result.
 #' @param ... further arguments (currently unused).
 #' @return For vectors, a list with `J_range`, `J_pct`, `J_ext`, `J_sig`,
-#'   `J_frac`. For `pima` objects, a data frame with one row per
-#'   response x coefficient.
+#'   `J_frac`. Otherwise, a data frame with one row per response x
+#'   coefficient.
 #' @references
 #' Patel, Burford, Ioannidis (2015). J Clin Epidemiol, 68(9), 1046-1058.
 #'
@@ -190,11 +200,12 @@ janus.default <- function(x, p = NULL, q = c(0.01, 0.99), null = 0,
 
 #' @rdname janus
 #' @export
-janus.pima <- function(x, focal = NULL, p.adjusted = TRUE, q = c(0.01, 0.99),
+janus.pima <- function(x, focal = NULL, p.adjusted = NULL, q = c(0.01, 0.99),
                        alpha = 0.05, which.response = NULL, xvar = "estimate",
-                       ...) {
-  pv <- .p_col(x, p.adjusted)
-  d <- .voe_data(x, focal, which.response, xvar)
+                       focal.var = NULL, p = NULL, ...) {
+  d <- .voe_data(x, focal = focal, focal.var = focal.var,
+                 which.response = which.response, xvar = xvar)
+  pv <- .pick_p(d, p = p, p.adjusted = p.adjusted)
   
   out <- lapply(.voe_groups(d), function(g) {
     data.frame(
@@ -207,6 +218,18 @@ janus.pima <- function(x, focal = NULL, p.adjusted = TRUE, q = c(0.01, 0.99),
   })
   .bind_rows(out)
 }
+
+#' @rdname janus
+#' @export
+janus.pima.multi <- janus.pima
+
+#' @rdname janus
+#' @export
+janus.list <- janus.pima
+
+#' @rdname janus
+#' @export
+janus.data.frame <- janus.pima
 
 # -----------------------------------------------------------------------------
 # Vibration of effects summaries
@@ -229,10 +252,17 @@ janus.pima <- function(x, focal = NULL, p.adjusted = TRUE, q = c(0.01, 0.99),
 #' logit and cloglog links. Quantiles are always returned on the scale of
 #' `xvar`.
 #'
-#' @param x an object of class `pima`.
-#' @param xvar column of `summary_table` to summarise (e.g. `"pcor"`,
-#'   `"estimate"`).
-#' @param p.adjusted if `TRUE` uses adjusted p-values, otherwise raw ones.
+#' @param x a `pima` object, a `pima.multi` object created with `fit.specs`, a
+#'   list of fitted `lm` or `glm` models, or a table returned by
+#'   [spec_table()].
+#' @param xvar column of the specification table to summarise (e.g.
+#'   `"pcor"`, `"estimate"`).
+#' @param p.adjusted which p-values to use, with the same rules as
+#'   [spec_curve()]: for `pima` objects `TRUE` uses the adjusted p-values,
+#'   `FALSE` the unadjusted flipscores ones and `NULL` (default) the adjusted
+#'   ones when [pima()] applied a correction; for lists of models and
+#'   `pima.multi` objects only the unadjusted Wald p-values exist (`"wald.p"`)
+#'   and `TRUE` is an error.
 #' @param q probabilities for the quantiles; the extremes define the
 #'   amplitudes and the Janus effect.
 #' @param type `"additive"` (difference) or `"ratio"` (exp of the difference,
@@ -241,8 +271,14 @@ janus.pima <- function(x, focal = NULL, p.adjusted = TRUE, q = c(0.01, 0.99),
 #'   (0 for `estimate`, `pcor` and `z`).
 #' @param alpha significance level.
 #' @param decompose_variance if `TRUE`, adds [voe_variance()].
-#' @param focal coefficients to consider; defaults to `x$tested_coeffs`.
+#' @param focal,focal.var coefficients and variables to consider, as in
+#'   [spec_curve()]; by default the tested coefficients (`pima`), the focal
+#'   predictors (`pima.multi`) or all the coefficients except the intercept.
+#'   Each selected coefficient is a separate association.
 #' @param which.response responses to consider; defaults to all.
+#' @param p column of p-values of the specification table (e.g. one added
+#'   with [stats::p.adjust()]). If `NULL`, chosen with the rules of
+#'   `p.adjusted`.
 #' @return An object of class `pima_voe`: a list with `summary` (one row per
 #'   response x coefficient), `quantiles` (long format), the settings used and,
 #'   optionally, `variance`.
@@ -250,14 +286,16 @@ janus.pima <- function(x, focal = NULL, p.adjusted = TRUE, q = c(0.01, 0.99),
 voe <- function(
     x,
     xvar = "pcor",
-    p.adjusted = TRUE,
+    p.adjusted = NULL,
     q = c(0.01, 0.50, 0.99),
     type = c("additive", "ratio"),
     null = 0,
     alpha = 0.05,
     decompose_variance = FALSE,
     focal = NULL,
-    which.response = NULL
+    which.response = NULL,
+    focal.var = NULL,
+    p = NULL
 ) {
   type <- match.arg(type)
   if (type == "ratio" && xvar != "estimate") {
@@ -267,13 +305,14 @@ voe <- function(
   
   q <- sort(unique(q))
   .check_q(q)
-  pv <- .p_col(x, p.adjusted)
-  d <- .voe_data(x, focal, which.response, xvar)
+  d <- .voe_data(x, focal = focal, focal.var = focal.var,
+                 which.response = which.response, xvar = xvar)
+  pv <- .pick_p(d, p = p, p.adjusted = p.adjusted)
 
   # check p distribution
   if(.similar_p(d[[pv]])){
     warning(
-      "The p values based on flipscores are extremely similar! Plots and VOE descriptives could be hard to read!"
+      "The p values are extremely similar! Plots and VOE descriptives could be hard to read!"
     )
   }
   
@@ -322,8 +361,8 @@ voe <- function(
     out$variance <- voe_variance(
       x,
       estimate = xvar,
-      p.adjusted = p.adjusted,
       focal = focal,
+      focal.var = focal.var,
       which.response = which.response
     )
   }
@@ -354,11 +393,11 @@ print.pima_voe <- function(x, digits = 3, ...) {
 #' balanced grid of specifications and no interactions, the unique R-squared
 #' equals the ANOVA share of variance (Klau et al. 2023).
 #'
-#' Decisions are the predictors (`attr(x$info, "xs")`, one factor per
-#' predictor whose levels are the terms used to include it and
+#' Decisions are the predictors (`attr(spec_table(x), "spec_predictors")`,
+#' one factor per predictor whose levels are the terms used to include it and
 #' `"<predictor> (removed)"` when it is excluded) and the other specification
-#' choices (`attr(x$info, "extra")`, e.g. `subset`, `fit_spec`, `family`,
-#' `link`). Decisions that do not vary within an association are dropped, and
+#' choices (the remaining `attr(spec_table(x), "spec_vars")`, e.g. `subset`,
+#' `fit_spec`, `family`, `link`). Decisions that do not vary within an association are dropped, and
 #' so are decisions that define the same partition of the specifications as an
 #' earlier one (e.g. `link` when it is fully determined by `fit_spec`). A
 #' decision nested in another one (e.g. `link` with fewer levels than
@@ -369,12 +408,11 @@ print.pima_voe <- function(x, digits = 3, ...) {
 #' form) and `r2u_transformation` (variation among the forms of an included
 #' predictor). Both are `NA` for the other decisions.
 #'
-#' @param x an object of class `pima`.
-#' @param estimate column of `summary_table` to decompose.
-#' @param p.adjusted if `TRUE` uses adjusted p-values (only needed to build the
-#'   specification data).
-#' @param focal coefficients to consider; defaults to `x$tested_coeffs`.
-#' @param which.response responses to consider; defaults to all.
+#' @inheritParams voe
+#' @param estimate column of the specification table to decompose.
+#' @param p.adjusted not used: p-values play no role in the decomposition.
+#'   Kept for backward compatibility; when not `NULL` it is only checked with
+#'   the rules of [voe()].
 #' @return A list with `r2` (one row per response x coefficient) and `dec`
 #'   (one row per response x coefficient x decision, with `source` equal to
 #'   `"predictor"` or `"other"`, and `r2u_inclusion`, `r2u_transformation` for
@@ -383,41 +421,35 @@ print.pima_voe <- function(x, digits = 3, ...) {
 voe_variance <- function(
     x,
     estimate = "pcor",
-    p.adjusted = TRUE,
+    p.adjusted = NULL,
     focal = NULL,
-    which.response = NULL
+    which.response = NULL,
+    focal.var = NULL
 ) {
-  pv <- .p_col(x, p.adjusted)
-  keep <- .voe_data(x, focal, which.response, estimate)
-  keep_id <- unique(paste(keep$response, keep$coefficient, sep = " ~ "))
-  
-  d <- .get_spec_curve_data(
-    x,
-    yvar = estimate,
-    p.adjusted = p.adjusted,
-    p.values = pv
-  )$dtop
-  if (is.null(d$response)) {
-    d$response <- "(response)"
+  d <- .voe_data(x, focal = focal, focal.var = focal.var,
+                 which.response = which.response, xvar = estimate)
+  if (!is.null(p.adjusted)) {
+    .pick_p(d, p.adjusted = p.adjusted)  # validates `p.adjusted`
   }
-  d <- d[paste(d$response, d$coefficient, sep = " ~ ") %in% keep_id, ,
-         drop = FALSE]
+  if (is.null(attr(d, "spec_vars"))) {
+    stop("cannot find the specification columns (attribute `spec_vars`): ",
+         "use a table returned by spec_table() and filter it with `[`.",
+         call. = FALSE)
+  }
   
   # decisions: predictors (xs) and the other specification choices (extra)
-  xs <- attr(x$info, "xs")
-  xs <- intersect(xs[!grepl("Intercept", xs, fixed = TRUE)], names(d))
-  extra <- setdiff(attr(x$info, "extra"), c("model", xs))
-  extra <- intersect(extra, names(d))
+  xs <- intersect(attr(d, "spec_predictors"), names(d))
+  extra <- intersect(setdiff(attr(d, "spec_vars"), xs), names(d))
   decisions <- c(xs, extra)
   
   res <- lapply(.voe_groups(d), function(g) {
     id <- list(response = g$response[1L], coefficient = g$coefficient[1L])
     dd <- g[, c(estimate, decisions), drop = FALSE]
     
-    # an excluded predictor is NA in `info`: make exclusion an explicit level,
-    # with the same label used by spec_curve()
+    # make exclusion an explicit level, with the same label used by
+    # spec_curve()
     for (v in xs) {
-      dd[[v]] <- factor(ifelse(is.na(dd[[v]]), sprintf("%s (removed)", v),
+      dd[[v]] <- factor(ifelse(.is_excluded(dd[[v]]), sprintf("%s (removed)", v),
                                as.character(dd[[v]])))
     }
     for (v in extra) {
@@ -516,116 +548,135 @@ voe_variance <- function(
 
 #' Volcano plot of the vibration of effects
 #'
-#' Plots `xvar` against -log10(p) for one association (one response x
-#' coefficient), adding the quantile lines computed by [voe()] and p-value
-#' cutoffs.
+#' Plots `xvar` against -log10(p), adding the quantile lines computed by
+#' [voe()] and p-value cutoffs. With more than one association (response x
+#' coefficient) each one is drawn in its own panel, with its own lines.
 #'
 #' @inheritParams voe
 #' @param p.cut p-value cutoffs drawn as horizontal lines.
+#' @param median.traj if `TRUE`, adds the trajectory of the medians by the
+#'   number of excluded predictors.
+#' @param ... further arguments passed to [spec_scatter()] (e.g. `xlab`,
+#'   `ylab`, `shapes`, `by`).
 #' @return A ggplot object.
 #' @export
 volcano <- function(x,
                     focal = NULL,
                     xvar = "pcor",
-                    p.adjusted = TRUE,
+                    p.adjusted = NULL,
                     p.cut = c(0.05, 0.001),
                     q = c(0.01, 0.50, 0.99),
                     type = c("additive", "ratio"),
                     null = 0,
                     alpha = 0.05,
                     which.response = NULL,
-                    median.traj = FALSE) {
+                    median.traj = FALSE,
+                    focal.var = NULL,
+                    p = NULL,
+                    ...) {
   type <- match.arg(type)
   
+  # specification table and selection built once, then reused
+  tab <- .voe_table(x)
+  d <- .voe_select(tab, x, focal = focal, focal.var = focal.var,
+                   which.response = which.response, xvar = xvar)
+  
   VOE <- voe(
-    x,
+    d,
     xvar = xvar,
     p.adjusted = p.adjusted,
     q = q,
     type = type,
     null = null,
     alpha = alpha,
-    focal = focal,
-    which.response = which.response
+    p = p
   )
   
-  if (nrow(VOE$summary) != 1L) {
-    stop("`volcano()` shows one association at a time: set `focal` ",
-         "(and `which.response`) to select a single coefficient.", call. = FALSE)
-  }
-  
-  d <- .voe_data(x, focal, which.response, xvar)
   qd <- VOE$quantiles
-  yd <- transf_p(d[[VOE$p.values]], "-log10")
-  yd <- yd[is.finite(yd)]
+  qd$label <- sprintf("%s%%", round(qd$q * 100))
   ycut <- transf_p(p.cut, "-log10")
-  qlab <- sprintf("%s%%", round(qd$q * 100))
-  
-  plt <- plot.pima(
-    x,
-    focal = VOE$summary$coefficient,
-    xvar = xvar,
-    p.adjusted = p.adjusted,
-    p.transf = "-log10",
-    alpha = alpha,
-    which.response = which.response
-  ) +
+  n_assoc <- nrow(VOE$summary)
+
+  # label positions, per association (one panel each)
+  pos <- .bind_rows(lapply(.voe_groups(d), function(g) {
+    yg <- transf_p(g[[VOE$p.values]], "-log10")
+    data.frame(response = g$response[1L], coefficient = g$coefficient[1L],
+               x_cut = .rpos(g[[xvar]], 0.1), x_q = .rpos(g[[xvar]], 1.05),
+               y_q = .rpos(yg[is.finite(yg)], -0.1), stringsAsFactors = FALSE)
+  }))
+  qd <- merge(qd, pos, by = c("response", "coefficient"))
+  cuts <- merge(pos, data.frame(y = ycut, label = sprintf("p = %s", p.cut)), by = NULL)
+
+  plt <- spec_scatter(d, xvar = xvar, p = VOE$p.values, p.transf = "-log10",
+                      alpha = alpha, ...) +
     ggplot2::theme(plot.title = ggplot2::element_blank())
-  
-  
-  if(median.traj){
-    perk <- .voe_per_k(x, xvar = xvar, p.adjusted = p.adjusted,
-                       focal = VOE$summary$coefficient,
-                       which.response = which.response)
-    
-    perk <- perk[order(perk$k), , drop = FALSE]
-    
+
+  if (n_assoc > 1L) {
+    # one panel per association; one colour (unless `by` is given)
     plt <- plt +
-      ggplot2::geom_path(data = perk, ggplot2::aes(x = .x, y = .logp),
-                         colour = "red", inherit.aes = FALSE) +
-      ggplot2::geom_point(data = perk, ggplot2::aes(x = .x, y = .logp),
-                          colour = "red", shape = 1, size = 2.5, inherit.aes = FALSE) +
-      ggplot2::geom_text(data = perk, ggplot2::aes(x = .x, y = .logp, label = k),
-                         vjust = -1, size = 3, inherit.aes = FALSE)
-    
+      ggplot2::facet_wrap(
+        c("response", "coefficient"), scales = "free_x",
+        labeller = function(l) list(sprintf("%s ~ %s", l$response, l$coefficient))
+      )
+    if (!"by" %in% names(list(...))) {
+      plt <- plt + ggplot2::scale_color_manual(values = rep(.single_color, n_assoc),
+                                               guide = "none")
+    }
   }
-  
+
+  if (median.traj) {
+    # k is computed on the whole table (also the models without `focal`)
+    perk <- .voe_per_k(tab, xvar = xvar, p.adjusted = p.adjusted,
+                       focal = VOE$summary$coefficient,
+                       which.response = VOE$summary$response, p = p)
+    perk <- perk[order(perk$response, perk$coefficient, perk$k), , drop = FALSE]
+    traj <- ggplot2::aes(x = .data[[".x"]], y = .data[[".logp"]],
+                         group = interaction(.data[["response"]], .data[["coefficient"]]))
+    plt <- plt +
+      ggplot2::geom_path(data = perk, traj, colour = "red", inherit.aes = FALSE) +
+      ggplot2::geom_point(data = perk, traj, colour = "red", shape = 1, size = 2.5,
+                          inherit.aes = FALSE) +
+      ggplot2::geom_text(data = perk,
+                         ggplot2::aes(x = .data[[".x"]], y = .data[[".logp"]],
+                                      label = .data[["k"]]),
+                         vjust = -1, size = 3, inherit.aes = FALSE)
+  }
+
+  lab <- function(x, y) {
+    ggplot2::aes(x = .data[[x]], y = .data[[y]], label = .data[["label"]])
+  }
   plt +
-    ggplot2::geom_vline(xintercept = qd$x, lty = "dotted") +
-    ggplot2::geom_hline(yintercept = qd$p, lty = "dotted") +
+    ggplot2::geom_vline(data = qd, ggplot2::aes(xintercept = .data[["x"]]),
+                        lty = "dotted") +
+    ggplot2::geom_hline(data = qd, ggplot2::aes(yintercept = .data[["p"]]),
+                        lty = "dotted") +
     ggplot2::geom_hline(yintercept = ycut, col = "darkgreen") +
-    ggplot2::annotate(
-      "label",
-      x = .rpos(d[[xvar]], 0.1),
-      y = ycut,
-      label = sprintf("p = %s", p.cut)
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = qd$x,
-      y = .rpos(yd, -0.1),
-      label = qlab
-    ) +
-    ggplot2::annotate(
-      "label",
-      x = .rpos(d[[xvar]], 1.05),
-      y = qd$p,
-      label = qlab
-    ) +
+    ggplot2::geom_label(data = cuts, lab("x_cut", "y"), inherit.aes = FALSE) +
+    ggplot2::geom_label(data = qd, lab("x", "y_q"), inherit.aes = FALSE) +
+    ggplot2::geom_label(data = qd, lab("x_q", "p"), inherit.aes = FALSE) +
     ggplot2::geom_vline(xintercept = VOE$null)
 }
 
 .voe_per_k <- function(x, xvar = "estimate", p.adjusted = FALSE,
-                       focal = NULL, which.response = NULL) {
-  pv <- .p_col(x, p.adjusted)
-  d  <- .voe_data(x, focal, which.response, xvar)
+                       focal = NULL, which.response = NULL, focal.var = NULL,
+                       p = NULL) {
+  tab <- .voe_table(x)
+  d <- .voe_select(tab, x, focal = focal, focal.var = focal.var,
+                   which.response = which.response, xvar = xvar)
+  pv <- .pick_p(d, p = p, p.adjusted = p.adjusted)
   
-  # k = number of optional predictors included in each specification
-  xs <- attr(x$info, "xs")
-  xs <- xs[!grepl("Intercept", xs, fixed = TRUE)]
-  info <- x$info[, c("model", xs), drop = FALSE]
-  optional <- xs[vapply(xs, function(v) anyNA(info[[v]]), logical(1))]
-  info$k <- rowSums(!is.na(info[, optional, drop = FALSE]))
+  # k = number of optional predictors included in each specification,
+  # computed on all the specifications (also those without the focal
+  # coefficient)
+  xs <- intersect(attr(tab, "spec_predictors"), names(tab))
+  if (!length(xs)) {
+    stop("cannot find the predictors of the specifications (attribute ",
+         "`spec_predictors`): use a table returned by spec_table().",
+         call. = FALSE)
+  }
+  info <- unique(tab[, c("model", xs), drop = FALSE])
+  optional <- xs[vapply(xs, function(v) any(.is_excluded(info[[v]])), logical(1))]
+  info$k <- Reduce(`+`, lapply(info[optional], function(v) !.is_excluded(v)), 0)
   
   d <- merge(d, info[, c("model", "k")], by = "model")
   d$.x <- d[[xvar]]

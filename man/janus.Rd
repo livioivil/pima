@@ -4,6 +4,9 @@
 \alias{janus}
 \alias{janus.default}
 \alias{janus.pima}
+\alias{janus.pima.multi}
+\alias{janus.list}
+\alias{janus.data.frame}
 \title{Janus effect}
 \usage{
 janus(x, ...)
@@ -13,21 +16,65 @@ janus(x, ...)
 \method{janus}{pima}(
   x,
   focal = NULL,
-  p.adjusted = TRUE,
+  p.adjusted = NULL,
   q = c(0.01, 0.99),
   alpha = 0.05,
   which.response = NULL,
   xvar = "estimate",
+  focal.var = NULL,
+  p = NULL,
+  ...
+)
+
+\method{janus}{pima.multi}(
+  x,
+  focal = NULL,
+  p.adjusted = NULL,
+  q = c(0.01, 0.99),
+  alpha = 0.05,
+  which.response = NULL,
+  xvar = "estimate",
+  focal.var = NULL,
+  p = NULL,
+  ...
+)
+
+\method{janus}{list}(
+  x,
+  focal = NULL,
+  p.adjusted = NULL,
+  q = c(0.01, 0.99),
+  alpha = 0.05,
+  which.response = NULL,
+  xvar = "estimate",
+  focal.var = NULL,
+  p = NULL,
+  ...
+)
+
+\method{janus}{data.frame}(
+  x,
+  focal = NULL,
+  p.adjusted = NULL,
+  q = c(0.01, 0.99),
+  alpha = 0.05,
+  which.response = NULL,
+  xvar = "estimate",
+  focal.var = NULL,
+  p = NULL,
   ...
 )
 }
 \arguments{
-\item{x}{a numeric vector of estimates, or an object of class `pima`.}
+\item{x}{a numeric vector of estimates, a `pima` object, a `pima.multi`
+object created with `fit.specs`, a list of fitted `lm` or `glm` models,
+or a table returned by [spec_table()].}
 
 \item{...}{further arguments (currently unused).}
 
-\item{p}{a numeric vector of p-values, same length as `x`. If `NULL`,
-`J_sig` and `J_ext` are `NA`.}
+\item{p}{for vectors, a numeric vector of p-values, same length as `x`
+(if `NULL`, `J_sig` and `J_ext` are `NA`). Otherwise, the column of
+p-values of the specification table, as in [spec_curve()].}
 
 \item{q}{probabilities; only the extremes are used.}
 
@@ -35,21 +82,24 @@ janus(x, ...)
 
 \item{alpha}{significance level.}
 
-\item{focal}{coefficients to consider; defaults to `x$tested_coeffs`.}
+\item{focal, focal.var}{coefficients and variables to consider, as in
+[spec_curve()]; by default the tested coefficients (`pima`), the focal
+predictors (`pima.multi`) or all the coefficients except the intercept.}
 
-\item{p.adjusted}{if `TRUE` uses adjusted p-values, otherwise raw ones.
-Published values in the literature use raw p-values.}
+\item{p.adjusted}{which p-values to use, with the same rules as
+[spec_curve()]: adjusted p-values only exist for `pima` objects analysed
+with a correction. Published values in the literature use raw p-values.}
 
 \item{which.response}{responses to consider; defaults to all.}
 
-\item{xvar}{column of `summary_table` whose sign is used. Any column with
-the same sign as the coefficient (`estimate`, `pcor`, `z`) gives the same
-result.}
+\item{xvar}{column of the specification table whose sign is used. Any
+column with the same sign as the coefficient (`estimate`, `pcor`,
+`wald.t`) gives the same result.}
 }
 \value{
 For vectors, a list with `J_range`, `J_pct`, `J_ext`, `J_sig`,
-  `J_frac`. For `pima` objects, a data frame with one row per
-  response x coefficient.
+  `J_frac`. Otherwise, a data frame with one row per response x
+  coefficient.
 }
 \description{
 Computes the definitions of the Janus effect used in the vibration of
