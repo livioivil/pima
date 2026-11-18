@@ -24,7 +24,11 @@
 #'   For `pima.multi` objects the columns `model`, `subset` and `fit_spec` of
 #'   the scenarios (and `.source`, `y.fun` when present) are added
 #'   automatically.
-#' @param id currently not used.
+#' @param id identifier of the observations, passed to [flipscores::flipscores()]:
+#'   the name of a column of the models' data or a one-sided formula (e.g.
+#'   `~id`). Used to align the scores of models fitted on different rows (e.g.
+#'   after subsetting or removing missing values); repeated values define
+#'   clusters. If `NULL` (default), the scores are aligned by row names.
 #' @param parametric if `TRUE`, uses the experimental parametric backend based
 #'   on [multcomp::mmm()] instead of the sign-flip score test. Its output is
 #'   not compatible with the other functions of the package.
@@ -166,7 +170,7 @@ pima <- function(mods, tested_coeffs = NULL, n_flips = 5000, method = c("maxT", 
   extra_args <- list(...)
   
   flipscores_args <- c(
-    list(formula = mods, tested_coeffs = tested_coeffs, n_flips = n_flips), 
+    list(formula = mods, tested_coeffs = tested_coeffs, n_flips = n_flips, id = id), 
     extra_args
   )
   

@@ -43,7 +43,11 @@ For \code{pima.multi} objects the columns \code{model}, \code{subset} and \code{
 the scenarios (and \code{.source}, \code{y.fun} when present) are added
 automatically.}
 
-\item{id}{currently not used.}
+\item{id}{identifier of the observations, passed to \code{\link[flipscores:flipscores]{flipscores::flipscores()}}:
+the name of a column of the models' data or a one-sided formula (e.g.
+\code{~id}). Used to align the scores of models fitted on different rows (e.g.
+after subsetting or removing missing values); repeated values define
+clusters. If \code{NULL} (default), the scores are aligned by row names.}
 
 \item{parametric}{if \code{TRUE}, uses the experimental parametric backend based
 on \code{\link[multcomp:mmm]{multcomp::mmm()}} instead of the sign-flip score test. Its output is
